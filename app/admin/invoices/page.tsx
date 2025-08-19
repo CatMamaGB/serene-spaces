@@ -145,21 +145,6 @@ export default function InvoicesPage() {
     setInvoiceToDelete(null);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "paid":
-        return { bg: "#dcfce7", text: "#166534", border: "#bbf7d0" };
-      case "open":
-        return { bg: "#dbeafe", text: "#1e40af", border: "#93c5fd" };
-      case "draft":
-        return { bg: "#f3f4f6", text: "#374151", border: "#d1d5db" };
-      case "void":
-        return { bg: "#fee2e2", text: "#991b1b", border: "#fca5a5" };
-      default:
-        return { bg: "#f3f4f6", text: "#374151", border: "#d1d5db" };
-    }
-  };
-
   if (loading) {
     return (
       <div
@@ -771,6 +756,35 @@ export default function InvoicesPage() {
                             >
                               Edit
                             </Link>
+                            <button
+                              onClick={() =>
+                                handleDeleteInvoice(
+                                  invoice.id,
+                                  invoice.customerName,
+                                )
+                              }
+                              style={{
+                                padding: "6px 12px",
+                                backgroundColor: "#dc2626",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "4px",
+                                fontSize: "0.8rem",
+                                fontWeight: "500",
+                                cursor: "pointer",
+                                transition: "background-color 0.2s ease",
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor =
+                                  "#b91c1c";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor =
+                                  "#dc2626";
+                              }}
+                            >
+                              Delete
+                            </button>
                           </div>
                         </td>
                       </tr>

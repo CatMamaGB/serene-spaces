@@ -240,7 +240,6 @@ export default function ViewInvoice() {
                     );
 
                     if (response.ok) {
-                      const result = await response.json();
                       setInvoice((prev) =>
                         prev ? { ...prev, status: e.target.value } : null,
                       );
@@ -639,6 +638,155 @@ export default function ViewInvoice() {
               )}
             </div>
           )}
+
+          {/* Payment Instructions */}
+          <div
+            style={{
+              borderTop: "1px solid #e2e8f0",
+              paddingTop: "1.5rem",
+              marginTop: "1.5rem",
+            }}
+          >
+            <h4
+              style={{
+                color: "#374151",
+                fontSize: "1.25rem",
+                fontWeight: "600",
+                marginBottom: "1.5rem",
+                textAlign: "center",
+              }}
+            >
+              Payment Instructions
+            </h4>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr 1fr",
+                gap: "1.5rem",
+              }}
+            >
+              <div
+                style={{
+                  backgroundColor: "#f8f9fa",
+                  padding: "1.5rem",
+                  borderRadius: "0.5rem",
+                  border: "1px solid #e2e8f0",
+                  textAlign: "center",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "2rem",
+                    marginBottom: "0.75rem",
+                    color: "#7a6990",
+                  }}
+                >
+                  💳
+                </div>
+                <h5
+                  style={{
+                    fontSize: "1.1rem",
+                    fontWeight: "600",
+                    margin: "0 0 0.75rem 0",
+                    color: "#374151",
+                  }}
+                >
+                  Zelle
+                </h5>
+                <p
+                  style={{
+                    margin: "0",
+                    fontSize: "1rem",
+                    color: "#64748b",
+                    wordBreak: "break-all",
+                    fontWeight: "500",
+                  }}
+                >
+                  loveserenespaces@gmail.com
+                </p>
+              </div>
+
+              <div
+                style={{
+                  backgroundColor: "#f8f9fa",
+                  padding: "1.5rem",
+                  borderRadius: "0.5rem",
+                  border: "1px solid #e2e8f0",
+                  textAlign: "center",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "2rem",
+                    marginBottom: "0.75rem",
+                    color: "#7a6990",
+                  }}
+                >
+                  📱
+                </div>
+                <h5
+                  style={{
+                    fontSize: "1.1rem",
+                    fontWeight: "600",
+                    margin: "0 0 0.75rem 0",
+                    color: "#374151",
+                  }}
+                >
+                  Venmo
+                </h5>
+                <p
+                  style={{
+                    margin: "0",
+                    fontSize: "1rem",
+                    color: "#64748b",
+                    fontWeight: "500",
+                  }}
+                >
+                  @beth-contos
+                </p>
+              </div>
+
+              <div
+                style={{
+                  backgroundColor: "#f8f9fa",
+                  padding: "1.5rem",
+                  borderRadius: "0.5rem",
+                  border: "1px solid #e2e8f0",
+                  textAlign: "center",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "2rem",
+                    marginBottom: "0.75rem",
+                    color: "#7a6990",
+                  }}
+                >
+                  💵
+                </div>
+                <h5
+                  style={{
+                    fontSize: "1.1rem",
+                    fontWeight: "600",
+                    margin: "0 0 0.75rem 0",
+                    color: "#374151",
+                  }}
+                >
+                  Cash
+                </h5>
+                <p
+                  style={{
+                    margin: "0",
+                    fontSize: "1rem",
+                    color: "#64748b",
+                    fontWeight: "500",
+                  }}
+                >
+                  Due at delivery
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

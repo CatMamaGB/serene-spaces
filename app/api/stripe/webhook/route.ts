@@ -29,9 +29,8 @@ export async function POST(req: Request) {
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await prisma.eventLog.create({
-    data: { type: event.type, payload: event as any },
+    data: { type: event.type, payload: event as any }, // eslint-disable-line @typescript-eslint/no-explicit-any
   });
 
   try {

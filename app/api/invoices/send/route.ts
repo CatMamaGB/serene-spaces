@@ -166,11 +166,14 @@ function generateInvoiceHtml(invoiceData: any) {
             </tr>
           </thead>
           <tbody>
-            ${
-              /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-              items
-                .map(
-                  (item: any) => `
+            ${items
+              .map(
+                (item: {
+                  description: string;
+                  quantity: number;
+                  rate: number;
+                  amount: number;
+                }) => `
               <tr>
                 <td>${item.description}</td>
                 <td>${item.quantity}</td>
@@ -178,9 +181,8 @@ function generateInvoiceHtml(invoiceData: any) {
                 <td>$${item.amount.toFixed(2)}</td>
               </tr>
             `,
-                )
-                .join("")
-            }
+              )
+              .join("")}
           </tbody>
         </table>
         

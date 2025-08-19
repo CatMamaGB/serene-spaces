@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
 import { NextResponse } from "next/server";
+import Stripe from "stripe";
 
 export async function POST(req: Request) {
   try {
@@ -55,7 +56,6 @@ export async function POST(req: Request) {
 
     // create invoice items
     for (const it of items) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await stripe.invoiceItems.create({
         customer: stripeCustomerId!,
         description: it.description,
@@ -66,25 +66,21 @@ export async function POST(req: Request) {
           it.taxable && process.env.STRIPE_TAX_RATE_ID
             ? [process.env.STRIPE_TAX_RATE_ID]
             : undefined,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any);
+      } as Stripe.InvoiceItemCreateParams);
     }
 
     // create and finalize invoice
-    const invoiceData = {
+    const invoiceData: Stripe.InvoiceCreateParams = {
       customer: stripeCustomerId!,
-      collection_method: "send_invoice" as const,
+      collection_method: "send_invoice",
       days_until_due: 7,
       footer: "Thank you for your business.",
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (invoiceNumber) (invoiceData as any).number = invoiceNumber;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (notes) (invoiceData as any).description = notes;
+    if (invoiceNumber) invoiceData.number = invoiceNumber;
+    if (notes) invoiceData.description = notes;
     if (issueDate && dueDate) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (invoiceData as any).metadata = {
+      invoiceData.metadata = {
         issueDate,
         dueDate: dueDate || "",
       };

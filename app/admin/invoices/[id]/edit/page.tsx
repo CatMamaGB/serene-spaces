@@ -918,6 +918,156 @@ export default function EditInvoicePage() {
             />
           </div>
 
+          {/* Payment Instructions */}
+          <div
+            style={{
+              backgroundColor: "white",
+              borderRadius: "16px",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+              border: "1px solid #e9ecef",
+              padding: isMobile ? "20px" : "24px",
+              marginBottom: "24px",
+            }}
+          >
+            <h3
+              style={{
+                fontSize: "1.25rem",
+                margin: "0 0 16px 0",
+                color: "#1a1a1a",
+              }}
+            >
+              Payment Instructions
+            </h3>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr",
+                gap: "16px",
+              }}
+            >
+              <div
+                style={{
+                  backgroundColor: "#f8f9fa",
+                  padding: "16px",
+                  borderRadius: "8px",
+                  border: "1px solid #e9ecef",
+                  textAlign: "center",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "1.5rem",
+                    marginBottom: "8px",
+                    color: "#7a6990",
+                  }}
+                >
+                  💳
+                </div>
+                <h4
+                  style={{
+                    fontSize: "1rem",
+                    fontWeight: "600",
+                    margin: "0 0 8px 0",
+                    color: "#1a1a1a",
+                  }}
+                >
+                  Zelle
+                </h4>
+                <p
+                  style={{
+                    margin: "0",
+                    fontSize: "0.875rem",
+                    color: "#666",
+                    wordBreak: "break-all",
+                    fontWeight: "500",
+                  }}
+                >
+                  loveserenespaces@gmail.com
+                </p>
+              </div>
+
+              <div
+                style={{
+                  backgroundColor: "#f8f9fa",
+                  padding: "16px",
+                  borderRadius: "8px",
+                  border: "1px solid #e9ecef",
+                  textAlign: "center",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "1.5rem",
+                    marginBottom: "8px",
+                    color: "#7a6990",
+                  }}
+                >
+                  📱
+                </div>
+                <h4
+                  style={{
+                    fontSize: "1rem",
+                    fontWeight: "600",
+                    margin: "0 0 8px 0",
+                    color: "#1a1a1a",
+                  }}
+                >
+                  Venmo
+                </h4>
+                <p
+                  style={{
+                    margin: "0",
+                    fontSize: "0.875rem",
+                    color: "#666",
+                    fontWeight: "500",
+                  }}
+                >
+                  @beth-contos
+                </p>
+              </div>
+
+              <div
+                style={{
+                  backgroundColor: "#f8f9fa",
+                  padding: "16px",
+                  borderRadius: "8px",
+                  border: "1px solid #e9ecef",
+                  textAlign: "center",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "1.5rem",
+                    marginBottom: "8px",
+                    color: "#7a6990",
+                  }}
+                >
+                  💵
+                </div>
+                <h4
+                  style={{
+                    fontSize: "1rem",
+                    fontWeight: "600",
+                    margin: "0 0 8px 0",
+                    color: "#1a1a1a",
+                  }}
+                >
+                  Cash
+                </h4>
+                <p
+                  style={{
+                    margin: "0",
+                    fontSize: "0.875rem",
+                    color: "#666",
+                    fontWeight: "500",
+                  }}
+                >
+                  Due at delivery
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Total and Submit */}
           <div
             style={{
