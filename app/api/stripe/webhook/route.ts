@@ -5,7 +5,10 @@ import { prisma } from "@/lib/prisma";
 export async function POST(req: Request) {
   // If Stripe is not configured, return early
   if (!stripe) {
-    return NextResponse.json({ error: "Stripe not configured" }, { status: 503 });
+    return NextResponse.json(
+      { error: "Stripe not configured" },
+      { status: 503 },
+    );
   }
 
   const sig = req.headers.get("stripe-signature");
@@ -13,17 +16,31 @@ export async function POST(req: Request) {
   let event;
 
   try {
-    event = stripe.webhooks.constructEvent(buf, sig!, process.env.STRIPE_WEBHOOK_SECRET!);
+    event = stripe.webhooks.constructEvent(
+      buf,
+      sig!,
+      process.env.STRIPE_WEBHOOK_SECRET!,
+    );
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : "Unknown error";
-    return NextResponse.json({ error: `Webhook Error: ${errorMessage}` }, { status: 400 });
+    return NextResponse.json(
+      { error: `Webhook Error: ${errorMessage}` },
+      { status: 400 },
+    );
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await prisma.eventLog.create({ data: { type: event.type, payload: event as any } });
+  await prisma.eventLog.create({
+    data: { type: event.type, payload: event as any },
+  });
 
   try {
-    if (event.type === "invoice.finalized" || event.type === "invoice.sent" || event.type === "invoice.payment_succeeded" || event.type === "invoice.payment_failed") {
+    if (
+      event.type === "invoice.finalized" ||
+      event.type === "invoice.sent" ||
+      event.type === "invoice.payment_succeeded" ||
+      event.type === "invoice.payment_failed"
+    ) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const inv = event.data.object as any;
       await prisma.invoiceMirror.update({
@@ -35,7 +52,7 @@ export async function POST(req: Request) {
           total: inv.total ?? undefined,
           hostedUrl: inv.hosted_invoice_url ?? undefined,
           pdfUrl: inv.invoice_pdf ?? undefined,
-        }
+        },
       });
     }
   } catch {

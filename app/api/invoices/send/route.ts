@@ -1,32 +1,35 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { Resend } from 'resend';
+import { NextRequest, NextResponse } from "next/server";
+import { Resend } from "resend";
 
-const resend = new Resend('re_Tjn1PQUf_5RNFxHdpKb7deMjTqPXQmyTu');
+const resend = new Resend("re_Tjn1PQUf_5RNFxHdpKb7deMjTqPXQmyTu");
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { 
-      customerName, 
-      customerEmail, 
-      customerPhone, 
-      customerAddress, 
-      invoiceDate, 
-      dueDate, 
-      items, 
-      notes, 
+    const {
+      customerName,
+      customerEmail,
+      customerPhone,
+      customerAddress,
+      invoiceDate,
+      dueDate,
+      items,
+      notes,
       terms,
       subtotal,
       tax,
       total,
-      emailMessage 
+      emailMessage,
     } = body;
 
     // Validate required fields
     if (!customerName || !customerEmail || !items || items.length === 0) {
       return NextResponse.json(
-        { error: 'Missing required fields: customer name, email, and items are required' },
-        { status: 400 }
+        {
+          error:
+            "Missing required fields: customer name, email, and items are required",
+        },
+        { status: 400 },
       );
     }
 
@@ -44,37 +47,36 @@ export async function POST(req: NextRequest) {
       subtotal,
       tax,
       total,
-      emailMessage
+      emailMessage,
     });
 
     // Send email
     const { data, error } = await resend.emails.send({
-      from: 'Serene Spaces <onboarding@resend.dev>',
+      from: "Serene Spaces <onboarding@resend.dev>",
       to: customerEmail,
       subject: `Invoice from Serene Spaces - ${invoiceDate}`,
       html: invoiceHtml,
-      replyTo: 'loveserenespaces@gmail.com'
+      replyTo: "loveserenespaces@gmail.com",
     });
 
     if (error) {
-      console.error('Resend error:', error);
+      console.error("Resend error:", error);
       return NextResponse.json(
-        { error: 'Failed to send email' },
-        { status: 500 }
+        { error: "Failed to send email" },
+        { status: 500 },
       );
     }
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       messageId: data?.id,
-      message: 'Invoice sent successfully' 
+      message: "Invoice sent successfully",
     });
-
   } catch (error) {
-    console.error('Error sending invoice:', error);
+    console.error("Error sending invoice:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: "Internal server error" },
+      { status: 500 },
     );
   }
 }
@@ -94,7 +96,7 @@ function generateInvoiceHtml(invoiceData: any) {
     subtotal,
     tax,
     total,
-    emailMessage
+    emailMessage,
   } = invoiceData;
 
   return `
@@ -128,25 +130,29 @@ function generateInvoiceHtml(invoiceData: any) {
           <div>Professional Equestrian Cleaning Services</div>
         </div>
         
-        ${emailMessage ? `
+        ${
+          emailMessage
+            ? `
         <div style="background-color: #f0f9ff; border: 2px solid #0ea5e9; border-radius: 10px; padding: 20px; margin: 20px 0; text-align: center;">
           <div style="font-size: 18px; font-weight: bold; color: #0c4a6e; margin-bottom: 10px;">📧 Personal Message</div>
           <div style="font-size: 16px; color: #0c4a6e; line-height: 1.6;">${emailMessage}</div>
         </div>
-        ` : ''}
+        `
+            : ""
+        }
         
         <div class="invoice-details">
           <div class="customer-info">
             <h3>Bill To:</h3>
             <p><strong>${customerName}</strong></p>
-            ${customerEmail ? `<p>${customerEmail}</p>` : ''}
-            ${customerPhone ? `<p>${customerPhone}</p>` : ''}
-            ${customerAddress ? `<p>${customerAddress}</p>` : ''}
+            ${customerEmail ? `<p>${customerEmail}</p>` : ""}
+            ${customerPhone ? `<p>${customerPhone}</p>` : ""}
+            ${customerAddress ? `<p>${customerAddress}</p>` : ""}
           </div>
           <div class="invoice-info">
             <h3>Invoice Details:</h3>
             <p><strong>Date:</strong> ${invoiceDate}</p>
-            ${dueDate ? `<p><strong>Due Date:</strong> ${dueDate}</p>` : ''}
+            ${dueDate ? `<p><strong>Due Date:</strong> ${dueDate}</p>` : ""}
           </div>
         </div>
         
@@ -160,15 +166,21 @@ function generateInvoiceHtml(invoiceData: any) {
             </tr>
           </thead>
           <tbody>
-            ${/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-            items.map((item: any) => `
+            ${
+              /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+              items
+                .map(
+                  (item: any) => `
               <tr>
                 <td>${item.description}</td>
                 <td>${item.quantity}</td>
                 <td>$${item.rate.toFixed(2)}</td>
                 <td>$${item.amount.toFixed(2)}</td>
               </tr>
-            `).join('')}
+            `,
+                )
+                .join("")
+            }
           </tbody>
         </table>
         
@@ -178,12 +190,16 @@ function generateInvoiceHtml(invoiceData: any) {
           <p class="total-row"><strong>Total:</strong> $${total.toFixed(2)}</p>
         </div>
         
-        ${notes || terms ? `
+        ${
+          notes || terms
+            ? `
           <div class="notes-terms">
-            ${notes ? `<div><strong>Notes:</strong><br>${notes}</div>` : ''}
-            ${terms ? `<div style="margin-top: 15px;"><strong>Terms:</strong><br>${terms}</div>` : ''}
+            ${notes ? `<div><strong>Notes:</strong><br>${notes}</div>` : ""}
+            ${terms ? `<div style="margin-top: 15px;"><strong>Terms:</strong><br>${terms}</div>` : ""}
           </div>
-        ` : ''}
+        `
+            : ""
+        }
         
         <div class="footer">
           <p>Thank you for choosing Serene Spaces!</p>

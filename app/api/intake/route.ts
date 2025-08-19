@@ -1,34 +1,38 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { Resend } from 'resend';
+import { Resend } from "resend";
 
-const resend = new Resend('re_Tjn1PQUf_5RNFxHdpKb7deMjTqPXQmyTu');
+const resend = new Resend("re_Tjn1PQUf_5RNFxHdpKb7deMjTqPXQmyTu");
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { 
-      fullName, 
-      email, 
-      phone, 
-      address, 
-      pickupDate, 
-      services, 
-      repairNotes, 
-      waterproofingNotes, 
-      allergies 
+    const {
+      fullName,
+      email,
+      phone,
+      address,
+      pickupDate,
+      services,
+      repairNotes,
+      waterproofingNotes,
+      allergies,
     } = body;
 
     // Validate required fields
     if (!fullName || !email || !address || !services || services.length === 0) {
-      return NextResponse.json({ 
-        error: "Missing required fields: fullName, email, address, and at least one service" 
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error:
+            "Missing required fields: fullName, email, address, and at least one service",
+        },
+        { status: 400 },
+      );
     }
 
     // Check if customer already exists
     let customer = await prisma.customer.findFirst({
-      where: { email }
+      where: { email },
     });
 
     // Create new customer if they don't exist
@@ -39,10 +43,10 @@ export async function POST(req: Request) {
           email,
           phone: phone || null,
           address: address, // Use the address field from schema
-          city: '', // Will be extracted from address if needed
-          state: '', // Will be extracted from address if needed
-          postalCode: '' // Use postalCode instead of zipCode
-        }
+          city: "", // Will be extracted from address if needed
+          state: "", // Will be extracted from address if needed
+          postalCode: "", // Use postalCode instead of zipCode
+        },
       });
     }
 
@@ -56,8 +60,8 @@ export async function POST(req: Request) {
         repairNotes: repairNotes || null,
         waterproofingNotes: waterproofingNotes || null,
         allergies: allergies || null,
-        status: 'pending'
-      }
+        status: "pending",
+      },
     });
 
     // Send confirmation email
@@ -72,37 +76,39 @@ export async function POST(req: Request) {
         repairNotes,
         waterproofingNotes,
         allergies,
-        serviceRequestId: serviceRequest.id
+        serviceRequestId: serviceRequest.id,
       });
 
       await resend.emails.send({
-        from: 'Serene Spaces <onboarding@resend.dev>',
+        from: "Serene Spaces <onboarding@resend.dev>",
         to: email,
-        subject: 'Service Request Confirmation - Serene Spaces',
+        subject: "Service Request Confirmation - Serene Spaces",
         html: confirmationHtml,
-        replyTo: 'loveserenespaces@gmail.com'
+        replyTo: "loveserenespaces@gmail.com",
       });
     } catch (emailError) {
-      console.error('Failed to send confirmation email:', emailError);
+      console.error("Failed to send confirmation email:", emailError);
       // Don't fail the whole request if email fails
     }
 
     // Return success response
     return NextResponse.json({
       success: true,
-      message: 'Service request submitted successfully',
+      message: "Service request submitted successfully",
       data: {
         customerId: customer.id,
         serviceRequestId: serviceRequest.id,
-        status: 'pending'
-      }
+        status: "pending",
+      },
     });
-
   } catch (error) {
-    console.error('Error submitting intake form:', error);
-    return NextResponse.json({ 
-      error: 'Failed to submit service request' 
-    }, { status: 500 });
+    console.error("Error submitting intake form:", error);
+    return NextResponse.json(
+      {
+        error: "Failed to submit service request",
+      },
+      { status: 500 },
+    );
   }
 }
 
@@ -118,16 +124,16 @@ function generateConfirmationEmail(data: any) {
     repairNotes,
     waterproofingNotes,
     allergies,
-    serviceRequestId
+    serviceRequestId,
   } = data;
 
   const formatDate = (date: string) => {
-    if (!date) return 'To be scheduled';
-    return new Date(date).toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    if (!date) return "To be scheduled";
+    return new Date(date).toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
@@ -195,12 +201,16 @@ function generateConfirmationEmail(data: any) {
               <div class="info-label">Email:</div>
               <div class="info-value">${email}</div>
             </div>
-            ${phone ? `
+            ${
+              phone
+                ? `
             <div class="info-row">
               <div class="info-label">Phone:</div>
               <div class="info-value">${phone}</div>
             </div>
-            ` : ''}
+            `
+                : ""
+            }
             <div class="info-row">
               <div class="info-label">Address:</div>
               <div class="info-value">${address}</div>
@@ -215,33 +225,49 @@ function generateConfirmationEmail(data: any) {
         <div class="section">
           <h2 class="section-title">Services Requested</h2>
           <ul class="services-list">
-            ${services.map((service: string) => `<li class="service-item">• ${service}</li>`).join('')}
+            ${services.map((service: string) => `<li class="service-item">• ${service}</li>`).join("")}
           </ul>
         </div>
         
-        ${repairNotes || waterproofingNotes || allergies ? `
+        ${
+          repairNotes || waterproofingNotes || allergies
+            ? `
         <div class="section">
           <h2 class="section-title">Additional Information</h2>
-          ${repairNotes ? `
+          ${
+            repairNotes
+              ? `
           <div class="notes-section">
             <strong>Repair Notes:</strong><br>
             ${repairNotes}
           </div>
-          ` : ''}
-          ${waterproofingNotes ? `
+          `
+              : ""
+          }
+          ${
+            waterproofingNotes
+              ? `
           <div class="notes-section">
             <strong>Waterproofing Notes:</strong><br>
             ${waterproofingNotes}
           </div>
-          ` : ''}
-          ${allergies ? `
+          `
+              : ""
+          }
+          ${
+            allergies
+              ? `
           <div class="notes-section">
             <strong>Allergies/Special Instructions:</strong><br>
             ${allergies}
           </div>
-          ` : ''}
+          `
+              : ""
+          }
         </div>
-        ` : ''}
+        `
+            : ""
+        }
         
         <div class="contact-info">
           <h2 class="section-title">What Happens Next?</h2>
