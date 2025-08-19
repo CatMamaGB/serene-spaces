@@ -3,6 +3,11 @@ import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(req: Request) {
+  // If Stripe is not configured, return early
+  if (!stripe) {
+    return NextResponse.json({ error: "Stripe not configured" }, { status: 503 });
+  }
+
   const sig = req.headers.get("stripe-signature");
   const buf = Buffer.from(await req.arrayBuffer());
   let event;

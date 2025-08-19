@@ -4,6 +4,11 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
+    // If Stripe is not configured, return an error
+    if (!stripe) {
+      return NextResponse.json({ error: "Payment processing not configured" }, { status: 503 });
+    }
+
     const body = await req.json();
     const { 
       customerId, 

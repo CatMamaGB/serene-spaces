@@ -24,10 +24,20 @@ export async function POST(req: Request) {
     const { name, email, phone } = body;
     if (!name) return NextResponse.json({ error: "Missing name" }, { status: 400 });
 
-    // create Stripe customer for convenience
-    const sc = await stripe.customers.create({ name, email: email || undefined, phone: phone || undefined });
+    let stripeId = null;
+    
+    // create Stripe customer only if Stripe is configured
+    if (stripe) {
+      try {
+        const sc = await stripe.customers.create({ name, email: email || undefined, phone: phone || undefined });
+        stripeId = sc.id;
+      } catch (stripeError) {
+        console.warn('Failed to create Stripe customer:', stripeError);
+        // Continue without Stripe customer
+      }
+    }
 
-    const customer = await prisma.customer.create({ data: { name, email, phone, stripeId: sc.id } });
+    const customer = await prisma.customer.create({ data: { name, email, phone, stripeId } });
     return NextResponse.json(customer);
   } catch (error) {
     console.error('Error creating customer:', error);
