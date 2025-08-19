@@ -326,8 +326,41 @@ export default function HomePage() {
             </div>
           </div>
           <div style={{ borderTop: '1px solid rgba(255,255,255,0.2)', paddingTop: '20px' }}>
-            <p style={{ margin: '0', opacity: '0.8' }}>
+            <p style={{ 
+              fontSize: '0.875rem',
+              color: 'rgba(255,255,255,0.8)',
+              textAlign: 'center',
+              marginTop: '16px'
+            }}>
               © 2024 Serene Spaces. Professional horse blanket cleaning, repairs, and waterproofing services.
+            </p>
+            <p style={{ 
+              fontSize: '0.75rem',
+              color: 'rgba(255,255,255,0.4)',
+              textAlign: 'center',
+              marginTop: '8px'
+            }}>
+              Made and designed by{' '}
+              <a 
+                href="https://codeandcosmos.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{
+                  color: 'rgba(255,255,255,0.6)',
+                  textDecoration: 'none',
+                  fontWeight: '500'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'rgba(255,255,255,0.8)';
+                  e.currentTarget.style.textDecoration = 'underline';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = 'rgba(255,255,255,0.6)';
+                  e.currentTarget.style.textDecoration = 'none';
+                }}
+              >
+                Code & Cosmos
+              </a>
             </p>
           </div>
         </div>

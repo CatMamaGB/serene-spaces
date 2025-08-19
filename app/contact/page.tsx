@@ -474,7 +474,43 @@ export default function ContactPage() {
               @loveserenespaces • loveserenespaces.com
             </p>
           </div>
-         </div>
+          
+          {/* Made by Credit */}
+          <div style={{ 
+            textAlign: 'center', 
+            marginTop: '60px', 
+            padding: '20px',
+            borderTop: '1px solid #e5e7eb'
+          }}>
+            <p style={{ 
+              fontSize: '0.875rem',
+              color: '#6b7280',
+              margin: '0'
+            }}>
+              Made and designed by{' '}
+              <a 
+                href="https://codeandcosmos.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{
+                  color: '#3b82f6',
+                  textDecoration: 'none',
+                  fontWeight: '500'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = '#1d4ed8';
+                  e.currentTarget.style.textDecoration = 'underline';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '#3b82f6';
+                  e.currentTarget.style.textDecoration = 'none';
+                }}
+              >
+                Code & Cosmos
+              </a>
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
