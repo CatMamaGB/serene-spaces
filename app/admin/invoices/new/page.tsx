@@ -7,8 +7,8 @@ import { PRICING, PRICE_LABELS, type PriceCode } from '@/lib/pricing';
 
 
 interface Customer {
-  id: string;
-  name: string;
+  id: string; 
+  name: string; 
   email: string;
   phone: string;
   address: string;
@@ -181,11 +181,11 @@ export default function CreateInvoice() {
     
     try {
       const response = await fetch('/api/invoices/send', {
-        method: 'POST',
+      method: 'POST', 
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
+      body: JSON.stringify({ 
           ...invoiceData,
           subtotal: calculateSubtotal(),
           tax: calculateTax(),
@@ -208,7 +208,7 @@ export default function CreateInvoice() {
     }
   };
 
-  return (
+    return (
     <div style={{
       minHeight: '100vh',
       backgroundColor: '#f8fafc',
@@ -220,22 +220,22 @@ export default function CreateInvoice() {
         borderBottom: '1px solid #e2e8f0',
         padding: '1rem 2rem'
       }}>
-        <div style={{
+            <div style={{
           maxWidth: '1200px',
           margin: '0 auto',
-          display: 'flex',
-          justifyContent: 'space-between',
+              display: 'flex',
+              justifyContent: 'space-between',
           alignItems: 'center'
         }}>
           <div style={{
             display: 'flex',
-            alignItems: 'center',
+              alignItems: 'center',
             gap: '1rem'
           }}>
             <Link
               href="/admin"
-              style={{
-                color: '#7a6990',
+                style={{
+                  color: '#7a6990',
                 textDecoration: 'none',
                 fontSize: '0.875rem',
                 fontWeight: '500'
@@ -252,7 +252,7 @@ export default function CreateInvoice() {
               Create New Invoice
             </h1>
           </div>
-        </div>
+          </div>
       </header>
 
       <div style={{
@@ -324,7 +324,7 @@ export default function CreateInvoice() {
                     ))}
                   </select>
                 </div>
-              </div>
+                </div>
 
               {/* Customer Information */}
               <div style={{
@@ -342,7 +342,7 @@ export default function CreateInvoice() {
                 }}>
                   Customer Information
                 </h2>
-                
+
                 <div style={{
                   display: 'grid',
                   gridTemplateColumns: '1fr 1fr',
@@ -415,24 +415,24 @@ export default function CreateInvoice() {
                         e.target.style.borderColor = '#e5e7eb';
                       }}
                     />
-                  </div>
-                  
+                </div>
+
                   <div>
-                    <label style={{
-                      display: 'block',
+                  <label style={{
+                    display: 'block',
                       marginBottom: '0.5rem',
                       fontWeight: '500',
                       color: '#374151'
                     }}>
                       Phone
-                    </label>
+                  </label>
                     <input
                       type="tel"
                       name="customerPhone"
                       value={invoiceData.customerPhone}
                       onChange={handleInputChange}
-                      style={{
-                        width: '100%',
+                    style={{
+                      width: '100%',
                         padding: '0.75rem',
                         border: '1px solid #e5e7eb',
                         borderRadius: '0.5rem',
@@ -449,24 +449,24 @@ export default function CreateInvoice() {
                         e.target.style.borderColor = '#e5e7eb';
                       }}
                     />
-                  </div>
-                  
+                </div>
+
                   <div>
-                    <label style={{
-                      display: 'block',
+                  <label style={{
+                    display: 'block',
                       marginBottom: '0.5rem',
                       fontWeight: '500',
                       color: '#374151'
                     }}>
                       Address
-                    </label>
+                  </label>
                     <input
                       type="text"
                       name="customerAddress"
                       value={invoiceData.customerAddress}
                       onChange={handleInputChange}
-                      style={{
-                        width: '100%',
+                    style={{
+                      width: '100%',
                         padding: '0.75rem',
                         border: '1px solid #e5e7eb',
                         borderRadius: '0.5rem',
@@ -545,7 +545,7 @@ export default function CreateInvoice() {
                       </div>
                       <div style={{ fontSize: '0.625rem', opacity: '0.8' }}>
                         ${price.toFixed(2)}
-                      </div>
+                </div>
                     </button>
                   ))}
                 </div>
@@ -559,8 +559,8 @@ export default function CreateInvoice() {
                   color: '#0c4a6e'
                 }}>
                   <strong>Note:</strong> Wraps and boots are $5 each. Click any service above to add it to your invoice.
-                </div>
               </div>
+            </div>
 
               {/* Invoice Items */}
               <div style={{
@@ -603,7 +603,7 @@ export default function CreateInvoice() {
                     + Add Item
                   </button>
                 </div>
-                
+
                 <div style={{ marginBottom: '1rem' }}>
                   <div style={{
                     display: 'grid',
@@ -748,28 +748,28 @@ export default function CreateInvoice() {
                 borderRadius: '0.75rem',
                 border: '1px solid #e2e8f0',
                 padding: '1.5rem'
-              }}>
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
+                  }}>
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
                   gap: '1.5rem'
-                }}>
-                  <div>
-                    <label style={{
-                      display: 'block',
+                    }}>
+                      <div>
+                        <label style={{
+                          display: 'block',
                       marginBottom: '0.5rem',
                       fontWeight: '500',
                       color: '#374151'
                     }}>
                       Notes
-                    </label>
+                        </label>
                     <textarea
                       name="notes"
                       value={invoiceData.notes}
                       onChange={handleInputChange}
                       rows={4}
-                      style={{
-                        width: '100%',
+                          style={{
+                            width: '100%',
                         padding: '0.75rem',
                         border: '1px solid #e5e7eb',
                         borderRadius: '0.5rem',
@@ -787,24 +787,24 @@ export default function CreateInvoice() {
                         e.target.style.borderColor = '#e5e7eb';
                       }}
                     />
-                  </div>
+                      </div>
                   
-                  <div>
-                    <label style={{
-                      display: 'block',
+                      <div>
+                        <label style={{
+                          display: 'block',
                       marginBottom: '0.5rem',
                       fontWeight: '500',
                       color: '#374151'
                     }}>
                       Terms
-                    </label>
+                        </label>
                     <textarea
                       name="terms"
                       value={invoiceData.terms}
                       onChange={handleInputChange}
                       rows={4}
-                      style={{
-                        width: '100%',
+                          style={{
+                            width: '100%',
                         padding: '0.75rem',
                         border: '1px solid #e5e7eb',
                         borderRadius: '0.5rem',
@@ -820,10 +820,10 @@ export default function CreateInvoice() {
                       }}
                       onBlur={(e) => {
                         e.target.style.borderColor = '#e5e7eb';
-                      }}
-                    />
-                  </div>
-                </div>
+                          }}
+                        />
+                      </div>
+                    </div>
               </div>
             </div>
 
@@ -848,28 +848,28 @@ export default function CreateInvoice() {
                 
                 {/* Invoice Details */}
                 <div style={{ marginBottom: '1.5rem' }}>
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
                     gap: '1rem'
-                  }}>
-                    <div>
-                      <label style={{
-                        display: 'block',
+                    }}>
+                      <div>
+                        <label style={{
+                          display: 'block',
                         marginBottom: '0.5rem',
                         fontWeight: '500',
                         color: '#374151',
                         fontSize: '0.875rem'
                       }}>
                         Invoice Date
-                      </label>
-                      <input
+                        </label>
+                        <input
                         type="date"
                         name="invoiceDate"
                         value={invoiceData.invoiceDate}
                         onChange={handleInputChange}
-                        style={{
-                          width: '100%',
+                          style={{
+                            width: '100%',
                           padding: '0.5rem',
                           border: '1px solid #e5e7eb',
                           borderRadius: '0.375rem',
@@ -884,27 +884,27 @@ export default function CreateInvoice() {
                         }}
                         onBlur={(e) => {
                           e.target.style.borderColor = '#e5e7eb';
-                        }}
-                      />
-                    </div>
+                          }}
+                        />
+                      </div>
                     
-                    <div>
-                      <label style={{
-                        display: 'block',
+                      <div>
+                        <label style={{
+                          display: 'block',
                         marginBottom: '0.5rem',
                         fontWeight: '500',
                         color: '#374151',
                         fontSize: '0.875rem'
                       }}>
                         Due Date
-                      </label>
-                      <input
+                        </label>
+                        <input
                         type="date"
                         name="dueDate"
                         value={invoiceData.dueDate}
                         onChange={handleInputChange}
-                        style={{
-                          width: '100%',
+                          style={{
+                            width: '100%',
                           padding: '0.5rem',
                           border: '1px solid #e5e7eb',
                           borderRadius: '0.375rem',
@@ -922,26 +922,26 @@ export default function CreateInvoice() {
                         }}
                       />
                     </div>
-                  </div>
-                </div>
-                
+                      </div>
+                    </div>
+
                 {/* Totals */}
                 <div style={{
                   borderTop: '1px solid #e2e8f0',
                   paddingTop: '1rem'
                 }}>
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
                     marginBottom: '0.5rem',
                     fontSize: '0.875rem',
                     color: '#64748b'
-                  }}>
+                    }}>
                     <span>Subtotal</span>
                     <span>${calculateSubtotal().toFixed(2)}</span>
                   </div>
-                  <div style={{
-                    display: 'flex',
+                      <div style={{
+                        display: 'flex',
                     justifyContent: 'space-between',
                     marginBottom: '0.5rem',
                     fontSize: '0.875rem',
@@ -949,8 +949,8 @@ export default function CreateInvoice() {
                   }}>
                     <span>Tax (8%)</span>
                     <span>${calculateTax().toFixed(2)}</span>
-                  </div>
-                  <div style={{
+                      </div>
+                      <div style={{
                     display: 'flex',
                     justifyContent: 'space-between',
                     paddingTop: '0.5rem',
@@ -962,7 +962,7 @@ export default function CreateInvoice() {
                     <span>Total</span>
                     <span>${calculateTotal().toFixed(2)}</span>
                   </div>
-                </div>
+                      </div>
                 
                 {/* Actions */}
                 <div style={{
@@ -990,14 +990,14 @@ export default function CreateInvoice() {
                      {isSubmitting ? 'Creating...' : 'Create Invoice'}
                    </button>
                    
-                   <button
+                        <button
                      type="button"
                      onClick={handleSendEmail}
                      disabled={isSendingEmail || !invoiceData.customerEmail || invoiceData.items.length === 0 || invoiceData.items[0].description === ''}
-                     style={{
+                          style={{
                        backgroundColor: isSendingEmail || !invoiceData.customerEmail || invoiceData.items.length === 0 || invoiceData.items[0].description === '' ? '#9ca3af' : '#10b981',
-                       color: 'white',
-                       border: 'none',
+                            color: 'white',
+                            border: 'none',
                        padding: '0.75rem 1.5rem',
                        borderRadius: '0.5rem',
                        fontSize: '0.875rem',
@@ -1026,11 +1026,11 @@ export default function CreateInvoice() {
                     
                   >
                     Save as Draft
-                  </button>
-                </div>
+                        </button>
               </div>
             </div>
           </div>
+        </div>
         </form>
       </div>
     </div>
