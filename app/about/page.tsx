@@ -185,12 +185,174 @@ export default function AboutPage() {
         padding: isMobile ? '30px 20px' : '40px 24px',
         textAlign: 'center'
       }}>
+        {/* Social Media Links */}
+        <div style={{
+          marginBottom: '24px'
+        }}>
+          <p style={{
+            color: 'rgba(255,255,255,0.9)',
+            fontSize: isMobile ? '1rem' : '1.1rem',
+            fontWeight: '600',
+            margin: '0 0 16px 0'
+          }}>
+            Follow Us
+          </p>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: isMobile ? '12px' : '16px',
+            marginBottom: '16px'
+          }}>
+            <a 
+              href="https://instagram.com/loveserenespaces" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              style={{
+                color: 'rgba(255,255,255,0.7)',
+                textDecoration: 'none',
+                fontSize: isMobile ? '1.3rem' : '1.5rem',
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: isMobile ? '45px' : '50px',
+                height: isMobile ? '45px' : '50px',
+                borderRadius: '12px',
+                backgroundColor: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.2)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = '#E4405F';
+                e.currentTarget.style.backgroundColor = 'rgba(228, 64, 95, 0.1)';
+                e.currentTarget.style.borderColor = '#E4405F';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'rgba(255,255,255,0.7)';
+                e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+              title="Follow us on Instagram @loveserenespaces"
+            >
+              📷
+            </a>
+            <a 
+              href="https://facebook.com/loveserenespaces" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              style={{
+                color: 'rgba(255,255,255,0.7)',
+                textDecoration: 'none',
+                fontSize: isMobile ? '1.3rem' : '1.5rem',
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: isMobile ? '45px' : '50px',
+                height: isMobile ? '45px' : '50px',
+                borderRadius: '12px',
+                backgroundColor: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.2)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = '#1877F2';
+                e.currentTarget.style.backgroundColor = 'rgba(24, 119, 242, 0.1)';
+                e.currentTarget.style.borderColor = '#1877F2';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'rgba(255,255,255,0.7)';
+                e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+              title="Follow us on Facebook"
+            >
+              📘
+            </a>
+            <a 
+              href="mailto:loveserenespaces@gmail.com"
+              style={{
+                color: 'rgba(255,255,255,0.7)',
+                textDecoration: 'none',
+                fontSize: isMobile ? '1.3rem' : '1.5rem',
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: isMobile ? '45px' : '50px',
+                height: isMobile ? '45px' : '50px',
+                borderRadius: '12px',
+                backgroundColor: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.2)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = '#EA4335';
+                e.currentTarget.style.backgroundColor = 'rgba(234, 67, 53, 0.1)';
+                e.currentTarget.style.borderColor = '#EA4335';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'rgba(255,255,255,0.7)';
+                e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+              title="Email us at loveserenespaces@gmail.com"
+            >
+              ✉️
+            </a>
+            <a 
+              href="https://loveserenespaces.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                color: 'rgba(255,255,255,0.7)',
+                textDecoration: 'none',
+                fontSize: isMobile ? '1.3rem' : '1.5rem',
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: isMobile ? '45px' : '50px',
+                height: isMobile ? '45px' : '50px',
+                borderRadius: '12px',
+                backgroundColor: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.2)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = '#7a6990';
+                e.currentTarget.style.backgroundColor = 'rgba(122, 105, 144, 0.1)';
+                e.currentTarget.style.borderColor = '#7a6990';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'rgba(255,255,255,0.7)';
+                e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+              title="Visit our website at loveserenespaces.com"
+            >
+              🌐
+            </a>
+          </div>
+          <p style={{
+            color: 'rgba(255,255,255,0.6)',
+            fontSize: isMobile ? '0.8rem' : '0.9rem',
+            margin: '0 0 20px 0'
+          }}>
+            @loveserenespaces • loveserenespaces.com
+          </p>
+        </div>
+        
         <p style={{ 
           margin: '0', 
           opacity: '0.8',
           fontSize: isMobile ? '0.9rem' : '1rem'
         }}>
-          © 2024 Serene Spaces. Professional horse blanket cleaning, repairs, and waterproofing services.
+          © 2025 Serene Spaces. Professional horse blanket cleaning, repairs, and waterproofing services.
         </p>
         <p style={{ 
           margin: '16px 0 0', 

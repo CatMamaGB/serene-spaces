@@ -325,24 +325,155 @@ export default function ContactPage() {
                  (555) 123-4567
                </p>
              </div>
-             <div>
-               <p style={{
-                 color: '#7a6990',
-                 fontWeight: '700',
-                 margin: '0 0 0.5rem 0',
-                 fontSize: '1rem'
-               }}>
-                 Email
-               </p>
-               <p style={{
-                 color: '#6b7280',
-                 margin: '0',
-                 fontSize: '1.1rem'
-               }}>
-                 info@serenespaces.com
-               </p>
-             </div>
-           </div>
+                         <div>
+              <p style={{
+                color: '#7a6990',
+                fontWeight: '700',
+                margin: '0 0 0.5rem 0',
+                fontSize: '1rem'
+              }}>
+                Email
+              </p>
+              <p style={{
+                color: '#6b7280',
+                margin: '0',
+                fontSize: '1.1rem'
+              }}>
+                loveserenespaces@gmail.com
+              </p>
+            </div>
+          </div>
+          
+          {/* Social Media Links */}
+          <div style={{
+            marginTop: '2.5rem',
+            paddingTop: '2rem',
+            borderTop: '1px solid #f3f4f6',
+            textAlign: 'center'
+          }}>
+            <p style={{
+              color: '#7a6990',
+              fontWeight: '700',
+              margin: '0 0 1rem 0',
+              fontSize: '1rem'
+            }}>
+              Follow Us
+            </p>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '1rem',
+              marginBottom: '1rem'
+            }}>
+              <a 
+                href="https://instagram.com/loveserenespaces" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{
+                  color: '#7a6990',
+                  textDecoration: 'none',
+                  fontSize: '1.5rem',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '12px',
+                  backgroundColor: '#f8fafc',
+                  border: '2px solid #e2e8f0'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = '#E4405F';
+                  e.currentTarget.style.backgroundColor = 'rgba(228, 64, 95, 0.1)';
+                  e.currentTarget.style.borderColor = '#E4405F';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '#7a6990';
+                  e.currentTarget.style.backgroundColor = '#f8fafc';
+                  e.currentTarget.style.borderColor = '#e2e8f0';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
+                title="Follow us on Instagram @loveserenespaces"
+              >
+                📷
+              </a>
+              <a 
+                href="https://facebook.com/loveserenespaces" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{
+                  color: '#7a6990',
+                  textDecoration: 'none',
+                  fontSize: '1.5rem',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '12px',
+                  backgroundColor: '#f8fafc',
+                  border: '2px solid #e2e8f0'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = '#1877F2';
+                  e.currentTarget.style.backgroundColor = 'rgba(24, 119, 242, 0.1)';
+                  e.currentTarget.style.borderColor = '#1877F2';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '#7a6990';
+                  e.currentTarget.style.backgroundColor = '#f8fafc';
+                  e.currentTarget.style.borderColor = '#e2e8f0';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
+                title="Follow us on Facebook"
+              >
+                📘
+              </a>
+              <a 
+                href="mailto:loveserenespaces@gmail.com"
+                style={{
+                  color: '#7a6990',
+                  textDecoration: 'none',
+                  fontSize: '1.5rem',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '12px',
+                  backgroundColor: '#f8fafc',
+                  border: '2px solid #e2e8f0'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = '#EA4335';
+                  e.currentTarget.style.backgroundColor = 'rgba(234, 67, 53, 0.1)';
+                  e.currentTarget.style.borderColor = '#EA4335';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '#7a6990';
+                  e.currentTarget.style.backgroundColor = '#f8fafc';
+                  e.currentTarget.style.borderColor = '#e2e8f0';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
+                title="Email us directly"
+              >
+                ✉️
+              </a>
+            </div>
+            <p style={{
+              color: '#6b7280',
+              fontSize: '0.9rem',
+              margin: '0'
+            }}>
+              @loveserenespaces • loveserenespaces.com
+            </p>
+          </div>
          </div>
       </div>
     </div>

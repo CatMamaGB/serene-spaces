@@ -1,4 +1,5 @@
 
+'use client';
 
 import Link from 'next/link';
 
@@ -216,10 +217,112 @@ export default function HomePage() {
             </div>
             <div>
               <h4 style={{ fontSize: '1.1rem', marginBottom: '16px' }}>Service Area</h4>
-              <p style={{ color: 'rgba(255,255,255,0.7)', margin: '0' }}>
+              <p style={{ color: 'rgba(255,255,255,0.7)', margin: '0 0 16px 0' }}>
                 Crystal Lake, IL<br />
                 25-mile radius
               </p>
+            </div>
+            <div>
+              <h4 style={{ fontSize: '1.1rem', marginBottom: '16px' }}>Follow Us</h4>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                <a 
+                  href="https://instagram.com/loveserenespaces" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{
+                    color: 'rgba(255,255,255,0.7)',
+                    textDecoration: 'none',
+                    fontSize: '1.5rem',
+                    transition: 'color 0.2s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '8px',
+                    backgroundColor: 'rgba(255,255,255,0.1)',
+                    border: '1px solid rgba(255,255,255,0.2)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = '#E4405F';
+                    e.currentTarget.style.backgroundColor = 'rgba(228, 64, 95, 0.1)';
+                    e.currentTarget.style.borderColor = '#E4405F';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = 'rgba(255,255,255,0.7)';
+                    e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)';
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+                  }}
+                  title="Follow us on Instagram @loveserenespaces"
+                >
+                  📷
+                </a>
+                <a 
+                  href="https://facebook.com/loveserenespaces" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{
+                    color: 'rgba(255,255,255,0.7)',
+                    textDecoration: 'none',
+                    fontSize: '1.5rem',
+                    transition: 'color 0.2s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '8px',
+                    backgroundColor: 'rgba(255,255,255,0.1)',
+                    border: '1px solid rgba(255,255,255,0.2)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = '#1877F2';
+                    e.currentTarget.style.backgroundColor = 'rgba(24, 119, 242, 0.1)';
+                    e.currentTarget.style.borderColor = '#1877F2';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = 'rgba(255,255,255,0.7)';
+                    e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)';
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+                  }}
+                  title="Follow us on Facebook"
+                >
+                  📘
+                </a>
+                <a 
+                  href="mailto:loveserenespaces@gmail.com"
+                  style={{
+                    color: 'rgba(255,255,255,0.7)',
+                    textDecoration: 'none',
+                    fontSize: '1.5rem',
+                    transition: 'color 0.2s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '8px',
+                    backgroundColor: 'rgba(255,255,255,0.1)',
+                    border: '1px solid rgba(255,255,255,0.2)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = '#EA4335';
+                    e.currentTarget.style.backgroundColor = 'rgba(234, 67, 53, 0.1)';
+                    e.currentTarget.style.borderColor = '#EA4335';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = 'rgba(255,255,255,0.7)';
+                    e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)';
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+                  }}
+                  title="Email us at loveserenespaces@gmail.com"
+                >
+                  ✉️
+                </a>
+              </div>
+              <div style={{ marginTop: '12px', fontSize: '0.875rem', color: 'rgba(255,255,255,0.6)' }}>
+                @loveserenespaces
+              </div>
             </div>
           </div>
           <div style={{ borderTop: '1px solid rgba(255,255,255,0.2)', paddingTop: '20px' }}>
