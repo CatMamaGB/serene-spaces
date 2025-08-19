@@ -38,27 +38,6 @@ export default function CreateInvoice() {
       phone: "(555) 123-4567",
       address: "123 Main Street, Portland, OR 97201",
     },
-    {
-      id: "2",
-      name: "Mike Chen",
-      email: "mike.chen@email.com",
-      phone: "(555) 234-5678",
-      address: "456 Oak Avenue, Seattle, WA 98101",
-    },
-    {
-      id: "3",
-      name: "Emily Rodriguez",
-      email: "emily.rodriguez@email.com",
-      phone: "(555) 345-6789",
-      address: "789 Pine Street, San Francisco, CA 94102",
-    },
-    {
-      id: "4",
-      name: "David Wilson",
-      email: "david.wilson@email.com",
-      phone: "(555) 456-7890",
-      address: "321 Elm Street, Denver, CO 80201",
-    },
   ];
 
   const handleInputChange = (
