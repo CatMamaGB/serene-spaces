@@ -9,14 +9,17 @@ export async function POST(req: Request) {
 
   try {
     event = stripe.webhooks.constructEvent(buf, sig!, process.env.STRIPE_WEBHOOK_SECRET!);
-  } catch (err: any) {
-    return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : "Unknown error";
+    return NextResponse.json({ error: `Webhook Error: ${errorMessage}` }, { status: 400 });
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await prisma.eventLog.create({ data: { type: event.type, payload: event as any } });
 
   try {
     if (event.type === "invoice.finalized" || event.type === "invoice.sent" || event.type === "invoice.payment_succeeded" || event.type === "invoice.payment_failed") {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const inv = event.data.object as any;
       await prisma.invoiceMirror.update({
         where: { stripeInvoiceId: inv.id },

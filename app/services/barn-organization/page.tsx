@@ -59,14 +59,6 @@ export default function BarnOrganizationPage() {
             fontWeight: '600',
             transition: 'all 0.2s ease'
           }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#6b5b7a';
-            e.currentTarget.style.transform = 'translateY(-1px)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = '#7a6990';
-            e.currentTarget.style.transform = 'translateY(0)';
-          }}
         >
           Return to Home
         </Link>
