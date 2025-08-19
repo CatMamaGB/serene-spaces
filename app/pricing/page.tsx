@@ -1,3 +1,5 @@
+import Footer from "../../components/Footer";
+
 export default function PricingPage() {
   return (
     <div
@@ -488,6 +490,8 @@ export default function PricingPage() {
           </a>
         </div>
       </section>
+
+      <Footer />
     </div>
   );
 }

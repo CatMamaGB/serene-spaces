@@ -5,35 +5,21 @@ import Link from "next/link";
 interface Customer {
   id: string;
   name: string;
-  email: string;
-  phone: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
+  email: string | null;
+  phone: string | null;
+  addressLine1: string | null;
+  addressLine2: string | null;
+  city: string | null;
+  state: string | null;
+  postalCode: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
-
-  // Mock customer data - in a real app, this would come from an API
-  const mockCustomers: Customer[] = useMemo(
-    () => [
-      {
-        id: "1",
-        name: "Sarah Johnson",
-        email: "sarah.johnson@email.com",
-        phone: "(555) 123-4567",
-        address: "123 Main Street",
-        city: "Portland",
-        state: "OR",
-        zipCode: "97201",
-      }
-    ],
-    [],
-  );
 
   useEffect(() => {
     // Check if mobile
@@ -44,36 +30,30 @@ export default function CustomersPage() {
     checkMobile();
     window.addEventListener("resize", checkMobile);
 
-    // For now, just use mock data directly since the API isn't fully set up
-    setCustomers(mockCustomers);
-    setLoading(false);
-
-    return () => window.removeEventListener("resize", checkMobile);
-
-    // TODO: Uncomment this when the API is properly set up
-    /*
-    fetch('/api/customers')
-      .then(r => {
+    // Fetch customers from API
+    fetch("/api/customers")
+      .then((r) => {
         if (!r.ok) {
           throw new Error(`HTTP error! status: ${r.status}`);
         }
         return r.json();
       })
-      .then(data => {
+      .then((data) => {
         if (Array.isArray(data)) {
           setCustomers(data);
         } else {
-          console.warn('API returned non-array data, using mock data');
-          setCustomers(mockCustomers);
+          console.warn("API returned non-array data:", data);
+          setCustomers([]);
         }
       })
-      .catch(error => {
-        console.error('Error fetching customers, using mock data:', error);
-        setCustomers(mockCustomers);
+      .catch((error) => {
+        console.error("Error fetching customers:", error);
+        setCustomers([]);
       })
       .finally(() => setLoading(false));
-    */
-  }, [mockCustomers]);
+
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const handleDeleteCustomer = (customerId: string) => {
     if (window.confirm("Are you sure you want to delete this customer?")) {
@@ -355,14 +335,20 @@ export default function CustomersPage() {
                       }}
                     >
                       <div style={{ color: "#666" }}>
-                        <strong>Email:</strong> {customer.email}
+                        <strong>Email:</strong> {customer.email || "N/A"}
                       </div>
                       <div style={{ color: "#666" }}>
-                        <strong>Phone:</strong> {customer.phone}
+                        <strong>Phone:</strong> {customer.phone || "N/A"}
                       </div>
                       <div style={{ color: "#666" }}>
-                        <strong>Address:</strong> {customer.address},{" "}
-                        {customer.city}, {customer.state} {customer.zipCode}
+                        <strong>Address:</strong>{" "}
+                        {customer.addressLine1 || "N/A"}
+                        {customer.addressLine2
+                          ? `, ${customer.addressLine2}`
+                          : ""}
+                        {customer.city ? `, ${customer.city}` : ""}
+                        {customer.state ? `, ${customer.state}` : ""}
+                        {customer.postalCode ? ` ${customer.postalCode}` : ""}
                       </div>
                     </div>
                   </div>
@@ -465,7 +451,7 @@ export default function CustomersPage() {
                             fontSize: "0.9rem",
                           }}
                         >
-                          {customer.email}
+                          {customer.email || "N/A"}
                         </td>
                         <td
                           style={{
@@ -474,7 +460,7 @@ export default function CustomersPage() {
                             fontSize: "0.9rem",
                           }}
                         >
-                          {customer.phone}
+                          {customer.phone || "N/A"}
                         </td>
                         <td
                           style={{
@@ -484,10 +470,16 @@ export default function CustomersPage() {
                           }}
                         >
                           <div>
-                            <div>{customer.address}</div>
+                            <div>{customer.addressLine1 || "N/A"}</div>
                             <div style={{ fontSize: "0.8rem", color: "#999" }}>
-                              {customer.city}, {customer.state}{" "}
-                              {customer.zipCode}
+                              {customer.addressLine2
+                                ? `${customer.addressLine2}, `
+                                : ""}
+                              {customer.city ? `${customer.city}, ` : ""}
+                              {customer.state ? `${customer.state} ` : ""}
+                              {customer.postalCode
+                                ? `${customer.postalCode}`
+                                : ""}
                             </div>
                           </div>
                         </td>

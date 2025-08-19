@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Footer from "../../components/Footer";
 
 export default function ServicesPage() {
   return (
@@ -73,6 +74,8 @@ export default function ServicesPage() {
           Return to Home
         </Link>
       </div>
+
+      <Footer />
     </div>
   );
 }

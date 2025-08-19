@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Footer from "../../components/Footer";
 
 export default function IntakePage() {
   const [formData, setFormData] = useState({
@@ -228,6 +229,58 @@ export default function IntakePage() {
               Let us know what services you need and we&apos;ll schedule your
               pickup
             </p>
+          </div>
+
+          {/* Service Area Information */}
+          <div
+            style={{
+              backgroundColor: "#f8fafc",
+              borderTop: "1px solid #e2e8f0",
+              borderBottom: "1px solid #e2e8f0",
+              padding: "30px 40px",
+              textAlign: "center",
+            }}
+          >
+            <div style={{ marginBottom: "16px" }}>
+              <span style={{ fontSize: "2rem" }}>📍</span>
+            </div>
+            <h3
+              style={{
+                color: "#7a6990",
+                fontSize: "1.25rem",
+                marginBottom: "12px",
+                fontWeight: "600",
+              }}
+            >
+              Service Area
+            </h3>
+            <p
+              style={{
+                color: "#6b7280",
+                fontSize: "1rem",
+                margin: "0 0 16px 0",
+                lineHeight: "1.5",
+              }}
+            >
+              We proudly serve the <strong>Crystal Lake, IL</strong> area with a{" "}
+              <strong>25-mile radius</strong> for pickup and delivery services.
+            </p>
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                backgroundColor: "rgba(122, 105, 144, 0.1)",
+                color: "#7a6990",
+                padding: "8px 16px",
+                borderRadius: "20px",
+                fontSize: "0.9rem",
+                fontWeight: "500",
+              }}
+            >
+              <span style={{ fontSize: "1.1rem" }}>🚚</span>
+              Free pickup & delivery within service area
+            </div>
           </div>
 
           {/* Form */}
@@ -756,6 +809,8 @@ export default function IntakePage() {
           </form>
         </div>
       </div>
+
+      <Footer />
     </>
   );
 }

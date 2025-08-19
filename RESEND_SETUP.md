@@ -1,9 +1,11 @@
 # Resend Email Service Setup
 
 ## Overview
+
 This website uses [Resend](https://resend.com) for sending invoice emails to customers. Resend is a modern email API that provides reliable email delivery.
 
 ## Current Configuration
+
 - **API Key**: Currently using a hardcoded key (should be moved to environment variables)
 - **From Email**: `noreply@serenespaces.com` (you'll need to verify this domain)
 - **Reply-To**: `loveserenespaces@gmail.com`
@@ -11,6 +13,7 @@ This website uses [Resend](https://resend.com) for sending invoice emails to cus
 ## Setup Steps
 
 ### 1. Create Environment File
+
 Create a `.env.local` file in your project root with:
 
 ```bash
@@ -24,12 +27,14 @@ DATABASE_URL=your_database_url_here
 ```
 
 ### 2. Get Your Resend API Key
+
 1. Go to [resend.com](https://resend.com) and create an account
 2. Navigate to the API Keys section
 3. Create a new API key
 4. Copy the key and add it to your `.env.local` file
 
 ### 3. Verify Your Domain (Recommended)
+
 To send emails from `noreply@serenespaces.com` instead of the default Resend domain:
 
 1. In your Resend dashboard, go to Domains
@@ -38,6 +43,7 @@ To send emails from `noreply@serenespaces.com` instead of the default Resend dom
 4. Wait for verification (usually takes a few minutes)
 
 ### 4. Test Email Sending
+
 1. Start your development server: `npm run dev`
 2. Go to `/admin/invoices/new`
 3. Fill out an invoice with a valid email address
@@ -47,6 +53,7 @@ To send emails from `noreply@serenespaces.com` instead of the default Resend dom
 ## Email Features
 
 ### Invoice Email Includes:
+
 - Professional HTML formatting
 - Company branding
 - Customer information
@@ -57,6 +64,7 @@ To send emails from `noreply@serenespaces.com` instead of the default Resend dom
 - Contact information
 
 ### Email Styling:
+
 - Responsive design for mobile and desktop
 - Professional color scheme matching your brand
 - Clear payment instructions
@@ -81,6 +89,7 @@ To send emails from `noreply@serenespaces.com` instead of the default Resend dom
    - Include proper email content (not just links)
 
 ### Testing:
+
 - Use your own email address for testing
 - Check both inbox and spam folders
 - Monitor Resend dashboard for delivery status

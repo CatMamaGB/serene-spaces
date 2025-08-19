@@ -61,20 +61,10 @@ export default function NewCustomerPage() {
 
       if (response.ok) {
         setSaved(true);
+        // Redirect to customers list after 1 second
         setTimeout(() => {
-          setSaved(false);
-          setFormData({
-            name: "",
-            email: "",
-            phone: "",
-            addressLine1: "",
-            addressLine2: "",
-            city: "",
-            state: "",
-            postalCode: "",
-            notes: "",
-          });
-        }, 2000);
+          window.location.href = "/admin/customers";
+        }, 1000);
       } else {
         alert("Error saving customer");
       }

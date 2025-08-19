@@ -4,6 +4,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 
+interface ServiceRequest {
+  id: string;
+  status: string;
+  customer: {
+    name: string;
+  };
+  services: string[];
+  createdAt: string;
+}
+
 export default function AdminLayout({
   children,
 }: {
@@ -12,6 +22,8 @@ export default function AdminLayout({
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [pendingRequests, setPendingRequests] = useState<ServiceRequest[]>([]);
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -20,7 +32,32 @@ export default function AdminLayout({
 
     checkMobile();
     window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
+
+    // Fetch pending service requests
+    const fetchPendingRequests = async () => {
+      try {
+        const response = await fetch("/api/service-requests");
+        if (response.ok) {
+          const data = await response.json();
+          const pending = data.filter(
+            (req: ServiceRequest) => req.status === "pending",
+          );
+          setPendingRequests(pending);
+          setPendingCount(pending.length);
+        }
+      } catch (error) {
+        console.error("Error fetching pending requests:", error);
+      }
+    };
+
+    fetchPendingRequests();
+    // Refresh every 5 minutes
+    const interval = setInterval(fetchPendingRequests, 5 * 60 * 1000);
+
+    return () => {
+      window.removeEventListener("resize", checkMobile);
+      clearInterval(interval);
+    };
   }, []);
 
   const isActive = (path: string) => {
@@ -75,6 +112,53 @@ export default function AdminLayout({
             >
               {isMobile ? "Admin" : "Serene Spaces Admin"}
             </Link>
+
+            {/* Pending Requests Display */}
+            {!isMobile && pendingCount > 0 && (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  padding: "0.5rem 1rem",
+                  backgroundColor: "#fef3c7",
+                  border: "1px solid #f59e0b",
+                  borderRadius: "8px",
+                  position: "relative",
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: "0.875rem",
+                    fontWeight: "600",
+                    color: "#92400e",
+                  }}
+                >
+                  {pendingCount} Pending Request{pendingCount !== 1 ? "s" : ""}
+                </span>
+                <Link
+                  href="/admin/service-requests"
+                  style={{
+                    padding: "0.25rem 0.5rem",
+                    backgroundColor: "#f59e0b",
+                    color: "white",
+                    textDecoration: "none",
+                    borderRadius: "4px",
+                    fontSize: "0.75rem",
+                    fontWeight: "500",
+                    transition: "background-color 0.2s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#d97706";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "#f59e0b";
+                  }}
+                >
+                  View
+                </Link>
+              </div>
+            )}
 
             {/* Desktop Admin Navigation */}
             {!isMobile && (
@@ -150,6 +234,29 @@ export default function AdminLayout({
                   }}
                 >
                   Invoices
+                </Link>
+
+                <Link
+                  href="/admin/service-requests"
+                  style={{
+                    padding: "0.5rem 1rem",
+                    borderRadius: "6px",
+                    textDecoration: "none",
+                    fontSize: "0.875rem",
+                    fontWeight: "500",
+                    transition: "all 0.2s ease",
+                    backgroundColor: isActive("/admin/service-requests")
+                      ? "#7a6990"
+                      : "transparent",
+                    color: isActive("/admin/service-requests")
+                      ? "white"
+                      : "#6b7280",
+                    border: isActive("/admin/service-requests")
+                      ? "none"
+                      : "1px solid transparent",
+                  }}
+                >
+                  Service Requests
                 </Link>
               </nav>
             )}
@@ -277,6 +384,46 @@ export default function AdminLayout({
             }}
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Pending Requests for Mobile */}
+            {pendingCount > 0 && (
+              <div
+                style={{
+                  padding: "16px",
+                  backgroundColor: "#fef3c7",
+                  border: "1px solid #f59e0b",
+                  borderRadius: "8px",
+                  marginBottom: "16px",
+                  textAlign: "center",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "1rem",
+                    fontWeight: "600",
+                    color: "#92400e",
+                    marginBottom: "8px",
+                  }}
+                >
+                  {pendingCount} Pending Request{pendingCount !== 1 ? "s" : ""}
+                </div>
+                <Link
+                  href="/admin/service-requests"
+                  style={{
+                    padding: "8px 16px",
+                    backgroundColor: "#f59e0b",
+                    color: "white",
+                    textDecoration: "none",
+                    borderRadius: "6px",
+                    fontSize: "0.9rem",
+                    fontWeight: "500",
+                    display: "inline-block",
+                  }}
+                >
+                  View All
+                </Link>
+              </div>
+            )}
+
             <div
               style={{
                 display: "flex",
@@ -346,6 +493,28 @@ export default function AdminLayout({
                 onClick={closeMobileMenu}
               >
                 Invoices
+              </Link>
+
+              <Link
+                href="/admin/service-requests"
+                style={{
+                  textDecoration: "none",
+                  padding: "16px",
+                  borderRadius: "8px",
+                  fontWeight: "500",
+                  fontSize: "1.1rem",
+                  border: "1px solid #e5e7eb",
+                  transition: "all 0.2s ease",
+                  backgroundColor: isActive("/admin/service-requests")
+                    ? "#7a6990"
+                    : "transparent",
+                  color: isActive("/admin/service-requests")
+                    ? "white"
+                    : "#6b7280",
+                }}
+                onClick={closeMobileMenu}
+              >
+                Service Requests
               </Link>
 
               <Link

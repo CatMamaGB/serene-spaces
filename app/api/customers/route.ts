@@ -24,7 +24,18 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { name, email, phone } = body;
+    const {
+      name,
+      email,
+      phone,
+      addressLine1,
+      addressLine2,
+      city,
+      state,
+      postalCode,
+      notes,
+    } = body;
+
     if (!name)
       return NextResponse.json({ error: "Missing name" }, { status: 400 });
 
@@ -46,7 +57,17 @@ export async function POST(req: Request) {
     }
 
     const customer = await prisma.customer.create({
-      data: { name, email, phone, stripeId },
+      data: {
+        name,
+        email,
+        phone,
+        addressLine1,
+        addressLine2,
+        city,
+        state,
+        postalCode,
+        stripeId,
+      },
     });
     return NextResponse.json(customer);
   } catch (error) {

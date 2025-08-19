@@ -1,15 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { PRICING, PRICE_LABELS, type PriceCode } from "@/lib/pricing";
 
 interface Customer {
   id: string;
   name: string;
-  email: string;
-  phone: string;
-  address: string;
+  email: string | null;
+  phone: string | null;
+  addressLine1: string | null;
+  addressLine2: string | null;
+  city: string | null;
+  state: string | null;
+  postalCode: string | null;
 }
 
 export default function CreateInvoice() {
@@ -29,17 +33,29 @@ export default function CreateInvoice() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock customer data - in a real app, this would come from your customer database
-  const customers: Customer[] = [
-    {
-      id: "1",
-      name: "Sarah Johnson",
-      email: "sarah.johnson@email.com",
-      phone: "(555) 123-4567",
-      address: "123 Main Street, Portland, OR 97201",
-    },
-  ];
+  useEffect(() => {
+    // Fetch customers from API
+    const fetchCustomers = async () => {
+      try {
+        const response = await fetch("/api/customers");
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data)) {
+            setCustomers(data);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching customers:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCustomers();
+  }, []);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -59,9 +75,9 @@ export default function CreateInvoice() {
         setInvoiceData((prev) => ({
           ...prev,
           customerName: customer.name,
-          customerEmail: customer.email,
-          customerPhone: customer.phone,
-          customerAddress: customer.address,
+          customerEmail: customer.email || "",
+          customerPhone: customer.phone || "",
+          customerAddress: `${customer.addressLine1 || ""}${customer.addressLine2 ? `, ${customer.addressLine2}` : ""}${customer.city ? `, ${customer.city}` : ""}${customer.state ? `, ${customer.state}` : ""}${customer.postalCode ? `, ${customer.postalCode}` : ""}`,
         }));
       }
     } else {
@@ -324,11 +340,20 @@ export default function CreateInvoice() {
                     }}
                   >
                     <option value="">Select a customer...</option>
-                    {customers.map((customer) => (
-                      <option key={customer.id} value={customer.id}>
-                        {customer.name} - {customer.email}
+                    {loading ? (
+                      <option value="">Loading customers...</option>
+                    ) : customers.length === 0 ? (
+                      <option value="">
+                        No customers found. Add one in the Customers page.
                       </option>
-                    ))}
+                    ) : (
+                      customers.map((customer) => (
+                        <option key={customer.id} value={customer.id}>
+                          {customer.name} -{" "}
+                          {customer.email || customer.phone || "N/A"}
+                        </option>
+                      ))
+                    )}
                   </select>
                 </div>
               </div>
@@ -830,7 +855,8 @@ export default function CreateInvoice() {
                     lineHeight: "1.5",
                   }}
                 >
-                  Add a personal message to include in the email with the invoice.
+                  Add a personal message to include in the email with the
+                  invoice.
                 </p>
                 <textarea
                   name="emailMessage"
@@ -1338,13 +1364,19 @@ export default function CreateInvoice() {
                   <button
                     type="button"
                     onClick={async () => {
-                      const testEmail = prompt("Enter email address for test email:");
+                      const testEmail = prompt(
+                        "Enter email address for test email:",
+                      );
                       if (testEmail) {
                         try {
-                          const response = await fetch(`/api/invoices/send?email=${encodeURIComponent(testEmail)}`);
+                          const response = await fetch(
+                            `/api/invoices/send?email=${encodeURIComponent(testEmail)}`,
+                          );
                           const result = await response.json();
                           if (response.ok) {
-                            alert(`Test email sent successfully to ${testEmail}!`);
+                            alert(
+                              `Test email sent successfully to ${testEmail}!`,
+                            );
                           } else {
                             alert(`Failed to send test email: ${result.error}`);
                           }

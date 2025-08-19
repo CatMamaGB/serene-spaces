@@ -5,12 +5,15 @@ import Link from "next/link";
 interface Customer {
   id: string;
   name: string;
-  email: string;
-  phone: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
+  email: string | null;
+  phone: string | null;
+  addressLine1: string | null;
+  addressLine2: string | null;
+  city: string | null;
+  state: string | null;
+  postalCode: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface ServiceRequest {
@@ -55,10 +58,13 @@ export default function AdminDashboard() {
         name: "Sarah Johnson",
         email: "sarah.johnson@email.com",
         phone: "(555) 123-4567",
-        address: "123 Main Street",
+        addressLine1: "123 Main Street",
+        addressLine2: null,
         city: "Portland",
         state: "OR",
-        zipCode: "97201",
+        postalCode: "97201",
+        createdAt: "2023-10-20T10:00:00Z",
+        updatedAt: "2023-10-20T10:00:00Z",
       },
     ],
     [],
@@ -169,12 +175,12 @@ export default function AdminDashboard() {
       ["Name", "Email", "Phone", "Address", "City", "State", "ZIP"],
       ...customers.map((customer) => [
         customer.name,
-        customer.email,
-        customer.phone,
-        customer.address,
-        customer.city,
-        customer.state,
-        customer.zipCode,
+        customer.email || "",
+        customer.phone || "",
+        customer.addressLine1 || "",
+        customer.city || "",
+        customer.state || "",
+        customer.postalCode || "",
       ]),
     ]
       .map((row) => row.map((field) => `"${field}"`).join(","))

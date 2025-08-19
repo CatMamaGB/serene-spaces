@@ -96,14 +96,20 @@ export async function GET(req: NextRequest) {
   try {
     // Only allow in development
     if (process.env.NODE_ENV === "production") {
-      return NextResponse.json({ error: "Not available in production" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Not available in production" },
+        { status: 404 },
+      );
     }
 
     const { searchParams } = new URL(req.url);
     const testEmail = searchParams.get("email");
 
     if (!testEmail) {
-      return NextResponse.json({ error: "Email parameter required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Email parameter required" },
+        { status: 400 },
+      );
     }
 
     // Validate Resend API key
@@ -136,7 +142,10 @@ export async function GET(req: NextRequest) {
 
     if (error) {
       console.error("Resend test error:", error);
-      return NextResponse.json({ error: "Failed to send test email" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Failed to send test email" },
+        { status: 500 },
+      );
     }
 
     return NextResponse.json({
@@ -146,7 +155,10 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error("Error sending test email:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 
