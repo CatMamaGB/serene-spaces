@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 
 interface Customer {
@@ -48,7 +48,7 @@ export default function AdminDashboard() {
   const [isMobile, setIsMobile] = useState(false);
 
   // Mock data - in a real app, this would come from APIs
-  const mockCustomers: Customer[] = [
+  const mockCustomers: Customer[] = useMemo(() => [
     {
       id: '1',
       name: 'Sarah Johnson',
@@ -89,14 +89,14 @@ export default function AdminDashboard() {
       state: 'CO',
       zipCode: '80201'
     }
-  ];
+  ], []);
 
-  const mockInvoices: Invoice[] = [
+  const mockInvoices: Invoice[] = useMemo(() => [
     { id: '1', customerName: 'Sarah Johnson', invoiceNumber: 'INV-001', issueDate: '2024-01-15', dueDate: '2024-02-15', total: 245.00, status: 'Paid' },
     { id: '2', customerName: 'Mike Chen', invoiceNumber: 'INV-002', issueDate: '2024-01-14', dueDate: '2024-02-14', total: 180.50, status: 'Pending' },
     { id: '3', customerName: 'Emily Rodriguez', invoiceNumber: 'INV-003', issueDate: '2024-01-13', dueDate: '2024-02-13', total: 320.00, status: 'Paid' },
     { id: '4', customerName: 'David Wilson', invoiceNumber: 'INV-004', issueDate: '2024-01-12', dueDate: '2024-02-12', total: 95.25, status: 'Draft' }
-  ];
+  ], []);
 
   useEffect(() => {
     // Check if mobile
@@ -150,7 +150,7 @@ export default function AdminDashboard() {
     fetchData();
 
     return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  }, [mockCustomers, mockInvoices]);
 
   const stats = {
     totalCustomers: customers.length,

@@ -1,6 +1,6 @@
 'use client';
 
-import { PRICING, PRICE_LABELS, TAX_RATE, type PriceCode } from '@/lib/pricing';
+import { TAX_RATE, type PriceCode } from '@/lib/pricing';
 
 type Customer = { 
   id: string; 

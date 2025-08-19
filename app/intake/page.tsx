@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 
 export default function IntakePage() {
   const [formData, setFormData] = useState({
@@ -123,9 +124,9 @@ export default function IntakePage() {
             marginBottom: '24px',
             lineHeight: '1.6'
           }}>
-            Your service request has been submitted successfully. We'll contact you within 24 hours to confirm your pickup details and discuss your specific needs.
+            Your service request has been submitted successfully. We&apos;ll contact you within 24 hours to confirm your pickup details and discuss your specific needs.
           </p>
-          <a
+          <Link
             href="/"
             style={{
               display: 'inline-block',
@@ -137,15 +138,15 @@ export default function IntakePage() {
               fontWeight: '500',
               transition: 'background-color 0.2s'
             }}
-            onMouseEnter={(e) => {
+            onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => {
               e.currentTarget.style.backgroundColor = '#6b5b7a';
             }}
-            onMouseLeave={(e) => {
+            onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => {
               e.currentTarget.style.backgroundColor = '#7a6990';
             }}
           >
             Return to Home
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -198,7 +199,7 @@ export default function IntakePage() {
             opacity: '0.9',
             lineHeight: '1.6'
           }}>
-            Let us know what services you need and we'll schedule your pickup
+            Let us know what services you need and we&apos;ll schedule your pickup
           </p>
         </div>
 

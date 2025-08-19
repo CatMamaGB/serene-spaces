@@ -240,7 +240,6 @@ export default function AdminLayout({
               <Link
                 href="/admin"
                 style={{
-                  color: '#374151',
                   textDecoration: 'none',
                   padding: '16px',
                   borderRadius: '8px',
@@ -259,7 +258,6 @@ export default function AdminLayout({
               <Link
                 href="/admin/customers"
                 style={{
-                  color: '#374151',
                   textDecoration: 'none',
                   padding: '16px',
                   borderRadius: '8px',
@@ -278,7 +276,6 @@ export default function AdminLayout({
               <Link
                 href="/admin/invoices"
                 style={{
-                  color: '#374151',
                   textDecoration: 'none',
                   padding: '16px',
                   borderRadius: '8px',

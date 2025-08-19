@@ -77,20 +77,7 @@ export default function ServiceRequestsPage() {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return { bg: '#fef3c7', text: '#92400e', border: '#fde68a' };
-      case 'scheduled':
-        return { bg: '#dbeafe', text: '#1e40af', border: '#93c5fd' };
-      case 'completed':
-        return { bg: '#dcfce7', text: '#166534', border: '#bbf7d0' };
-      case 'cancelled':
-        return { bg: '#fee2e2', text: '#991b1b', border: '#fca5a5' };
-      default:
-        return { bg: '#f3f4f6', text: '#374151', border: '#d1d5db' };
-    }
-  };
+
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {

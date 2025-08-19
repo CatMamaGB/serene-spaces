@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 
 interface Customer {
@@ -19,7 +19,7 @@ export default function CustomersPage() {
   const [isMobile, setIsMobile] = useState(false);
 
   // Mock customer data - in a real app, this would come from an API
-  const mockCustomers: Customer[] = [
+  const mockCustomers: Customer[] = useMemo(() => [
     {
       id: '1',
       name: 'Sarah Johnson',
@@ -60,7 +60,7 @@ export default function CustomersPage() {
       state: 'CO',
       zipCode: '80201'
     }
-  ];
+  ], []);
 
   useEffect(() => {
     // Check if mobile
@@ -100,7 +100,7 @@ export default function CustomersPage() {
       })
       .finally(() => setLoading(false));
     */
-  }, []);
+  }, [mockCustomers]);
 
   const handleDeleteCustomer = (customerId: string) => {
     if (window.confirm('Are you sure you want to delete this customer?')) {

@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 
 type Invoice = {
@@ -27,7 +27,7 @@ type InvoiceItem = {
 
 export default function InvoiceDetailPage() {
   const params = useParams();
-  const router = useRouter();
+
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);

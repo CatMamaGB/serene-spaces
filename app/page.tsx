@@ -1,3 +1,7 @@
+
+
+import Link from 'next/link';
+
 export default function HomePage() {
   return (
     <div style={{ 
@@ -33,7 +37,7 @@ export default function HomePage() {
             opacity: '0.8',
             lineHeight: '1.6'
           }}>
-            We'll clean and repair your horse's essentials — quickly and reliably. From blankets to boots, Serene Spaces makes it easy with local pick-up & delivery.
+                            We&apos;ll clean and repair your horse&apos;s essentials — quickly and reliably. From blankets to boots, Serene Spaces makes it easy with local pick-up & delivery.
           </p>
           <a 
             href="/intake" 
@@ -196,7 +200,7 @@ export default function HomePage() {
             <div>
               <h4 style={{ fontSize: '1.1rem', marginBottom: '16px' }}>Quick Links</h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <a href="/" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none' }}>Home</a>
+                <Link href="/" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none' }}>Home</Link>
                 <a href="/pricing" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none' }}>Pricing</a>
                 <a href="/intake" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none' }}>Schedule Service</a>
                 <a href="/contact" style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none' }}>Contact</a>
