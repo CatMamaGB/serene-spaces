@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { PRICING, PRICE_LABELS, type PriceCode } from '@/lib/pricing';
 
 
 
@@ -27,6 +28,7 @@ export default function CreateInvoice() {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
 
   // Mock customer data - in a real app, this would come from your customer database
@@ -153,6 +155,48 @@ export default function CreateInvoice() {
     setIsSubmitting(false);
     // Here you would typically save the invoice and redirect
     alert('Invoice created successfully!');
+  };
+
+  const handleSendEmail = async () => {
+    if (!invoiceData.customerEmail) {
+      alert('Please enter a customer email address to send the invoice.');
+      return;
+    }
+
+    if (invoiceData.items.length === 0 || invoiceData.items[0].description === '') {
+      alert('Please add at least one item to the invoice before sending.');
+      return;
+    }
+
+    setIsSendingEmail(true);
+    
+    try {
+      const response = await fetch('/api/invoices/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...invoiceData,
+          subtotal: calculateSubtotal(),
+          tax: calculateTax(),
+          total: calculateTotal()
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert(`Invoice sent successfully to ${invoiceData.customerEmail}!`);
+      } else {
+        alert(`Failed to send invoice: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Error sending invoice:', error);
+      alert('Failed to send invoice. Please try again.');
+    } finally {
+      setIsSendingEmail(false);
+    }
   };
 
   return (
@@ -434,6 +478,81 @@ export default function CreateInvoice() {
                 </div>
               </div>
 
+              {/* Quick Add Services */}
+              <div style={{
+                backgroundColor: 'white',
+                borderRadius: '0.75rem',
+                border: '1px solid #e2e8f0',
+                padding: '1.5rem',
+                marginBottom: '1.5rem'
+              }}>
+                <h2 style={{
+                  color: '#1e293b',
+                  fontSize: '1.25rem',
+                  fontWeight: '600',
+                  marginBottom: '1rem'
+                }}>
+                  Quick Add Services
+                </h2>
+                
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                  gap: '0.5rem',
+                  marginBottom: '1rem'
+                }}>
+                  {Object.entries(PRICING).map(([code, price]) => (
+                    <button
+                      key={code}
+                      type="button"
+                      onClick={() => {
+                        const newItem = {
+                          description: PRICE_LABELS[code as PriceCode],
+                          quantity: 1,
+                          rate: price,
+                          amount: price
+                        };
+                        setInvoiceData(prev => ({
+                          ...prev,
+                          items: [...prev.items, newItem]
+                        }));
+                      }}
+                      style={{
+                        backgroundColor: '#f8fafc',
+                        color: '#374151',
+                        border: '1px solid #e5e7eb',
+                        padding: '0.5rem',
+                        borderRadius: '0.375rem',
+                        fontSize: '0.75rem',
+                        fontWeight: '500',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        textAlign: 'center'
+                      }}
+
+                    >
+                      <div style={{ fontWeight: '600', marginBottom: '0.125rem' }}>
+                        {PRICE_LABELS[code as PriceCode]}
+                      </div>
+                      <div style={{ fontSize: '0.625rem', opacity: '0.8' }}>
+                        ${price.toFixed(2)}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                
+                <div style={{
+                  backgroundColor: '#f0f9ff',
+                  border: '1px solid #0ea5e9',
+                  borderRadius: '0.5rem',
+                  padding: '1rem',
+                  fontSize: '0.875rem',
+                  color: '#0c4a6e'
+                }}>
+                  <strong>Note:</strong> Wraps and boots are $5 each. Click any service above to add it to your invoice.
+                </div>
+              </div>
+
               {/* Invoice Items */}
               <div style={{
                 backgroundColor: 'white',
@@ -470,12 +589,7 @@ export default function CreateInvoice() {
                       cursor: 'pointer',
                       transition: 'background-color 0.2s ease'
                     }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#6b5b7a';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#7a6990';
-                    }}
+
                   >
                     + Add Item
                   </button>
