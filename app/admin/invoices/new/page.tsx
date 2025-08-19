@@ -149,12 +149,21 @@ export default function CreateInvoice() {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    setIsSubmitting(false);
-    // Here you would typically save the invoice and redirect
-    alert('Invoice created successfully!');
+    try {
+      // Simulate form submission - in a real app, this would save to your database
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Generate a mock invoice ID for demo purposes
+      const mockInvoiceId = 'INV-' + Date.now();
+      
+      // Redirect to the invoice view page
+      window.location.href = `/admin/invoices/${mockInvoiceId}`;
+    } catch (error) {
+      console.error('Error creating invoice:', error);
+      alert('Failed to create invoice. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleSendEmail = async () => {
@@ -976,23 +985,32 @@ export default function CreateInvoice() {
                       cursor: isSubmitting ? 'not-allowed' : 'pointer',
                       transition: 'all 0.2s ease'
                     }}
-                    onMouseEnter={(e) => {
-                      if (!isSubmitting) {
-                        e.currentTarget.style.backgroundColor = '#6b5b7a';
-                        e.currentTarget.style.transform = 'translateY(-1px)';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isSubmitting) {
-                        e.currentTarget.style.backgroundColor = '#7a6990';
-                        e.currentTarget.style.transform = 'translateY(0)';
-                      }
-                    }}
-                  >
-                    {isSubmitting ? 'Creating...' : 'Create Invoice'}
-                  </button>
-                  
-                  <button
+                    
+                                     >
+                     {isSubmitting ? 'Creating...' : 'Create Invoice'}
+                   </button>
+                   
+                   <button
+                     type="button"
+                     onClick={handleSendEmail}
+                     disabled={isSendingEmail || !invoiceData.customerEmail || invoiceData.items.length === 0 || invoiceData.items[0].description === ''}
+                     style={{
+                       backgroundColor: isSendingEmail || !invoiceData.customerEmail || invoiceData.items.length === 0 || invoiceData.items[0].description === '' ? '#9ca3af' : '#10b981',
+                       color: 'white',
+                       border: 'none',
+                       padding: '0.75rem 1.5rem',
+                       borderRadius: '0.5rem',
+                       fontSize: '0.875rem',
+                       fontWeight: '600',
+                       cursor: isSendingEmail || !invoiceData.customerEmail || invoiceData.items.length === 0 || invoiceData.items[0].description === '' ? 'not-allowed' : 'pointer',
+                       transition: 'all 0.2s ease'
+                     }}
+
+                   >
+                     {isSendingEmail ? 'Sending...' : '📧 Send Invoice'}
+                   </button>
+                   
+                   <button
                     type="button"
                     style={{
                       backgroundColor: 'transparent',
@@ -1005,14 +1023,7 @@ export default function CreateInvoice() {
                       cursor: 'pointer',
                       transition: 'all 0.2s ease'
                     }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#7a6990';
-                      e.currentTarget.style.color = 'white';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                      e.currentTarget.style.color = '#7a6990';
-                    }}
+                    
                   >
                     Save as Draft
                   </button>

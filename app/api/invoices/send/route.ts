@@ -18,7 +18,8 @@ export async function POST(req: NextRequest) {
       terms,
       subtotal,
       tax,
-      total 
+      total,
+      emailMessage 
     } = body;
 
     // Validate required fields
@@ -42,7 +43,8 @@ export async function POST(req: NextRequest) {
       terms,
       subtotal,
       tax,
-      total
+      total,
+      emailMessage
     });
 
     // Send email
@@ -77,6 +79,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function generateInvoiceHtml(invoiceData: any) {
   const {
     customerName,
@@ -90,7 +93,8 @@ function generateInvoiceHtml(invoiceData: any) {
     terms,
     subtotal,
     tax,
-    total
+    total,
+    emailMessage
   } = invoiceData;
 
   return `
@@ -124,6 +128,13 @@ function generateInvoiceHtml(invoiceData: any) {
           <div>Professional Equestrian Cleaning Services</div>
         </div>
         
+        ${emailMessage ? `
+        <div style="background-color: #f0f9ff; border: 2px solid #0ea5e9; border-radius: 10px; padding: 20px; margin: 20px 0; text-align: center;">
+          <div style="font-size: 18px; font-weight: bold; color: #0c4a6e; margin-bottom: 10px;">📧 Personal Message</div>
+          <div style="font-size: 16px; color: #0c4a6e; line-height: 1.6;">${emailMessage}</div>
+        </div>
+        ` : ''}
+        
         <div class="invoice-details">
           <div class="customer-info">
             <h3>Bill To:</h3>
@@ -149,7 +160,8 @@ function generateInvoiceHtml(invoiceData: any) {
             </tr>
           </thead>
           <tbody>
-            ${items.map((item: any) => `
+            ${/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+            items.map((item: any) => `
               <tr>
                 <td>${item.description}</td>
                 <td>${item.quantity}</td>

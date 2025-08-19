@@ -1,564 +1,594 @@
 'use client';
-import { useEffect, useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 
-type Invoice = {
-  id: string;
-  customerName: string;
-  invoiceNumber: string;
-  issueDate: string;
-  dueDate: string;
-  total: number;
-  status: string;
-  hostedUrl?: string;
-  pdfUrl?: string;
-  items?: InvoiceItem[];
-  notes?: string;
-};
-
-type InvoiceItem = {
-  id: string;
+interface InvoiceItem {
   description: string;
   quantity: number;
-  unitPrice: number;
+  rate: number;
+  amount: number;
+}
+
+interface Invoice {
+  id: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  customerAddress: string;
+  invoiceDate: string;
+  dueDate: string;
+  items: InvoiceItem[];
+  notes: string;
+  terms: string;
+  subtotal: number;
+  tax: number;
   total: number;
-};
+}
 
-export default function InvoiceDetailPage() {
+export default function ViewInvoice() {
   const params = useParams();
-
   const [invoice, setInvoice] = useState<Invoice | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
+  const [showSendModal, setShowSendModal] = useState(false);
+  const [emailMessage, setEmailMessage] = useState('');
+  const [sendToEmail, setSendToEmail] = useState('');
 
   useEffect(() => {
-    // Check if mobile
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    // Mock data for now - in a real app, this would come from an API
+    // For demo purposes, create a mock invoice
+    // In a real app, you'd fetch this from your API
     const mockInvoice: Invoice = {
       id: params.id as string,
       customerName: 'Sarah Johnson',
-      invoiceNumber: 'INV-001',
-      issueDate: '2024-01-15',
-      dueDate: '2024-02-14',
-      total: 24500, // $245.00 in cents
-      status: 'open',
-      notes: 'Barn organization and blanket cleaning services completed.',
+      customerEmail: 'sarah.johnson@email.com',
+      customerPhone: '(555) 123-4567',
+      customerAddress: '123 Main Street, Portland, OR 97201',
+      invoiceDate: '2024-01-15',
+      dueDate: '2024-02-15',
       items: [
-        {
-          id: '1',
-          description: 'Barn Organization & Cleanup',
-          quantity: 1,
-          unitPrice: 15000, // $150.00
-          total: 15000
-        },
-        {
-          id: '2',
-          description: 'Blanket Cleaning & Repair',
-          quantity: 3,
-          unitPrice: 2500, // $25.00
-          total: 7500
-        },
-        {
-          id: '3',
-          description: 'Wraps & Boots',
-          quantity: 4,
-          unitPrice: 500, // $5.00
-          total: 2000
-        }
-      ]
+        { description: 'Blanket (with fill)', quantity: 2, rate: 25, amount: 50 },
+        { description: 'Wraps', quantity: 1, rate: 5, amount: 5 },
+        { description: 'Boots', quantity: 1, rate: 5, amount: 5 }
+      ],
+      notes: 'Please pickup on Monday between 9-11 AM',
+      terms: 'Payment due within 30 days',
+      subtotal: 60,
+      tax: 4.80,
+      total: 64.80
     };
 
-    // Simulate API call
-    setTimeout(() => {
-      setInvoice(mockInvoice);
-      setLoading(false);
-    }, 500);
-
-    return () => window.removeEventListener('resize', checkMobile);
+    setInvoice(mockInvoice);
+    setSendToEmail(mockInvoice.customerEmail);
+    setIsLoading(false);
   }, [params.id]);
 
-  const formatCurrency = (cents: number) => {
-    return `$${(cents / 100).toFixed(2)}`;
-  };
+  const handleSendInvoice = async () => {
+    if (!invoice || !sendToEmail) return;
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
+    setIsSending(true);
+    
+    try {
+      const response = await fetch('/api/invoices/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...invoice,
+          customerEmail: sendToEmail,
+          emailMessage: emailMessage
+        }),
+      });
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'paid':
-        return { bg: '#dcfce7', text: '#166534', border: '#bbf7d0' };
-      case 'open':
-        return { bg: '#dbeafe', text: '#1e40af', border: '#93c5fd' };
-      case 'draft':
-        return { bg: '#f3f4f6', text: '#374151', border: '#d1d5db' };
-      case 'void':
-        return { bg: '#fee2e2', text: '#991b1b', border: '#fca5a5' };
-      default:
-        return { bg: '#f3f4f6', text: '#374151', border: '#d1d5db' };
+      const result = await response.json();
+
+      if (response.ok) {
+        alert(`Invoice sent successfully to ${sendToEmail}!`);
+        setShowSendModal(false);
+        setEmailMessage('');
+      } else {
+        alert(`Failed to send invoice: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Error sending invoice:', error);
+      alert('Failed to send invoice. Please try again.');
+    } finally {
+      setIsSending(false);
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div style={{ 
-        padding: isMobile ? '16px' : '24px',
-        backgroundColor: '#f5f5f5',
-        minHeight: '100vh'
-      }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', padding: isMobile ? '40px' : '60px' }}>
-            <div style={{ fontSize: isMobile ? '1rem' : '1.2rem', color: '#666' }}>Loading invoice...</div>
-          </div>
-        </div>
+      <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <div>Loading invoice...</div>
       </div>
     );
   }
 
   if (!invoice) {
     return (
-      <div style={{ 
-        padding: isMobile ? '16px' : '24px',
-        backgroundColor: '#f5f5f5',
-        minHeight: '100vh'
-      }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', padding: isMobile ? '40px' : '60px' }}>
-            <div style={{ fontSize: isMobile ? '1rem' : '1.2rem', color: '#666' }}>Invoice not found</div>
-            <Link
-              href="/admin/invoices"
-              style={{
-                display: 'inline-block',
-                marginTop: '20px',
-                padding: '12px 24px',
-                backgroundColor: '#7a6990',
-                color: 'white',
-                textDecoration: 'none',
-                borderRadius: '8px',
-                fontSize: '1rem',
-                fontWeight: '600'
-              }}
-            >
-              Back to Invoices
-            </Link>
-          </div>
-        </div>
+      <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <div>Invoice not found</div>
+        <Link href="/admin/invoices" style={{ color: '#7a6990', textDecoration: 'none' }}>
+          ← Back to Invoices
+        </Link>
       </div>
     );
   }
 
   return (
-    <div style={{ 
-      padding: isMobile ? '16px' : '24px',
-      backgroundColor: '#f5f5f5',
-      minHeight: '100vh'
+    <div style={{
+      minHeight: '100vh',
+      backgroundColor: '#f8fafc',
+      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif'
     }}>
-      <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-        {/* Page Header */}
+      {/* Header */}
+      <header style={{
+        backgroundColor: 'white',
+        borderBottom: '1px solid #e2e8f0',
+        padding: '1rem 2rem'
+      }}>
         <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '32px',
-          flexDirection: isMobile ? 'column' : 'row',
-          gap: isMobile ? '1rem' : '0'
+          alignItems: 'center'
         }}>
-          <div style={{ textAlign: isMobile ? 'center' : 'left' }}>
-            <h1 style={{
-              fontSize: isMobile ? '1.5rem' : '2rem',
-              margin: '0',
-              color: '#1a1a1a'
-            }}>
-              Invoice Details
-            </h1>
-            <p style={{
-              color: '#666',
-              margin: '8px 0 0 0',
-              fontSize: isMobile ? '0.9rem' : '1rem'
-            }}>
-              {invoice.invoiceNumber}
-            </p>
-          </div>
           <div style={{
             display: 'flex',
-            gap: '12px',
-            flexDirection: isMobile ? 'column' : 'row'
+            alignItems: 'center',
+            gap: '1rem'
           }}>
-            <Link
-              href={`/admin/invoices/${invoice.id}/edit`}
-              style={{
-                padding: isMobile ? '12px 20px' : '10px 20px',
-                backgroundColor: '#007bff',
-                color: 'white',
-                textDecoration: 'none',
-                borderRadius: '8px',
-                fontSize: isMobile ? '0.9rem' : '0.875rem',
-                fontWeight: '600',
-                textAlign: 'center',
-                width: isMobile ? '100%' : 'auto'
-              }}
-            >
-              Edit Invoice
-            </Link>
             <Link
               href="/admin/invoices"
               style={{
-                padding: isMobile ? '12px 20px' : '10px 20px',
-                backgroundColor: 'transparent',
                 color: '#7a6990',
                 textDecoration: 'none',
-                borderRadius: '8px',
-                fontSize: isMobile ? '0.9rem' : '0.875rem',
-                fontWeight: '600',
-                border: '2px solid #7a6990',
-                textAlign: 'center',
-                width: isMobile ? '100%' : 'auto'
+                fontSize: '0.875rem',
+                fontWeight: '500'
               }}
             >
-              Back to Invoices
+              ← Back to Invoices
+            </Link>
+            <h1 style={{
+              color: '#1e293b',
+              fontSize: '1.875rem',
+              fontWeight: '700',
+              margin: 0
+            }}>
+              Invoice #{invoice.id}
+            </h1>
+          </div>
+          
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <button
+              onClick={() => setShowSendModal(true)}
+              style={{
+                backgroundColor: '#10b981',
+                color: 'white',
+                border: 'none',
+                padding: '0.75rem 1.5rem',
+                borderRadius: '0.5rem',
+                fontSize: '0.875rem',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              📧 Send Invoice
+            </button>
+            
+            <Link
+              href={`/admin/invoices/${invoice.id}/edit`}
+              style={{
+                backgroundColor: '#7a6990',
+                color: 'white',
+                border: 'none',
+                padding: '0.75rem 1.5rem',
+                borderRadius: '0.5rem',
+                fontSize: '0.875rem',
+                fontWeight: '600',
+                textDecoration: 'none',
+                display: 'inline-block',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              ✏️ Edit Invoice
             </Link>
           </div>
         </div>
+      </header>
 
-        {/* Invoice Information */}
+      <div style={{
+        maxWidth: '800px',
+        margin: '0 auto',
+        padding: '2rem'
+      }}>
+        {/* Invoice Display */}
         <div style={{
           backgroundColor: 'white',
-          borderRadius: '16px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-          border: '1px solid #e9ecef',
-          overflow: 'hidden',
-          marginBottom: '24px'
+          borderRadius: '0.75rem',
+          border: '1px solid #e2e8f0',
+          padding: '2rem',
+          marginBottom: '2rem'
         }}>
+          {/* Company Header */}
           <div style={{
-            padding: isMobile ? '16px' : '24px',
-            borderBottom: '1px solid #e9ecef',
-            backgroundColor: '#f8f9fa'
+            textAlign: 'center',
+            marginBottom: '2rem',
+            borderBottom: '2px solid #7a6990',
+            paddingBottom: '1rem'
           }}>
-            <h2 style={{
-              fontSize: isMobile ? '1.25rem' : '1.5rem',
-              margin: '0',
-              color: '#1a1a1a'
+            <h1 style={{
+              color: '#7a6990',
+              fontSize: '2.5rem',
+              fontWeight: 'bold',
+              margin: '0 0 0.5rem 0'
             }}>
-              Invoice Information
-            </h2>
-          </div>
-          
-          <div style={{ padding: isMobile ? '16px' : '24px' }}>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-              gap: isMobile ? '16px' : '24px',
-              marginBottom: '24px'
+              Serene Spaces
+            </h1>
+            <p style={{
+              color: '#64748b',
+              fontSize: '1.125rem',
+              margin: 0
             }}>
-              <div>
-                <h3 style={{
-                  fontSize: '1.1rem',
-                  margin: '0 0 12px 0',
-                  color: '#7a6990',
-                  fontWeight: '600'
-                }}>
-                  Customer Details
-                </h3>
-                <p style={{
-                  margin: '8px 0',
-                  fontSize: '1rem',
-                  color: '#1a1a1a',
-                  fontWeight: '500'
-                }}>
-                  {invoice.customerName}
-                </p>
-              </div>
-              
-              <div>
-                <h3 style={{
-                  fontSize: '1.1rem',
-                  margin: '0 0 12px 0',
-                  color: '#7a6990',
-                  fontWeight: '600'
-                }}>
-                  Invoice Details
-                </h3>
-                <div style={{
-                  display: 'grid',
-                  gap: '8px'
-                }}>
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between'
-                  }}>
-                    <span style={{ color: '#666' }}>Issue Date:</span>
-                    <span style={{ color: '#1a1a1a', fontWeight: '500' }}>
-                      {formatDate(invoice.issueDate)}
-                    </span>
-                  </div>
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between'
-                  }}>
-                    <span style={{ color: '#666' }}>Due Date:</span>
-                    <span style={{ color: '#1a1a1a', fontWeight: '500' }}>
-                      {formatDate(invoice.dueDate)}
-                    </span>
-                  </div>
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between'
-                  }}>
-                    <span style={{ color: '#666' }}>Status:</span>
-                    <span style={{
-                      padding: '4px 12px',
-                      borderRadius: '16px',
-                      fontSize: '0.8rem',
-                      fontWeight: '600',
-                      color: getStatusColor(invoice.status).text,
-                      backgroundColor: getStatusColor(invoice.status).bg,
-                      border: `1px solid ${getStatusColor(invoice.status).border}`
-                    }}>
-                      {invoice.status}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
+              Professional Equestrian Cleaning Services
+            </p>
           </div>
-        </div>
 
-        {/* Invoice Items */}
-        {invoice.items && invoice.items.length > 0 && (
+          {/* Invoice Details */}
           <div style={{
-            backgroundColor: 'white',
-            borderRadius: '16px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-            border: '1px solid #e9ecef',
-            overflow: 'hidden',
-            marginBottom: '24px'
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '2rem',
+            marginBottom: '2rem'
           }}>
-            <div style={{
-              padding: isMobile ? '16px' : '24px',
-              borderBottom: '1px solid #e9ecef',
-              backgroundColor: '#f8f9fa'
-            }}>
-              <h2 style={{
-                fontSize: isMobile ? '1.25rem' : '1.5rem',
-                margin: '0',
-                color: '#1a1a1a'
+            <div>
+              <h3 style={{
+                color: '#374151',
+                fontSize: '1.125rem',
+                fontWeight: '600',
+                marginBottom: '0.75rem'
               }}>
-                Invoice Items
-              </h2>
-            </div>
-            
-            <div style={{ padding: isMobile ? '0' : '0' }}>
-              {isMobile ? (
-                // Mobile card layout
-                <div style={{ padding: '16px' }}>
-                  {invoice.items.map((item, index) => (
-                    <div key={item.id} style={{
-                      border: '1px solid #e9ecef',
-                      borderRadius: '8px',
-                      padding: '16px',
-                      marginBottom: index < invoice.items!.length - 1 ? '12px' : '0',
-                      backgroundColor: '#fafbfc'
-                    }}>
-                      <div style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'flex-start',
-                        marginBottom: '8px'
-                      }}>
-                        <h4 style={{
-                          margin: '0',
-                          fontSize: '1rem',
-                          color: '#1a1a1a',
-                          fontWeight: '600'
-                        }}>
-                          {item.description}
-                        </h4>
-                        <span style={{
-                          fontSize: '1rem',
-                          color: '#1a1a1a',
-                          fontWeight: '600'
-                        }}>
-                          {formatCurrency(item.total)}
-                        </span>
-                      </div>
-                      <div style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        color: '#666',
-                        fontSize: '0.9rem'
-                      }}>
-                        <span>Qty: {item.quantity}</span>
-                        <span>@ {formatCurrency(item.unitPrice)}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                // Desktop table layout
-                <table style={{
-                  width: '100%',
-                  borderCollapse: 'collapse'
-                }}>
-                  <thead>
-                    <tr style={{ backgroundColor: '#f8f9fa' }}>
-                      <th style={{
-                        padding: '16px',
-                        textAlign: 'left',
-                        borderBottom: '1px solid #e9ecef',
-                        color: '#1a1a1a',
-                        fontWeight: '600',
-                        fontSize: '0.9rem'
-                      }}>
-                        Description
-                      </th>
-                      <th style={{
-                        padding: '16px',
-                        textAlign: 'center',
-                        borderBottom: '1px solid #e9ecef',
-                        color: '#1a1a1a',
-                        fontWeight: '600',
-                        fontSize: '0.9rem'
-                      }}>
-                        Quantity
-                      </th>
-                      <th style={{
-                        padding: '16px',
-                        textAlign: 'right',
-                        borderBottom: '1px solid #e9ecef',
-                        color: '#1a1a1a',
-                        fontWeight: '600',
-                        fontSize: '0.9rem'
-                      }}>
-                        Unit Price
-                      </th>
-                      <th style={{
-                        padding: '16px',
-                        textAlign: 'right',
-                        borderBottom: '1px solid #e9ecef',
-                        color: '#1a1a1a',
-                        fontWeight: '600',
-                        fontSize: '0.9rem'
-                      }}>
-                        Total
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {invoice.items.map((item) => (
-                      <tr key={item.id} style={{
-                        borderBottom: '1px solid #f0f0f0'
-                      }}>
-                        <td style={{
-                          padding: '16px',
-                          color: '#1a1a1a',
-                          fontWeight: '500'
-                        }}>
-                          {item.description}
-                        </td>
-                        <td style={{
-                          padding: '16px',
-                          textAlign: 'center',
-                          color: '#666'
-                        }}>
-                          {item.quantity}
-                        </td>
-                        <td style={{
-                          padding: '16px',
-                          textAlign: 'right',
-                          color: '#666'
-                        }}>
-                          {formatCurrency(item.unitPrice)}
-                        </td>
-                        <td style={{
-                          padding: '16px',
-                          textAlign: 'right',
-                          color: '#1a1a1a',
-                          fontWeight: '600'
-                        }}>
-                          {formatCurrency(item.total)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                Bill To:
+              </h3>
+              <p style={{ margin: '0.25rem 0', color: '#1f2937' }}>
+                <strong>{invoice.customerName}</strong>
+              </p>
+              {invoice.customerEmail && (
+                <p style={{ margin: '0.25rem 0', color: '#1f2937' }}>
+                  {invoice.customerEmail}
+                </p>
+              )}
+              {invoice.customerPhone && (
+                <p style={{ margin: '0.25rem 0', color: '#1f2937' }}>
+                  {invoice.customerPhone}
+                </p>
+              )}
+              {invoice.customerAddress && (
+                <p style={{ margin: '0.25rem 0', color: '#1f2937' }}>
+                  {invoice.customerAddress}
+                </p>
               )}
             </div>
-          </div>
-        )}
-
-        {/* Invoice Total */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '16px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-          border: '1px solid #e9ecef',
-          padding: isMobile ? '20px' : '24px'
-        }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '16px 0',
-            borderTop: '1px solid #e9ecef'
-          }}>
-            <h3 style={{
-              fontSize: '1.25rem',
-              margin: '0',
-              color: '#1a1a1a',
-              fontWeight: '600'
-            }}>
-              Total Amount
-            </h3>
-            <span style={{
-              fontSize: '1.5rem',
-              color: '#7a6990',
-              fontWeight: '700'
-            }}>
-              {formatCurrency(invoice.total)}
-            </span>
-          </div>
-          
-          {invoice.notes && (
-            <div style={{
-              marginTop: '20px',
-              padding: '16px',
-              backgroundColor: '#f8f9fa',
-              borderRadius: '8px',
-              border: '1px solid #e9ecef'
-            }}>
-              <h4 style={{
-                fontSize: '1rem',
-                margin: '0 0 8px 0',
-                color: '#1a1a1a',
-                fontWeight: '600'
+            
+            <div style={{ textAlign: 'right' }}>
+              <h3 style={{
+                color: '#374151',
+                fontSize: '1.125rem',
+                fontWeight: '600',
+                marginBottom: '0.75rem'
               }}>
-                Notes
-              </h4>
-              <p style={{
-                margin: '0',
-                color: '#666',
-                fontSize: '0.9rem',
-                lineHeight: '1.5'
-              }}>
-                {invoice.notes}
+                Invoice Details:
+              </h3>
+              <p style={{ margin: '0.25rem 0', color: '#1f2937' }}>
+                <strong>Date:</strong> {new Date(invoice.invoiceDate).toLocaleDateString()}
               </p>
+              {invoice.dueDate && (
+                <p style={{ margin: '0.25rem 0', color: '#1f2937' }}>
+                  <strong>Due Date:</strong> {new Date(invoice.dueDate).toLocaleDateString()}
+                </p>
+              )}
+              <p style={{ margin: '0.25rem 0', color: '#1f2937' }}>
+                <strong>Invoice #:</strong> {invoice.id}
+              </p>
+            </div>
+          </div>
+
+          {/* Items Table */}
+          <div style={{ marginBottom: '2rem' }}>
+            <table style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+              border: '1px solid #e2e8f0'
+            }}>
+              <thead>
+                <tr style={{ backgroundColor: '#f8fafc' }}>
+                  <th style={{
+                    padding: '1rem',
+                    textAlign: 'left',
+                    borderBottom: '1px solid #e2e8f0',
+                    fontWeight: '600',
+                    color: '#374151'
+                  }}>
+                    Description
+                  </th>
+                  <th style={{
+                    padding: '1rem',
+                    textAlign: 'center',
+                    borderBottom: '1px solid #e2e8f0',
+                    fontWeight: '600',
+                    color: '#374151'
+                  }}>
+                    Qty
+                  </th>
+                  <th style={{
+                    padding: '1rem',
+                    textAlign: 'right',
+                    borderBottom: '1px solid #e2e8f0',
+                    fontWeight: '600',
+                    color: '#374151'
+                  }}>
+                    Rate
+                  </th>
+                  <th style={{
+                    padding: '1rem',
+                    textAlign: 'right',
+                    borderBottom: '1px solid #e2e8f0',
+                    fontWeight: '600',
+                    color: '#374151'
+                  }}>
+                    Amount
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {invoice.items.map((item, index) => (
+                  <tr key={index} style={{
+                    borderBottom: '1px solid #f1f5f9'
+                  }}>
+                    <td style={{
+                      padding: '1rem',
+                      color: '#1f2937'
+                    }}>
+                      {item.description}
+                    </td>
+                    <td style={{
+                      padding: '1rem',
+                      textAlign: 'center',
+                      color: '#1f2937'
+                    }}>
+                      {item.quantity}
+                    </td>
+                    <td style={{
+                      padding: '1rem',
+                      textAlign: 'right',
+                      color: '#1f2937'
+                    }}>
+                      ${item.rate.toFixed(2)}
+                    </td>
+                    <td style={{
+                      padding: '1rem',
+                      textAlign: 'right',
+                      color: '#1f2937'
+                    }}>
+                      ${item.amount.toFixed(2)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Totals */}
+          <div style={{
+            textAlign: 'right',
+            marginBottom: '2rem'
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              marginBottom: '0.5rem',
+              fontSize: '1rem',
+              color: '#64748b'
+            }}>
+              <span>Subtotal:</span>
+              <span style={{ marginLeft: '2rem' }}>${invoice.subtotal.toFixed(2)}</span>
+            </div>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              marginBottom: '0.5rem',
+              fontSize: '1rem',
+              color: '#64748b'
+            }}>
+              <span>Tax:</span>
+              <span style={{ marginLeft: '2rem' }}>${invoice.tax.toFixed(2)}</span>
+            </div>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              paddingTop: '0.5rem',
+              borderTop: '2px solid #e2e8f0',
+              fontSize: '1.25rem',
+              fontWeight: '700',
+              color: '#1e293b'
+            }}>
+              <span>Total:</span>
+              <span style={{ marginLeft: '2rem' }}>${invoice.total.toFixed(2)}</span>
+            </div>
+          </div>
+
+          {/* Notes & Terms */}
+          {(invoice.notes || invoice.terms) && (
+            <div style={{
+              borderTop: '1px solid #e2e8f0',
+              paddingTop: '1.5rem'
+            }}>
+              {invoice.notes && (
+                <div style={{ marginBottom: '1rem' }}>
+                  <h4 style={{
+                    color: '#374151',
+                    fontSize: '1rem',
+                    fontWeight: '600',
+                    marginBottom: '0.5rem'
+                  }}>
+                    Notes:
+                  </h4>
+                  <p style={{ color: '#1f2937', margin: 0 }}>
+                    {invoice.notes}
+                  </p>
+                </div>
+              )}
+              
+              {invoice.terms && (
+                <div>
+                  <h4 style={{
+                    color: '#374151',
+                    fontSize: '1rem',
+                    fontWeight: '600',
+                    marginBottom: '0.5rem'
+                  }}>
+                    Terms:
+                  </h4>
+                  <p style={{ color: '#1f2937', margin: 0 }}>
+                    {invoice.terms}
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>
       </div>
+
+      {/* Send Invoice Modal */}
+      {showSendModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '0.75rem',
+            padding: '2rem',
+            maxWidth: '500px',
+            width: '90%',
+            maxHeight: '80vh',
+            overflow: 'auto'
+          }}>
+            <h2 style={{
+              color: '#1e293b',
+              fontSize: '1.5rem',
+              fontWeight: '600',
+              marginBottom: '1.5rem'
+            }}>
+              Send Invoice
+            </h2>
+            
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{
+                display: 'block',
+                marginBottom: '0.5rem',
+                fontWeight: '500',
+                color: '#374151'
+              }}>
+                Send to Email:
+              </label>
+              <input
+                type="email"
+                value={sendToEmail}
+                onChange={(e) => setSendToEmail(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '0.5rem',
+                  fontSize: '0.875rem',
+                  backgroundColor: 'white',
+                  color: '#374151'
+                }}
+              />
+            </div>
+            
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{
+                display: 'block',
+                marginBottom: '0.5rem',
+                fontWeight: '500',
+                color: '#374151'
+              }}>
+                Message (optional):
+              </label>
+              <textarea
+                value={emailMessage}
+                onChange={(e) => setEmailMessage(e.target.value)}
+                rows={4}
+                placeholder="Add a personal message to your customer..."
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '0.5rem',
+                  fontSize: '0.875rem',
+                  resize: 'vertical',
+                  backgroundColor: 'white',
+                  color: '#374151'
+                }}
+              />
+            </div>
+            
+            <div style={{
+              display: 'flex',
+              gap: '1rem',
+              justifyContent: 'flex-end'
+            }}>
+              <button
+                onClick={() => setShowSendModal(false)}
+                style={{
+                  backgroundColor: 'transparent',
+                  color: '#6b7280',
+                  border: '1px solid #d1d5db',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '0.5rem',
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+              
+              <button
+                onClick={handleSendInvoice}
+                disabled={isSending || !sendToEmail}
+                style={{
+                  backgroundColor: isSending || !sendToEmail ? '#9ca3af' : '#10b981',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '0.5rem',
+                  fontSize: '0.875rem',
+                  fontWeight: '600',
+                  cursor: isSending || !sendToEmail ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {isSending ? 'Sending...' : 'Send Invoice'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
