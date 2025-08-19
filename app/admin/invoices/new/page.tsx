@@ -23,6 +23,7 @@ export default function CreateInvoice() {
     items: [{ description: "", quantity: 1, rate: 0, amount: 0 }],
     notes: "",
     terms: "Payment due before delivery",
+    emailMessage: "",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -121,7 +122,7 @@ export default function CreateInvoice() {
   };
 
   const calculateTax = () => {
-    return calculateSubtotal() * 0.08; // 8% tax rate
+    return calculateSubtotal() * 0.0625; // 6.25% Illinois Sales Tax
   };
 
   const calculateTotal = () => {
@@ -801,6 +802,63 @@ export default function CreateInvoice() {
                 </div>
               </div>
 
+              {/* Personal Message */}
+              <div
+                style={{
+                  backgroundColor: "white",
+                  borderRadius: "0.75rem",
+                  border: "1px solid #e2e8f0",
+                  padding: "1.5rem",
+                  marginBottom: "1.5rem",
+                }}
+              >
+                <h2
+                  style={{
+                    color: "#1e293b",
+                    fontSize: "1.25rem",
+                    fontWeight: "600",
+                    marginBottom: "1rem",
+                  }}
+                >
+                  Personal Message (Optional)
+                </h2>
+                <p
+                  style={{
+                    color: "#6b7280",
+                    fontSize: "0.875rem",
+                    marginBottom: "1rem",
+                    lineHeight: "1.5",
+                  }}
+                >
+                  Add a personal message to include in the email with the invoice.
+                </p>
+                <textarea
+                  name="emailMessage"
+                  value={invoiceData.emailMessage}
+                  onChange={handleInputChange}
+                  rows={3}
+                  placeholder="e.g., Thank you for choosing Serene Spaces! We appreciate your business."
+                  style={{
+                    width: "100%",
+                    padding: "0.75rem",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "0.5rem",
+                    fontSize: "0.875rem",
+                    resize: "vertical",
+                    backgroundColor: "white",
+                    color: "#374151",
+                    transition: "border-color 0.2s ease",
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = "#7a6990";
+                    e.target.style.outline = "none";
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = "#e5e7eb";
+                  }}
+                />
+              </div>
+
               {/* Notes & Terms */}
               <div
                 style={{
@@ -1178,7 +1236,7 @@ export default function CreateInvoice() {
                       color: "#64748b",
                     }}
                   >
-                    <span>Tax (8%)</span>
+                    <span>Tax (6.25%)</span>
                     <span>${calculateTax().toFixed(2)}</span>
                   </div>
                   <div
@@ -1275,6 +1333,40 @@ export default function CreateInvoice() {
                     }}
                   >
                     Save as Draft
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const testEmail = prompt("Enter email address for test email:");
+                      if (testEmail) {
+                        try {
+                          const response = await fetch(`/api/invoices/send?email=${encodeURIComponent(testEmail)}`);
+                          const result = await response.json();
+                          if (response.ok) {
+                            alert(`Test email sent successfully to ${testEmail}!`);
+                          } else {
+                            alert(`Failed to send test email: ${result.error}`);
+                          }
+                        } catch (error) {
+                          console.error("Error sending test email:", error);
+                          alert("Failed to send test email. Please try again.");
+                        }
+                      }
+                    }}
+                    style={{
+                      backgroundColor: "#f59e0b",
+                      color: "white",
+                      border: "none",
+                      padding: "0.75rem 1.5rem",
+                      borderRadius: "0.5rem",
+                      fontSize: "0.875rem",
+                      fontWeight: "500",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                    }}
+                  >
+                    🧪 Test Email
                   </button>
                 </div>
               </div>
