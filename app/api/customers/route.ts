@@ -78,3 +78,38 @@ export async function POST(req: Request) {
     );
   }
 }
+
+export async function DELETE(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json({ error: "Missing customer ID" }, { status: 400 });
+    }
+
+    // Check if DATABASE_URL is set
+    if (!process.env.DATABASE_URL) {
+      return NextResponse.json({ error: "Database not configured" }, { status: 500 });
+    }
+
+    // Delete the customer from the database
+    await prisma.customer.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({ success: true, message: "Customer deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting customer:", error);
+    
+    // Handle specific Prisma errors
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2025') {
+      return NextResponse.json({ error: "Customer not found" }, { status: 404 });
+    }
+    
+    return NextResponse.json(
+      { error: "Failed to delete customer" },
+      { status: 500 },
+    );
+  }
+}

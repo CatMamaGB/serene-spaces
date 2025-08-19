@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
 interface Customer {
@@ -20,6 +20,7 @@ export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [deletingCustomerId, setDeletingCustomerId] = useState<string | null>(null);
 
   useEffect(() => {
     // Check if mobile
@@ -55,12 +56,30 @@ export default function CustomersPage() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  const handleDeleteCustomer = (customerId: string) => {
+  const handleDeleteCustomer = async (customerId: string) => {
     if (window.confirm("Are you sure you want to delete this customer?")) {
-      setCustomers((prev) =>
-        prev.filter((customer) => customer.id !== customerId),
-      );
-      // TODO: Add API call to delete customer from database
+      setDeletingCustomerId(customerId);
+      try {
+        const response = await fetch(`/api/customers?id=${customerId}`, {
+          method: 'DELETE',
+        });
+
+        if (response.ok) {
+          // Remove customer from local state
+          setCustomers((prev) =>
+            prev.filter((customer) => customer.id !== customerId),
+          );
+          alert('Customer deleted successfully!');
+        } else {
+          const errorData = await response.json();
+          alert(`Failed to delete customer: ${errorData.error}`);
+        }
+      } catch (error) {
+        console.error('Error deleting customer:', error);
+        alert('Failed to delete customer. Please try again.');
+      } finally {
+        setDeletingCustomerId(null);
+      }
     }
   };
 
@@ -526,27 +545,31 @@ export default function CustomersPage() {
                             </Link>
                             <button
                               onClick={() => handleDeleteCustomer(customer.id)}
+                              disabled={deletingCustomerId === customer.id}
                               style={{
                                 padding: "6px 12px",
-                                backgroundColor: "#dc3545",
+                                backgroundColor: deletingCustomerId === customer.id ? "#6c757d" : "#dc3545",
                                 color: "white",
                                 border: "none",
                                 borderRadius: "4px",
                                 fontSize: "0.8rem",
                                 fontWeight: "500",
-                                cursor: "pointer",
+                                cursor: deletingCustomerId === customer.id ? "not-allowed" : "pointer",
                                 transition: "background-color 0.2s ease",
+                                opacity: deletingCustomerId === customer.id ? 0.6 : 1,
                               }}
                               onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor =
-                                  "#c82333";
+                                if (deletingCustomerId !== customer.id) {
+                                  e.currentTarget.style.backgroundColor = "#c82333";
+                                }
                               }}
                               onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor =
-                                  "#dc3545";
+                                if (deletingCustomerId !== customer.id) {
+                                  e.currentTarget.style.backgroundColor = "#dc3545";
+                                }
                               }}
                             >
-                              Delete
+                              {deletingCustomerId === customer.id ? "Deleting..." : "Delete"}
                             </button>
                           </div>
                         </td>
