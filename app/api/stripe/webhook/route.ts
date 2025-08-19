@@ -1,0 +1,40 @@
+import { NextResponse } from "next/server";
+import { stripe } from "@/lib/stripe";
+import { prisma } from "@/lib/prisma";
+
+export async function POST(req: Request) {
+  const sig = req.headers.get("stripe-signature");
+  const buf = Buffer.from(await req.arrayBuffer());
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(buf, sig!, process.env.STRIPE_WEBHOOK_SECRET!);
+  } catch (err: any) {
+    return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
+  }
+
+  await prisma.eventLog.create({ data: { type: event.type, payload: event as any } });
+
+  try {
+    if (event.type === "invoice.finalized" || event.type === "invoice.sent" || event.type === "invoice.payment_succeeded" || event.type === "invoice.payment_failed") {
+      const inv = event.data.object as any;
+      await prisma.invoiceMirror.update({
+        where: { stripeInvoiceId: inv.id },
+        data: {
+          status: inv.status || undefined,
+          subtotal: inv.subtotal ?? undefined,
+          tax: inv.tax ?? undefined,
+          total: inv.total ?? undefined,
+          hostedUrl: inv.hosted_invoice_url ?? undefined,
+          pdfUrl: inv.invoice_pdf ?? undefined,
+        }
+      });
+    }
+  } catch {
+    // swallow to keep 200
+  }
+
+  return NextResponse.json({ received: true });
+}
+
+export const config = { api: { bodyParser: false } };

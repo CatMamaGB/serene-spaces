@@ -1,0 +1,913 @@
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+
+
+
+interface Customer {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+}
+
+export default function CreateInvoice() {
+  const [invoiceData, setInvoiceData] = useState({
+    customerName: '',
+    customerEmail: '',
+    customerPhone: '',
+    customerAddress: '',
+    invoiceDate: new Date().toISOString().split('T')[0],
+    dueDate: '',
+    items: [{ description: '', quantity: 1, rate: 0, amount: 0 }],
+    notes: '',
+    terms: 'Payment due within 30 days'
+  });
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] = useState('');
+
+  // Mock customer data - in a real app, this would come from your customer database
+  const customers: Customer[] = [
+    {
+      id: '1',
+      name: 'Sarah Johnson',
+      email: 'sarah.johnson@email.com',
+      phone: '(555) 123-4567',
+      address: '123 Main Street, Portland, OR 97201'
+    },
+    {
+      id: '2',
+      name: 'Mike Chen',
+      email: 'mike.chen@email.com',
+      phone: '(555) 234-5678',
+      address: '456 Oak Avenue, Seattle, WA 98101'
+    },
+    {
+      id: '3',
+      name: 'Emily Rodriguez',
+      email: 'emily.rodriguez@email.com',
+      phone: '(555) 345-6789',
+      address: '789 Pine Street, San Francisco, CA 94102'
+    },
+    {
+      id: '4',
+      name: 'David Wilson',
+      email: 'david.wilson@email.com',
+      phone: '(555) 456-7890',
+      address: '321 Elm Street, Denver, CO 80201'
+    }
+  ];
+
+
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setInvoiceData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleCustomerSelect = (customerId: string) => {
+    setSelectedCustomerId(customerId);
+    if (customerId) {
+      const customer = customers.find(c => c.id === customerId);
+      if (customer) {
+        setInvoiceData(prev => ({
+          ...prev,
+          customerName: customer.name,
+          customerEmail: customer.email,
+          customerPhone: customer.phone,
+          customerAddress: customer.address
+        }));
+      }
+    } else {
+      // Clear customer info when "Select a customer" is chosen
+      setInvoiceData(prev => ({
+        ...prev,
+        customerName: '',
+        customerEmail: '',
+        customerPhone: '',
+        customerAddress: ''
+      }));
+    }
+  };
+
+  const handleItemChange = (index: number, field: string, value: string | number) => {
+    const newItems = [...invoiceData.items];
+    newItems[index] = { ...newItems[index], [field]: value };
+    
+    // Calculate amount
+    if (field === 'quantity' || field === 'rate') {
+      const quantity = field === 'quantity' ? Number(value) : newItems[index].quantity;
+      const rate = field === 'rate' ? Number(value) : newItems[index].rate;
+      newItems[index].amount = quantity * rate;
+    }
+    
+    setInvoiceData(prev => ({
+      ...prev,
+      items: newItems
+    }));
+  };
+
+  const addItem = () => {
+    setInvoiceData(prev => ({
+      ...prev,
+      items: [...prev.items, { description: '', quantity: 1, rate: 0, amount: 0 }]
+    }));
+  };
+
+  const removeItem = (index: number) => {
+    if (invoiceData.items.length > 1) {
+      setInvoiceData(prev => ({
+        ...prev,
+        items: prev.items.filter((_, i) => i !== index)
+      }));
+    }
+  };
+
+
+
+  const calculateSubtotal = () => {
+    return invoiceData.items.reduce((sum, item) => sum + item.amount, 0);
+  };
+
+  const calculateTax = () => {
+    return calculateSubtotal() * 0.08; // 8% tax rate
+  };
+
+  const calculateTotal = () => {
+    return calculateSubtotal() + calculateTax();
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    // Simulate form submission
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    setIsSubmitting(false);
+    // Here you would typically save the invoice and redirect
+    alert('Invoice created successfully!');
+  };
+
+  return (
+    <div style={{
+      minHeight: '100vh',
+      backgroundColor: '#f8fafc',
+      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif'
+    }}>
+      {/* Header */}
+      <header style={{
+        backgroundColor: 'white',
+        borderBottom: '1px solid #e2e8f0',
+        padding: '1rem 2rem'
+      }}>
+        <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem'
+          }}>
+            <Link
+              href="/admin"
+              style={{
+                color: '#7a6990',
+                textDecoration: 'none',
+                fontSize: '0.875rem',
+                fontWeight: '500'
+              }}
+            >
+              ← Back to Dashboard
+            </Link>
+            <h1 style={{
+              color: '#1e293b',
+              fontSize: '1.875rem',
+              fontWeight: '700',
+              margin: 0
+            }}>
+              Create New Invoice
+            </h1>
+          </div>
+        </div>
+      </header>
+
+      <div style={{
+        maxWidth: '1200px',
+        margin: '0 auto',
+        padding: '2rem'
+      }}>
+        <form onSubmit={handleSubmit}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '2fr 1fr',
+            gap: '2rem'
+          }}>
+            {/* Main Form */}
+            <div>
+              {/* Customer Selection */}
+              <div style={{
+                backgroundColor: 'white',
+                borderRadius: '0.75rem',
+                border: '1px solid #e2e8f0',
+                padding: '1.5rem',
+                marginBottom: '1.5rem'
+              }}>
+                <h2 style={{
+                  color: '#1e293b',
+                  fontSize: '1.25rem',
+                  fontWeight: '600',
+                  marginBottom: '1rem'
+                }}>
+                  Select Customer
+                </h2>
+                
+                <div>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '0.5rem',
+                    fontWeight: '500',
+                    color: '#374151'
+                  }}>
+                    Choose Existing Customer
+                  </label>
+                  <select
+                    value={selectedCustomerId}
+                    onChange={(e) => handleCustomerSelect(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '0.5rem',
+                      fontSize: '0.875rem',
+                      backgroundColor: 'white',
+                      color: '#374151',
+                      cursor: 'pointer',
+                      transition: 'border-color 0.2s ease'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#7a6990';
+                      e.target.style.outline = 'none';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e5e7eb';
+                    }}
+                  >
+                    <option value="">Select a customer...</option>
+                    {customers.map(customer => (
+                      <option key={customer.id} value={customer.id}>
+                        {customer.name} - {customer.email}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Customer Information */}
+              <div style={{
+                backgroundColor: 'white',
+                borderRadius: '0.75rem',
+                border: '1px solid #e2e8f0',
+                padding: '1.5rem',
+                marginBottom: '1.5rem'
+              }}>
+                <h2 style={{
+                  color: '#1e293b',
+                  fontSize: '1.25rem',
+                  fontWeight: '600',
+                  marginBottom: '1rem'
+                }}>
+                  Customer Information
+                </h2>
+                
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '1rem'
+                }}>
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: '0.5rem',
+                      fontWeight: '500',
+                      color: '#374151'
+                    }}>
+                      Customer Name *
+                    </label>
+                    <input
+                      type="text"
+                      name="customerName"
+                      value={invoiceData.customerName}
+                      onChange={handleInputChange}
+                      required
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '0.5rem',
+                        fontSize: '0.875rem',
+                        backgroundColor: 'white',
+                        color: '#374151',
+                        transition: 'border-color 0.2s ease'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#7a6990';
+                        e.target.style.outline = 'none';
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = '#e5e7eb';
+                      }}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: '0.5rem',
+                      fontWeight: '500',
+                      color: '#374151'
+                    }}>
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      name="customerEmail"
+                      value={invoiceData.customerEmail}
+                      onChange={handleInputChange}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '0.5rem',
+                        fontSize: '0.875rem',
+                        backgroundColor: 'white',
+                        color: '#374151',
+                        transition: 'border-color 0.2s ease'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#7a6990';
+                        e.target.style.outline = 'none';
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = '#e5e7eb';
+                      }}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: '0.5rem',
+                      fontWeight: '500',
+                      color: '#374151'
+                    }}>
+                      Phone
+                    </label>
+                    <input
+                      type="tel"
+                      name="customerPhone"
+                      value={invoiceData.customerPhone}
+                      onChange={handleInputChange}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '0.5rem',
+                        fontSize: '0.875rem',
+                        backgroundColor: 'white',
+                        color: '#374151',
+                        transition: 'border-color 0.2s ease'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#7a6990';
+                        e.target.style.outline = 'none';
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = '#e5e7eb';
+                      }}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: '0.5rem',
+                      fontWeight: '500',
+                      color: '#374151'
+                    }}>
+                      Address
+                    </label>
+                    <input
+                      type="text"
+                      name="customerAddress"
+                      value={invoiceData.customerAddress}
+                      onChange={handleInputChange}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '0.5rem',
+                        fontSize: '0.875rem',
+                        backgroundColor: 'white',
+                        color: '#374151',
+                        transition: 'border-color 0.2s ease'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#7a6990';
+                        e.target.style.outline = 'none';
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = '#e5e7eb';
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Invoice Items */}
+              <div style={{
+                backgroundColor: 'white',
+                borderRadius: '0.75rem',
+                border: '1px solid #e2e8f0',
+                padding: '1.5rem',
+                marginBottom: '1.5rem'
+              }}>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '1rem'
+                }}>
+                  <h2 style={{
+                    color: '#1e293b',
+                    fontSize: '1.25rem',
+                    fontWeight: '600',
+                    margin: 0
+                  }}>
+                    Invoice Items
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={addItem}
+                    style={{
+                      backgroundColor: '#7a6990',
+                      color: 'white',
+                      border: 'none',
+                      padding: '0.5rem 1rem',
+                      borderRadius: '0.5rem',
+                      fontSize: '0.875rem',
+                      fontWeight: '500',
+                      cursor: 'pointer',
+                      transition: 'background-color 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#6b5b7a';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#7a6990';
+                    }}
+                  >
+                    + Add Item
+                  </button>
+                </div>
+                
+                <div style={{ marginBottom: '1rem' }}>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '2fr 1fr 1fr 1fr auto',
+                    gap: '1rem',
+                    padding: '0.75rem',
+                    backgroundColor: '#f8fafc',
+                    borderRadius: '0.5rem',
+                    fontWeight: '500',
+                    fontSize: '0.875rem',
+                    color: '#64748b'
+                  }}>
+                    <div>Description</div>
+                    <div>Qty</div>
+                    <div>Rate</div>
+                    <div>Amount</div>
+                    <div></div>
+                  </div>
+                  
+                  {invoiceData.items.map((item, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '2fr 1fr 1fr 1fr auto',
+                        gap: '1rem',
+                        padding: '0.75rem 0',
+                        alignItems: 'center',
+                        borderBottom: '1px solid #f1f5f9'
+                      }}
+                    >
+                      <input
+                        type="text"
+                        value={item.description}
+                        onChange={(e) => handleItemChange(index, 'description', e.target.value)}
+                        placeholder="Service description"
+                        style={{
+                          padding: '0.5rem',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '0.375rem',
+                          fontSize: '0.875rem',
+                          backgroundColor: 'white',
+                          color: '#374151',
+                          transition: 'border-color 0.2s ease'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = '#7a6990';
+                          e.target.style.outline = 'none';
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = '#e5e7eb';
+                        }}
+                      />
+                      <input
+                        type="number"
+                        value={item.quantity}
+                        onChange={(e) => handleItemChange(index, 'quantity', Number(e.target.value))}
+                        min="1"
+                        style={{
+                          padding: '0.5rem',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '0.375rem',
+                          fontSize: '0.875rem',
+                          backgroundColor: 'white',
+                          color: '#374151',
+                          transition: 'border-color 0.2s ease'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = '#7a6990';
+                          e.target.style.outline = 'none';
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = '#e5e7eb';
+                        }}
+                      />
+                      <input
+                        type="number"
+                        value={item.rate}
+                        onChange={(e) => handleItemChange(index, 'rate', Number(e.target.value))}
+                        min="0"
+                        step="0.01"
+                        style={{
+                          padding: '0.5rem',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '0.375rem',
+                          fontSize: '0.875rem',
+                          backgroundColor: 'white',
+                          color: '#374151',
+                          transition: 'border-color 0.2s ease'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = '#7a6990';
+                          e.target.style.outline = 'none';
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = '#e5e7eb';
+                        }}
+                      />
+                      <div style={{
+                        padding: '0.5rem',
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        color: '#1e293b'
+                      }}>
+                        ${item.amount.toFixed(2)}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeItem(index)}
+                        disabled={invoiceData.items.length === 1}
+                        style={{
+                          backgroundColor: invoiceData.items.length === 1 ? '#9ca3af' : '#ef4444',
+                          color: 'white',
+                          border: 'none',
+                          padding: '0.25rem 0.5rem',
+                          borderRadius: '0.375rem',
+                          fontSize: '0.75rem',
+                          cursor: invoiceData.items.length === 1 ? 'not-allowed' : 'pointer',
+                          transition: 'background-color 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (invoiceData.items.length > 1) {
+                            e.currentTarget.style.backgroundColor = '#dc2626';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (invoiceData.items.length > 1) {
+                            e.currentTarget.style.backgroundColor = '#ef4444';
+                          }
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Notes & Terms */}
+              <div style={{
+                backgroundColor: 'white',
+                borderRadius: '0.75rem',
+                border: '1px solid #e2e8f0',
+                padding: '1.5rem'
+              }}>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '1.5rem'
+                }}>
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: '0.5rem',
+                      fontWeight: '500',
+                      color: '#374151'
+                    }}>
+                      Notes
+                    </label>
+                    <textarea
+                      name="notes"
+                      value={invoiceData.notes}
+                      onChange={handleInputChange}
+                      rows={4}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '0.5rem',
+                        fontSize: '0.875rem',
+                        resize: 'vertical',
+                        backgroundColor: 'white',
+                        color: '#374151',
+                        transition: 'border-color 0.2s ease'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#7a6990';
+                        e.target.style.outline = 'none';
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = '#e5e7eb';
+                      }}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: '0.5rem',
+                      fontWeight: '500',
+                      color: '#374151'
+                    }}>
+                      Terms
+                    </label>
+                    <textarea
+                      name="terms"
+                      value={invoiceData.terms}
+                      onChange={handleInputChange}
+                      rows={4}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '0.5rem',
+                        fontSize: '0.875rem',
+                        resize: 'vertical',
+                        backgroundColor: 'white',
+                        color: '#374151',
+                        transition: 'border-color 0.2s ease'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#7a6990';
+                        e.target.style.outline = 'none';
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = '#e5e7eb';
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Invoice Summary */}
+            <div>
+              <div style={{
+                backgroundColor: 'white',
+                borderRadius: '0.75rem',
+                border: '1px solid #e2e8f0',
+                padding: '1.5rem',
+                position: 'sticky',
+                top: '2rem'
+              }}>
+                <h2 style={{
+                  color: '#1e293b',
+                  fontSize: '1.25rem',
+                  fontWeight: '600',
+                  marginBottom: '1rem'
+                }}>
+                  Invoice Summary
+                </h2>
+                
+                {/* Invoice Details */}
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '1rem'
+                  }}>
+                    <div>
+                      <label style={{
+                        display: 'block',
+                        marginBottom: '0.5rem',
+                        fontWeight: '500',
+                        color: '#374151',
+                        fontSize: '0.875rem'
+                      }}>
+                        Invoice Date
+                      </label>
+                      <input
+                        type="date"
+                        name="invoiceDate"
+                        value={invoiceData.invoiceDate}
+                        onChange={handleInputChange}
+                        style={{
+                          width: '100%',
+                          padding: '0.5rem',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '0.375rem',
+                          fontSize: '0.875rem',
+                          backgroundColor: 'white',
+                          color: '#374151',
+                          transition: 'border-color 0.2s ease'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = '#7a6990';
+                          e.target.style.outline = 'none';
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = '#e5e7eb';
+                        }}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label style={{
+                        display: 'block',
+                        marginBottom: '0.5rem',
+                        fontWeight: '500',
+                        color: '#374151',
+                        fontSize: '0.875rem'
+                      }}>
+                        Due Date
+                      </label>
+                      <input
+                        type="date"
+                        name="dueDate"
+                        value={invoiceData.dueDate}
+                        onChange={handleInputChange}
+                        style={{
+                          width: '100%',
+                          padding: '0.5rem',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '0.375rem',
+                          fontSize: '0.875rem',
+                          backgroundColor: 'white',
+                          color: '#374151',
+                          transition: 'border-color 0.2s ease'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = '#7a6990';
+                          e.target.style.outline = 'none';
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = '#e5e7eb';
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Totals */}
+                <div style={{
+                  borderTop: '1px solid #e2e8f0',
+                  paddingTop: '1rem'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    marginBottom: '0.5rem',
+                    fontSize: '0.875rem',
+                    color: '#64748b'
+                  }}>
+                    <span>Subtotal</span>
+                    <span>${calculateSubtotal().toFixed(2)}</span>
+                  </div>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    marginBottom: '0.5rem',
+                    fontSize: '0.875rem',
+                    color: '#64748b'
+                  }}>
+                    <span>Tax (8%)</span>
+                    <span>${calculateTax().toFixed(2)}</span>
+                  </div>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    paddingTop: '0.5rem',
+                    borderTop: '1px solid #e2e8f0',
+                    fontSize: '1.125rem',
+                    fontWeight: '700',
+                    color: '#1e293b'
+                  }}>
+                    <span>Total</span>
+                    <span>${calculateTotal().toFixed(2)}</span>
+                  </div>
+                </div>
+                
+                {/* Actions */}
+                <div style={{
+                  marginTop: '1.5rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.75rem'
+                }}>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    style={{
+                      backgroundColor: isSubmitting ? '#9ca3af' : '#7a6990',
+                      color: 'white',
+                      border: 'none',
+                      padding: '0.75rem 1.5rem',
+                      borderRadius: '0.5rem',
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isSubmitting) {
+                        e.currentTarget.style.backgroundColor = '#6b5b7a';
+                        e.currentTarget.style.transform = 'translateY(-1px)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isSubmitting) {
+                        e.currentTarget.style.backgroundColor = '#7a6990';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                      }
+                    }}
+                  >
+                    {isSubmitting ? 'Creating...' : 'Create Invoice'}
+                  </button>
+                  
+                  <button
+                    type="button"
+                    style={{
+                      backgroundColor: 'transparent',
+                      color: '#7a6990',
+                      border: '1px solid #7a6990',
+                      padding: '0.75rem 1.5rem',
+                      borderRadius: '0.5rem',
+                      fontSize: '0.875rem',
+                      fontWeight: '500',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#7a6990';
+                      e.currentTarget.style.color = 'white';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                      e.currentTarget.style.color = '#7a6990';
+                    }}
+                  >
+                    Save as Draft
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}

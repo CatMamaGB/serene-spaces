@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String?
+  email     String?  @unique
+  image     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  accounts  Account[]
+  sessions  Session[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Customer {
+  id           String   @id @default(cuid())
+  name         String
+  email        String?
+  phone        String?
+  address      String?  // Full address for intake forms
+  addressLine1 String?
+  addressLine2 String?
+  city         String?
+  state        String?
+  postalCode   String?
+  country      String? @default("US")
+  stripeId     String? @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  jobs         Job[]
+  invoices     InvoiceMirror[]
+  serviceRequests ServiceRequest[]
+}
+
+model Job {
+  id          String   @id @default(cuid())
+  customerId  String
+  notes       String?
+  status      String   @default("new")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+}
+
+model ServiceRequest {
+  id                  String   @id @default(cuid())
+  customerId          String
+  customer            Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  services            String[] // Array of requested services
+  address             String
+  pickupDate          DateTime?
+  repairNotes         String?
+  waterproofingNotes  String?
+  allergies           String?
+  status              String   @default("pending") // pending, scheduled, completed, cancelled
+  estimatedCost       Float?
+  actualCost          Float?
+  scheduledPickupDate DateTime?
+  completedDate       DateTime?
+  notes               String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model InvoiceMirror {
+  id             String   @id @default(cuid())
+  customerId     String
+  stripeInvoiceId String  @unique
+  status         String
+  currency       String   @default("usd")
+  subtotal       Int      @default(0)   // cents
+  tax            Int      @default(0)   // cents
+  total          Int      @default(0)   // cents
+  hostedUrl      String?
+  pdfUrl         String?
+  invoiceNumber  String?
+  issueDate      DateTime?
+  dueDate        DateTime?
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  items          InvoiceItemMirror[]
+  customer       Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+}
+
+model InvoiceItemMirror {
+  id            String   @id @default(cuid())
+  invoiceId     String
+  description   String
+  quantity      Int      @default(1)
+  unitAmount    Int      @default(0)  // cents
+  taxable       Boolean  @default(true)
+  notes         String?
+  createdAt     DateTime @default(now())
+  invoice       InvoiceMirror @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+model EventLog {
+  id        String   @id @default(cuid())
+  type      String
+  payload   Json
+  createdAt DateTime @default(now())
+}

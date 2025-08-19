@@ -1,0 +1,76 @@
+import Link from 'next/link';
+
+export default function ServicesPage() {
+  return (
+    <div style={{
+      minHeight: '100vh',
+      backgroundColor: '#f5f5f5',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '24px'
+    }}>
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '16px',
+        padding: '48px',
+        textAlign: 'center',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+        border: '1px solid #e9ecef',
+        maxWidth: '500px'
+      }}>
+        <div style={{
+          fontSize: '4rem',
+          marginBottom: '24px',
+          opacity: '0.3'
+        }}>
+          🚧
+        </div>
+        
+        <h1 style={{
+          fontSize: '2rem',
+          margin: '0 0 16px 0',
+          color: '#1a1a1a',
+          fontWeight: '700'
+        }}>
+          Services Coming Soon
+        </h1>
+        
+        <p style={{
+          color: '#666',
+          margin: '0 0 32px 0',
+          fontSize: '1.1rem',
+          lineHeight: '1.6'
+        }}>
+          We&apos;re currently updating our services page. 
+          Please check back soon for our complete service offerings.
+        </p>
+        
+        <Link
+          href="/"
+          style={{
+            display: 'inline-block',
+            padding: '14px 28px',
+            backgroundColor: '#7a6990',
+            color: 'white',
+            textDecoration: 'none',
+            borderRadius: '8px',
+            fontSize: '1rem',
+            fontWeight: '600',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#6b5b7a';
+            e.currentTarget.style.transform = 'translateY(-1px)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = '#7a6990';
+            e.currentTarget.style.transform = 'translateY(0)';
+          }}
+        >
+          Return to Home
+        </Link>
+      </div>
+    </div>
+  );
+}
