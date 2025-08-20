@@ -161,19 +161,129 @@ export default function CreateInvoice() {
     setIsSubmitting(true);
 
     try {
-      // Simulate form submission - in a real app, this would save to your database
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Validate required fields
+      if (
+        !invoiceData.customerName ||
+        invoiceData.items.length === 0 ||
+        invoiceData.items[0].description === ""
+      ) {
+        alert(
+          "Please fill in all required fields: customer name and at least one item with description.",
+        );
+        return;
+      }
 
-      // Generate a mock invoice ID for demo purposes
-      const mockInvoiceId = "INV-" + Date.now();
+      // Create invoice data in the format expected by the API
+      const invoicePayload = {
+        customerName: invoiceData.customerName,
+        customerEmail: invoiceData.customerEmail,
+        customerPhone: invoiceData.customerPhone,
+        customerAddress: invoiceData.customerAddress,
+        invoiceDate: invoiceData.invoiceDate,
+        dueDate: invoiceData.dueDate,
+        items: invoiceData.items.map((item) => ({
+          description: item.description,
+          quantity: item.quantity,
+          rate: item.rate,
+          amount: item.amount,
+        })),
+        notes: invoiceData.notes,
+        terms: invoiceData.terms,
+        subtotal: calculateSubtotal(),
+        tax: calculateTax(),
+        total: calculateTotal(),
+        status: "draft",
+      };
+
+      // Save to database first
+      const response = await fetch("/api/invoices", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(invoicePayload),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to create invoice");
+      }
+
+      const result = await response.json();
 
       // Redirect to the invoice view page
-      window.location.href = `/admin/invoices/${mockInvoiceId}`;
+      window.location.href = `/admin/invoices/${result.id}`;
     } catch (error) {
       console.error("Error creating invoice:", error);
-      alert("Failed to create invoice. Please try again.");
+      alert(
+        `Failed to create invoice: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleSaveAsDraft = async () => {
+    try {
+      // Validate required fields
+      if (
+        !invoiceData.customerName ||
+        invoiceData.items.length === 0 ||
+        invoiceData.items[0].description === ""
+      ) {
+        alert(
+          "Please fill in all required fields: customer name and at least one item with description.",
+        );
+        return;
+      }
+
+      // Create invoice data in the format expected by the API
+      const invoicePayload = {
+        customerName: invoiceData.customerName,
+        customerEmail: invoiceData.customerEmail,
+        customerPhone: invoiceData.customerPhone,
+        customerAddress: invoiceData.customerAddress,
+        invoiceDate: invoiceData.invoiceDate,
+        dueDate: invoiceData.dueDate,
+        items: invoiceData.items.map((item) => ({
+          description: item.description,
+          quantity: item.quantity,
+          rate: item.rate,
+          amount: item.amount,
+        })),
+        notes: invoiceData.notes,
+        terms: invoiceData.terms,
+        subtotal: calculateSubtotal(),
+        tax: calculateTax(),
+        total: calculateTotal(),
+        status: "draft",
+      };
+
+      // Save to database as draft
+      const response = await fetch("/api/invoices", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(invoicePayload),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to save draft");
+      }
+
+      const result = await response.json();
+
+      alert("Draft saved successfully! Invoice ID: " + result.id);
+
+      // Redirect to the invoice view page
+      window.location.href = `/admin/invoices/${result.id}`;
+    } catch (error) {
+      console.error("Error saving draft:", error);
+      alert(
+        `Failed to save draft: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   };
 
@@ -1321,6 +1431,24 @@ export default function CreateInvoice() {
                     }}
                   >
                     {isSubmitting ? "Creating..." : "Create Invoice"}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleSaveAsDraft}
+                    style={{
+                      backgroundColor: "transparent",
+                      color: "#7a6990",
+                      border: "1px solid #7a6990",
+                      padding: "0.75rem 1.5rem",
+                      borderRadius: "0.5rem",
+                      fontSize: "0.875rem",
+                      fontWeight: "500",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                    }}
+                  >
+                    Save as Draft
                   </button>
 
                   <button

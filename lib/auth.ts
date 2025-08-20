@@ -42,7 +42,10 @@ if (missingVars.length > 0) {
     ),
   );
   console.error("Current NEXTAUTH_URL:", process.env.NEXTAUTH_URL);
-  console.error("Current DATABASE_URL:", process.env.DATABASE_URL ? "SET" : "NOT SET");
+  console.error(
+    "Current DATABASE_URL:",
+    process.env.DATABASE_URL ? "SET" : "NOT SET",
+  );
   console.error("Environment check - NODE_ENV:", process.env.NODE_ENV);
   console.error("All environment keys:", Object.keys(process.env));
 }
@@ -65,9 +68,9 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         params: {
           prompt: "consent",
           access_type: "offline",
-          response_type: "code"
-        }
-      }
+          response_type: "code",
+        },
+      },
     }),
   ],
   callbacks: {

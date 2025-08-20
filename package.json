@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "next build",
+    "postinstall": "prisma generate",
+    "build:full": "prisma generate && next build",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "start": "next start",

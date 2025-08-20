@@ -1,135 +1,120 @@
 import { prisma } from "@/lib/prisma";
-import { stripe } from "@/lib/stripe";
 import { NextResponse } from "next/server";
-import Stripe from "stripe";
 
 export async function POST(req: Request) {
   try {
-    // If Stripe is not configured, return an error
-    if (!stripe) {
-      return NextResponse.json(
-        { error: "Payment processing not configured" },
-        { status: 503 },
-      );
-    }
-
     const body = await req.json();
-    const { customerId, items, invoiceNumber, issueDate, dueDate, notes } =
-      body as {
-        customerId: string;
-        items: {
-          description: string;
-          quantity: number;
-          unitAmount: number;
-          taxable: boolean;
-          notes?: string;
-        }[];
-        invoiceNumber?: string;
-        issueDate?: string;
-        dueDate?: string;
-        notes?: string;
-      };
+    console.log("Creating invoice with data:", JSON.stringify(body, null, 2));
 
-    const customer = await prisma.customer.findUnique({
-      where: { id: customerId },
-    });
-    if (!customer)
+    const {
+      customerName,
+      customerEmail,
+      customerPhone,
+      customerAddress,
+      invoiceDate,
+      dueDate,
+      items,
+      notes,
+      subtotal,
+      tax,
+      total,
+      status = "draft",
+    } = body;
+
+    // Validate required fields
+    if (!customerName || !items || items.length === 0) {
       return NextResponse.json(
-        { error: "Customer not found" },
-        { status: 404 },
+        { error: "Customer name and items are required" },
+        { status: 400 },
       );
-
-    // ensure Stripe customer exists
-    let stripeCustomerId = customer.stripeId;
-    if (!stripeCustomerId) {
-      const sc = await stripe.customers.create({
-        name: customer.name,
-        email: customer.email || undefined,
-        phone: customer.phone || undefined,
-      });
-      stripeCustomerId = sc.id;
-      await prisma.customer.update({
-        where: { id: customer.id },
-        data: { stripeId: sc.id },
-      });
     }
 
-    // create invoice items
-    for (const it of items) {
-      await stripe.invoiceItems.create({
-        customer: stripeCustomerId!,
-        description: it.description,
-        quantity: it.quantity,
-        unit_amount: it.unitAmount,
-        currency: "usd",
-        tax_rates:
-          it.taxable && process.env.STRIPE_TAX_RATE_ID
-            ? [process.env.STRIPE_TAX_RATE_ID]
-            : undefined,
-      } as Stripe.InvoiceItemCreateParams);
-    }
-
-    // create and finalize invoice
-    const invoiceData: Stripe.InvoiceCreateParams = {
-      customer: stripeCustomerId!,
-      collection_method: "send_invoice",
-      days_until_due: 7,
-      footer: "Thank you for your business.",
-    };
-
-    if (invoiceNumber) invoiceData.number = invoiceNumber;
-    if (notes) invoiceData.description = notes;
-    if (issueDate && dueDate) {
-      invoiceData.metadata = {
-        issueDate,
-        dueDate: dueDate || "",
-      };
-    }
-
-    const inv = await stripe.invoices.create(invoiceData);
-
-    if (!inv.id) throw new Error("Failed to create invoice");
-
-    const finalized = await stripe.invoices.finalizeInvoice(inv.id);
-    if (!finalized.id) throw new Error("Failed to finalize invoice");
-
-    await stripe.invoices.sendInvoice(finalized.id);
-
-    // mirror in DB
-    const mirror = await prisma.invoiceMirror.create({
-      data: {
-        customerId: customer.id,
-        stripeInvoiceId: finalized.id,
-        status: finalized.status || "open",
-        subtotal: finalized.subtotal || 0,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        tax: (finalized as any).tax || 0,
-        total: finalized.total || 0,
-        hostedUrl: finalized.hosted_invoice_url || undefined,
-        pdfUrl: finalized.invoice_pdf || undefined,
-        // invoiceNumber: invoiceNumber || undefined, // Property not available in schema
-        // issueDate: issueDate || undefined, // Property not available in schema
-        // dueDate: dueDate || undefined, // Property not available in schema
-        // notes: notes || undefined, // Property not available in schema
-        items: {
-          create: items.map((it) => ({
-            description: it.description,
-            quantity: it.quantity,
-            unitAmount: it.unitAmount,
-            taxable: it.taxable,
-            notes: it.notes || undefined,
-          })),
-        },
+    // Find or create customer
+    let customer = await prisma.customer.findFirst({
+      where: {
+        OR: [{ email: customerEmail }, { name: customerName }],
       },
     });
 
+    if (!customer) {
+      // Create new customer
+      customer = await prisma.customer.create({
+        data: {
+          name: customerName,
+          email: customerEmail || null,
+          phone: customerPhone || null,
+          address: customerAddress || null,
+          // Parse address components if available
+          addressLine1: customerAddress?.split(",")[0]?.trim() || null,
+          city:
+            customerAddress
+              ?.split(",")
+              .find((part: string) => part.trim().match(/^[A-Za-z\s]+$/))
+              ?.trim() || null,
+          state:
+            customerAddress
+              ?.split(",")
+              .find((part: string) => part.trim().match(/^[A-Z]{2}$/))
+              ?.trim() || null,
+          postalCode:
+            customerAddress
+              ?.split(",")
+              .find((part: string) => part.trim().match(/^\d{5}(-\d{4})?$/))
+              ?.trim() || null,
+        },
+      });
+    }
+
+    // Generate invoice number
+    const invoiceNumber = `INV-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+
+    // Create invoice in database
+    const invoice = await prisma.invoiceMirror.create({
+      data: {
+        customerId: customer.id,
+        stripeInvoiceId: `local-${Date.now()}`, // Placeholder for local invoices
+        status: status,
+        subtotal: Math.round(subtotal * 100), // Convert to cents
+        tax: Math.round(tax * 100), // Convert to cents
+        total: Math.round(total * 100), // Convert to cents
+        invoiceNumber: invoiceNumber,
+        issueDate: invoiceDate ? new Date(invoiceDate) : new Date(),
+        dueDate: dueDate ? new Date(dueDate) : null,
+        notes: notes || null,
+        items: {
+          create: items.map(
+            (item: {
+              description: string;
+              quantity: number;
+              rate: number;
+              amount: number;
+            }) => ({
+              description: item.description,
+              quantity: item.quantity,
+              unitAmount: Math.round(item.rate * 100), // Convert to cents
+              taxable: true,
+              notes: null,
+            }),
+          ),
+        },
+      },
+      include: {
+        customer: true,
+        items: true,
+      },
+    });
+
+    console.log("Invoice created successfully:", invoice.id);
+
     return NextResponse.json({
-      id: mirror.id,
-      hostedUrl: finalized.hosted_invoice_url,
-      pdfUrl: finalized.invoice_pdf,
+      id: invoice.id,
+      invoiceNumber: invoice.invoiceNumber,
+      status: invoice.status,
+      total: invoice.total,
+      message: "Invoice created successfully",
     });
   } catch (err: unknown) {
-    console.error(err);
+    console.error("Error creating invoice:", err);
     const errorMessage = err instanceof Error ? err.message : "Server error";
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }

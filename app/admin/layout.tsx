@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 
 interface ServiceRequest {
   id: string;
@@ -22,15 +22,18 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname();
   const { data: session, status } = useSession();
-  
+
   // Create mock session for admin access when not authenticated
-  const effectiveSession = status === "unauthenticated" ? {
-    user: {
-      id: "admin-bypass",
-      name: "Admin (Bypass Mode)",
-      email: "admin@loveserenespaces.com"
-    }
-  } : session;
+  const effectiveSession =
+    status === "unauthenticated"
+      ? {
+          user: {
+            id: "admin-bypass",
+            name: "Admin (Bypass Mode)",
+            email: "admin@loveserenespaces.com",
+          },
+        }
+      : session;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
@@ -115,16 +118,9 @@ export default function AdminLayout({
   // TODO: Re-enable authentication once Google OAuth is fixed
   if (status === "unauthenticated") {
     // Create a mock session for admin access
-    const mockSession = {
-      user: {
-        id: "admin-bypass",
-        name: "Admin (Bypass Mode)",
-        email: "admin@loveserenespaces.com"
-      }
-    };
-    
-    // Continue with mock session instead of blocking access
-    console.log("⚠️ AUTHENTICATION BYPASSED - Admin access granted without Google OAuth");
+    console.log(
+      "⚠️ AUTHENTICATION BYPASSED - Admin access granted without Google OAuth",
+    );
   }
 
   return (
@@ -361,13 +357,15 @@ export default function AdminLayout({
                     Sign Out
                   </button>
                 ) : (
-                  <span style={{ 
-                    padding: "0.5rem 1rem", 
-                    backgroundColor: "#10b981", 
-                    color: "white", 
-                    borderRadius: "6px", 
-                    fontSize: "0.875rem" 
-                  }}>
+                  <span
+                    style={{
+                      padding: "0.5rem 1rem",
+                      backgroundColor: "#10b981",
+                      color: "white",
+                      borderRadius: "6px",
+                      fontSize: "0.875rem",
+                    }}
+                  >
                     Bypass Mode
                   </span>
                 )}
@@ -658,15 +656,17 @@ export default function AdminLayout({
                   Sign Out
                 </button>
               ) : (
-                <div style={{
-                  padding: "16px",
-                  backgroundColor: "#10b981",
-                  color: "white",
-                  borderRadius: "8px",
-                  fontWeight: "500",
-                  fontSize: "1.1rem",
-                  textAlign: "center"
-                }}>
+                <div
+                  style={{
+                    padding: "16px",
+                    backgroundColor: "#10b981",
+                    color: "white",
+                    borderRadius: "8px",
+                    fontWeight: "500",
+                    fontSize: "1.1rem",
+                    textAlign: "center",
+                  }}
+                >
                   Bypass Mode Active
                 </div>
               )}
