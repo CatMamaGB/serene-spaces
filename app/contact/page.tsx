@@ -355,27 +355,6 @@ export default function ContactPage() {
                   fontSize: "1rem",
                 }}
               >
-                Phone
-              </p>
-              <p
-                style={{
-                  color: "#6b7280",
-                  margin: "0",
-                  fontSize: "1.1rem",
-                }}
-              >
-                (555) 123-4567
-              </p>
-            </div>
-            <div>
-              <p
-                style={{
-                  color: "#7a6990",
-                  fontWeight: "700",
-                  margin: "0 0 0.5rem 0",
-                  fontSize: "1rem",
-                }}
-              >
                 Email
               </p>
               <p
