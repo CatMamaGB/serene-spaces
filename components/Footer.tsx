@@ -5,23 +5,38 @@ import { useState, useEffect } from "react";
 
 export default function Footer() {
   const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
 
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+    const checkScreenSize = () => {
+      const width = window.innerWidth;
+      setIsMobile(width < 640);
+      setIsTablet(width >= 640 && width < 1024);
     };
 
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+    return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
+
+  const getGridColumns = () => {
+    if (isMobile) return "1fr";
+    if (isTablet) return "1fr 1fr";
+    return "2fr 1fr 1fr";
+  };
+
+  const getGap = () => {
+    if (isMobile) return "40px";
+    if (isTablet) return "50px";
+    return "60px";
+  };
 
   return (
     <footer
       style={{
         backgroundColor: "#0f172a",
         color: "white",
-        padding: isMobile ? "50px 20px" : "80px 24px",
+        padding: isMobile ? "40px 20px" : isTablet ? "60px 24px" : "80px 24px",
         textAlign: "center",
         borderTop: "1px solid rgba(255, 255, 255, 0.1)",
         position: "relative",
@@ -53,17 +68,21 @@ export default function Footer() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr 1fr",
-            gap: isMobile ? "50px" : "60px",
-            marginBottom: "60px",
+            gridTemplateColumns: getGridColumns(),
+            gap: getGap(),
+            marginBottom: isMobile ? "40px" : "60px",
             textAlign: isMobile ? "center" : "left",
           }}
         >
           {/* Company Info - Takes up more space */}
-          <div>
+          <div style={{ minWidth: 0 }}>
             <div
               style={{
-                fontSize: isMobile ? "1.75rem" : "2.25rem",
+                fontSize: isMobile
+                  ? "1.5rem"
+                  : isTablet
+                    ? "1.75rem"
+                    : "2.25rem",
                 fontWeight: "700",
                 marginBottom: "20px",
                 background: "linear-gradient(135deg, #7a6990 0%, #9f8bb3 100%)",
@@ -79,20 +98,21 @@ export default function Footer() {
                 color: "rgba(255,255,255,0.85)",
                 margin: "0 0 25px 0",
                 lineHeight: "1.7",
-                fontSize: isMobile ? "1rem" : "1.1rem",
-                maxWidth: "400px",
+                fontSize: isMobile ? "0.95rem" : "1.1rem",
+                maxWidth: isMobile ? "100%" : "400px",
+                wordWrap: "break-word",
               }}
             >
               Professional horse blanket cleaning, repairs, and waterproofing
               services. Serving the equestrian community with expertise and care
-              for over 10 years.
+              over 10 years.
             </p>
 
             {/* Social Media Section */}
             <div>
               <h4
                 style={{
-                  fontSize: isMobile ? "1rem" : "1.1rem",
+                  fontSize: isMobile ? "0.95rem" : "1.1rem",
                   marginBottom: "16px",
                   fontWeight: "600",
                   color: "rgba(255,255,255,0.9)",
@@ -107,6 +127,7 @@ export default function Footer() {
                   display: "flex",
                   gap: "16px",
                   justifyContent: isMobile ? "center" : "flex-start",
+                  flexWrap: "wrap",
                 }}
               >
                 <a
@@ -232,10 +253,10 @@ export default function Footer() {
           </div>
 
           {/* Quick Links */}
-          <div>
+          <div style={{ minWidth: 0 }}>
             <h4
               style={{
-                fontSize: isMobile ? "1.1rem" : "1.2rem",
+                fontSize: isMobile ? "1rem" : "1.2rem",
                 marginBottom: "24px",
                 fontWeight: "600",
                 color: "rgba(255,255,255,0.95)",
@@ -270,6 +291,7 @@ export default function Footer() {
                     fontWeight: "500",
                     position: "relative",
                     padding: "6px 0",
+                    whiteSpace: "nowrap",
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.color = "rgba(255,255,255,0.95)";
@@ -287,10 +309,10 @@ export default function Footer() {
           </div>
 
           {/* Contact Information */}
-          <div>
+          <div style={{ minWidth: 0 }}>
             <h4
               style={{
-                fontSize: isMobile ? "1.1rem" : "1.2rem",
+                fontSize: isMobile ? "1rem" : "1.2rem",
                 marginBottom: "24px",
                 fontWeight: "600",
                 color: "rgba(255,255,255,0.95)",
@@ -325,6 +347,7 @@ export default function Footer() {
                     alignItems: "center",
                     justifyContent: "center",
                     fontSize: "1.2rem",
+                    flexShrink: 0,
                   }}
                 >
                   📧
@@ -337,6 +360,7 @@ export default function Footer() {
                     transition: "color 0.3s ease",
                     fontSize: "1rem",
                     fontWeight: "500",
+                    wordBreak: "break-word",
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.color = "rgba(255,255,255,0.95)";
@@ -366,6 +390,7 @@ export default function Footer() {
                     alignItems: "center",
                     justifyContent: "center",
                     fontSize: "1.2rem",
+                    flexShrink: 0,
                   }}
                 >
                   📞
@@ -397,7 +422,7 @@ export default function Footer() {
         <div
           style={{
             borderTop: "1px solid rgba(255,255,255,0.1)",
-            paddingTop: "40px",
+            paddingTop: isMobile ? "30px" : "40px",
             textAlign: "center",
           }}
         >
@@ -420,7 +445,7 @@ export default function Footer() {
             >
               <p
                 style={{
-                  fontSize: "1rem",
+                  fontSize: isMobile ? "0.9rem" : "1rem",
                   color: "rgba(255,255,255,0.85)",
                   margin: "0",
                   fontWeight: "500",
@@ -430,7 +455,7 @@ export default function Footer() {
               </p>
               <p
                 style={{
-                  fontSize: "0.9rem",
+                  fontSize: isMobile ? "0.8rem" : "0.9rem",
                   color: "rgba(255,255,255,0.6)",
                   margin: "0",
                 }}
@@ -444,8 +469,10 @@ export default function Footer() {
                 display: "flex",
                 alignItems: "center",
                 gap: "10px",
-                fontSize: "0.9rem",
+                fontSize: isMobile ? "0.8rem" : "0.9rem",
                 color: "rgba(255,255,255,0.6)",
+                flexWrap: "wrap",
+                justifyContent: "center",
               }}
             >
               <span>Made with ❤️ by</span>

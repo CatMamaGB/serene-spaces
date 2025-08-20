@@ -6,8 +6,8 @@ Create a `.env.local` file in the project root with the following variables:
 
 ```bash
 # App
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=changeme-dev-secret
+NEXTAUTH_URL=""
+NEXTAUTH_SECRET=""
 
 # Database (Vercel Postgres later - for local dev set this now, update after deploy)
 DATABASE_URL=""
