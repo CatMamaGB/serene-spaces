@@ -56,9 +56,14 @@ export default function AdminLayout({
             (req: ServiceRequest) => req.status === "pending",
           );
           setPendingCount(pending.length);
+        } else {
+          console.warn("Service requests API returned non-OK status:", response.status);
+          setPendingCount(0);
         }
       } catch (error) {
         console.error("Error fetching pending requests:", error);
+        // Set pending count to 0 on error to avoid UI issues
+        setPendingCount(0);
       }
     };
 
