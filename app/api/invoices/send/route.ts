@@ -45,10 +45,12 @@ export async function POST(req: NextRequest) {
     if (!process.env.RESEND_API_KEY) {
       console.error("RESEND_API_KEY environment variable is not set");
       return NextResponse.json(
-        { error: "Email service configuration error" },
+        { error: "Email service configuration error - RESEND_API_KEY not set" },
         { status: 500 },
       );
     }
+
+    console.log("Resend API key configured:", process.env.RESEND_API_KEY ? "Yes" : "No");
 
     // Generate invoice HTML
     const invoiceHtml = generateInvoiceHtml({
@@ -67,9 +69,14 @@ export async function POST(req: NextRequest) {
       emailMessage,
     });
 
-    // Send email
+    // Send email via Resend
+    console.log("Attempting to send email via Resend...");
+    console.log("From:", "Serene Spaces <loveserenespaces@gmail.com>");
+    console.log("To:", customerEmail);
+    console.log("Subject:", `Invoice from Serene Spaces - ${invoiceDate}`);
+    
     const { data, error } = await resend.emails.send({
-      from: "Serene Spaces <noreply@serenespaces.com>",
+      from: "Serene Spaces <loveserenespaces@gmail.com>",
       to: customerEmail,
       subject: `Invoice from Serene Spaces - ${invoiceDate}`,
       html: invoiceHtml,
@@ -77,11 +84,15 @@ export async function POST(req: NextRequest) {
     });
 
     if (error) {
-      console.error("Resend error:", error);
-      return NextResponse.json(
-        { error: "Failed to send email" },
-        { status: 500 },
-      );
+      console.error("Resend API error details:", JSON.stringify(error, null, 2));
+              return NextResponse.json(
+          { 
+            error: "Failed to send email", 
+            details: error.message || "Unknown Resend API error",
+            code: "resend_error"
+          },
+          { status: 500 },
+        );
     }
 
     return NextResponse.json({
@@ -91,8 +102,20 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error("Error sending invoice:", error);
+    console.error("Error details:", JSON.stringify(error, null, 2));
+    
+    // Provide more specific error information
+    let errorMessage = "Internal server error";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    
     return NextResponse.json(
-      { error: "Internal server error" },
+      { 
+        error: "Internal server error", 
+        details: errorMessage,
+        timestamp: new Date().toISOString()
+      },
       { status: 500 },
     );
   }
