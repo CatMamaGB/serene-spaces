@@ -36,15 +36,18 @@ export default function CreateInvoice() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
 
   useEffect(() => {
-    // Check if mobile
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
+    // Check screen size
+    const checkScreenSize = () => {
+      const width = window.innerWidth;
+      setIsMobile(width <= 640);
+      setIsTablet(width > 640 && width <= 1024);
     };
 
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
 
     // Fetch customers from API
     const fetchCustomers = async () => {
@@ -65,7 +68,7 @@ export default function CreateInvoice() {
 
     fetchCustomers();
 
-    return () => window.removeEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
   const handleInputChange = (
@@ -345,7 +348,7 @@ export default function CreateInvoice() {
         style={{
           backgroundColor: "white",
           borderBottom: "1px solid #e2e8f0",
-          padding: isMobile ? "1rem" : "1rem 2rem",
+          padding: isMobile ? "1rem" : isTablet ? "1.5rem" : "2rem",
         }}
       >
         <div
@@ -356,14 +359,14 @@ export default function CreateInvoice() {
             justifyContent: "space-between",
             alignItems: isMobile ? "flex-start" : "center",
             flexDirection: isMobile ? "column" : "row",
-            gap: isMobile ? "0.5rem" : "0",
+            gap: isMobile ? "0.75rem" : "1rem",
           }}
         >
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              gap: isMobile ? "0.5rem" : "1rem",
+              gap: isMobile ? "0.75rem" : "1rem",
               flexDirection: isMobile ? "column" : "row",
               textAlign: isMobile ? "center" : "left",
             }}
@@ -373,8 +376,17 @@ export default function CreateInvoice() {
               style={{
                 color: "#7a6990",
                 textDecoration: "none",
-                fontSize: isMobile ? "0.8rem" : "0.875rem",
+                fontSize: isMobile ? "0.875rem" : "0.875rem",
                 fontWeight: "500",
+                padding: isMobile ? "0.5rem" : "0.25rem",
+                borderRadius: "0.375rem",
+                transition: "background-color 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "#f3f4f6";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "transparent";
               }}
             >
               ← Back to Dashboard
@@ -382,9 +394,10 @@ export default function CreateInvoice() {
             <h1
               style={{
                 color: "#1e293b",
-                fontSize: isMobile ? "1.5rem" : "1.875rem",
+                fontSize: isMobile ? "1.5rem" : isTablet ? "1.75rem" : "1.875rem",
                 fontWeight: "700",
                 margin: 0,
+                lineHeight: "1.2",
               }}
             >
               Create New Invoice
@@ -397,15 +410,15 @@ export default function CreateInvoice() {
         style={{
           maxWidth: "1200px",
           margin: "0 auto",
-          padding: isMobile ? "1rem" : "2rem",
+          padding: isMobile ? "1rem" : isTablet ? "1.5rem" : "2rem",
         }}
       >
         <form onSubmit={handleSubmit}>
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr",
-              gap: isMobile ? "1.5rem" : "2rem",
+              gridTemplateColumns: isMobile ? "1fr" : isTablet ? "1fr" : "2fr 1fr",
+              gap: isMobile ? "1.5rem" : isTablet ? "2rem" : "2rem",
             }}
           >
             {/* Main Form */}
@@ -507,8 +520,8 @@ export default function CreateInvoice() {
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: "1rem",
+                    gridTemplateColumns: isMobile ? "1fr" : isTablet ? "1fr 1fr" : "1fr 1fr",
+                    gap: isMobile ? "1rem" : "1rem",
                   }}
                 >
                   <div>
@@ -794,21 +807,21 @@ export default function CreateInvoice() {
                   <div
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "2fr 1fr 1fr 1fr auto",
-                      gap: "1rem",
-                      padding: "0.75rem",
+                      gridTemplateColumns: isMobile ? "1fr" : isTablet ? "2fr 1fr 1fr" : "2fr 1fr 1fr 1fr auto",
+                      gap: isMobile ? "0.5rem" : "1rem",
+                      padding: isMobile ? "0.5rem" : "0.75rem",
                       backgroundColor: "#f8fafc",
                       borderRadius: "0.5rem",
                       fontWeight: "500",
-                      fontSize: "0.875rem",
+                      fontSize: isMobile ? "0.75rem" : "0.875rem",
                       color: "#64748b",
                     }}
                   >
                     <div>Description</div>
-                    <div>Qty</div>
-                    <div>Rate</div>
+                    {!isMobile && <div>Qty</div>}
+                    {!isMobile && <div>Rate</div>}
                     <div>Amount</div>
-                    <div></div>
+                    {!isMobile && <div></div>}
                   </div>
 
                   {invoiceData.items.map((item, index) => (
@@ -816,9 +829,9 @@ export default function CreateInvoice() {
                       key={index}
                       style={{
                         display: "grid",
-                        gridTemplateColumns: "2fr 1fr 1fr 1fr auto",
-                        gap: "1rem",
-                        padding: "0.75rem 0",
+                        gridTemplateColumns: isMobile ? "1fr" : isTablet ? "2fr 1fr 1fr" : "2fr 1fr 1fr 1fr auto",
+                        gap: isMobile ? "0.5rem" : "1rem",
+                        padding: isMobile ? "0.5rem 0" : "0.75rem 0",
                         alignItems: "center",
                         borderBottom: "1px solid #f1f5f9",
                       }}
@@ -847,63 +860,67 @@ export default function CreateInvoice() {
                           e.target.style.borderColor = "#e5e7eb";
                         }}
                       />
-                      <input
-                        type="number"
-                        value={item.quantity}
-                        onChange={(e) =>
-                          handleItemChange(
-                            index,
-                            "quantity",
-                            Number(e.target.value),
-                          )
-                        }
-                        min="1"
-                        style={{
-                          padding: "0.5rem",
-                          border: "1px solid #e5e7eb",
-                          borderRadius: "0.375rem",
-                          fontSize: "0.875rem",
-                          backgroundColor: "white",
-                          color: "#374151",
-                          transition: "border-color 0.2s ease",
-                        }}
-                        onFocus={(e) => {
-                          e.target.style.borderColor = "#7a6990";
-                          e.target.style.outline = "none";
-                        }}
-                        onBlur={(e) => {
-                          e.target.style.borderColor = "#e5e7eb";
-                        }}
-                      />
-                      <input
-                        type="number"
-                        value={item.rate}
-                        onChange={(e) =>
-                          handleItemChange(
-                            index,
-                            "rate",
-                            Number(e.target.value),
-                          )
-                        }
-                        min="0"
-                        step="0.01"
-                        style={{
-                          padding: "0.5rem",
-                          border: "1px solid #e5e7eb",
-                          borderRadius: "0.375rem",
-                          fontSize: "0.875rem",
-                          backgroundColor: "white",
-                          color: "#374151",
-                          transition: "border-color 0.2s ease",
-                        }}
-                        onFocus={(e) => {
-                          e.target.style.borderColor = "#7a6990";
-                          e.target.style.outline = "none";
-                        }}
-                        onBlur={(e) => {
-                          e.target.style.borderColor = "#e5e7eb";
-                        }}
-                      />
+                      {!isMobile && (
+                        <input
+                          type="number"
+                          value={item.quantity}
+                          onChange={(e) =>
+                            handleItemChange(
+                              index,
+                              "quantity",
+                              Number(e.target.value),
+                            )
+                          }
+                          min="1"
+                          style={{
+                            padding: "0.5rem",
+                            border: "1px solid #e5e7eb",
+                            borderRadius: "0.375rem",
+                            fontSize: "0.875rem",
+                            backgroundColor: "white",
+                            color: "#374151",
+                            transition: "border-color 0.2s ease",
+                          }}
+                          onFocus={(e) => {
+                            e.target.style.borderColor = "#7a6990";
+                            e.target.style.outline = "none";
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderColor = "#e5e7eb";
+                          }}
+                        />
+                      )}
+                      {!isMobile && (
+                        <input
+                          type="number"
+                          value={item.rate}
+                          onChange={(e) =>
+                            handleItemChange(
+                              index,
+                              "rate",
+                              Number(e.target.value),
+                            )
+                          }
+                          min="0"
+                          step="0.01"
+                          style={{
+                            padding: "0.5rem",
+                            border: "1px solid #e5e7eb",
+                            borderRadius: "0.375rem",
+                            fontSize: "0.875rem",
+                            backgroundColor: "white",
+                            color: "#374151",
+                            transition: "border-color 0.2s ease",
+                          }}
+                          onFocus={(e) => {
+                            e.target.style.borderColor = "#7a6990";
+                            e.target.style.outline = "none";
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderColor = "#e5e7eb";
+                          }}
+                        />
+                      )}
                       <div
                         style={{
                           padding: "0.5rem",
@@ -1485,23 +1502,6 @@ export default function CreateInvoice() {
                     }}
                   >
                     {isSendingEmail ? "Sending..." : "📧 Send Invoice"}
-                  </button>
-
-                  <button
-                    type="button"
-                    style={{
-                      backgroundColor: "transparent",
-                      color: "#7a6990",
-                      border: "1px solid #7a6990",
-                      padding: "0.75rem 1.5rem",
-                      borderRadius: "0.5rem",
-                      fontSize: "0.875rem",
-                      fontWeight: "500",
-                      cursor: "pointer",
-                      transition: "all 0.2s ease",
-                    }}
-                  >
-                    Save as Draft
                   </button>
 
                   <button
