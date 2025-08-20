@@ -336,7 +336,7 @@ export default function ContactPage() {
               fontWeight: "500",
             }}
           >
-            Prefer to call or email directly?
+            Prefer to email us directly?
           </p>
           <div
             style={{
