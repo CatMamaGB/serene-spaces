@@ -7,6 +7,8 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+    console.log("Send invoice request body:", JSON.stringify(body, null, 2));
+
     const {
       customerName,
       customerEmail,
@@ -25,6 +27,11 @@ export async function POST(req: NextRequest) {
 
     // Validate required fields
     if (!customerName || !customerEmail || !items || items.length === 0) {
+      console.error("Missing required fields:", {
+        customerName,
+        customerEmail,
+        items: items?.length,
+      });
       return NextResponse.json(
         {
           error:

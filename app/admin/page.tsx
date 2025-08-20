@@ -246,7 +246,7 @@ export default function AdminDashboard() {
   return (
     <div
       style={{
-        padding: "24px",
+        padding: isMobile ? "12px" : "24px",
         backgroundColor: "#f5f5f5",
         minHeight: "100vh",
       }}
@@ -255,7 +255,7 @@ export default function AdminDashboard() {
         style={{
           maxWidth: "1400px",
           margin: "0 auto",
-          padding: isMobile ? "0" : "0",
+          padding: "0",
         }}
       >
         {/* Welcome Header */}

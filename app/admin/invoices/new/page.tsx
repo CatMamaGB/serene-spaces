@@ -35,8 +35,17 @@ export default function CreateInvoice() {
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
+    // Check if mobile
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
     // Fetch customers from API
     const fetchCustomers = async () => {
       try {
@@ -55,6 +64,8 @@ export default function CreateInvoice() {
     };
 
     fetchCustomers();
+
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   const handleInputChange = (
@@ -224,7 +235,7 @@ export default function CreateInvoice() {
         style={{
           backgroundColor: "white",
           borderBottom: "1px solid #e2e8f0",
-          padding: "1rem 2rem",
+          padding: isMobile ? "1rem" : "1rem 2rem",
         }}
       >
         <div
@@ -233,14 +244,18 @@ export default function CreateInvoice() {
             margin: "0 auto",
             display: "flex",
             justifyContent: "space-between",
-            alignItems: "center",
+            alignItems: isMobile ? "flex-start" : "center",
+            flexDirection: isMobile ? "column" : "row",
+            gap: isMobile ? "0.5rem" : "0",
           }}
         >
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "1rem",
+              gap: isMobile ? "0.5rem" : "1rem",
+              flexDirection: isMobile ? "column" : "row",
+              textAlign: isMobile ? "center" : "left",
             }}
           >
             <Link
@@ -248,7 +263,7 @@ export default function CreateInvoice() {
               style={{
                 color: "#7a6990",
                 textDecoration: "none",
-                fontSize: "0.875rem",
+                fontSize: isMobile ? "0.8rem" : "0.875rem",
                 fontWeight: "500",
               }}
             >
@@ -257,7 +272,7 @@ export default function CreateInvoice() {
             <h1
               style={{
                 color: "#1e293b",
-                fontSize: "1.875rem",
+                fontSize: isMobile ? "1.5rem" : "1.875rem",
                 fontWeight: "700",
                 margin: 0,
               }}
@@ -272,15 +287,15 @@ export default function CreateInvoice() {
         style={{
           maxWidth: "1200px",
           margin: "0 auto",
-          padding: "2rem",
+          padding: isMobile ? "1rem" : "2rem",
         }}
       >
         <form onSubmit={handleSubmit}>
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "2fr 1fr",
-              gap: "2rem",
+              gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr",
+              gap: isMobile ? "1.5rem" : "2rem",
             }}
           >
             {/* Main Form */}
@@ -291,14 +306,14 @@ export default function CreateInvoice() {
                   backgroundColor: "white",
                   borderRadius: "0.75rem",
                   border: "1px solid #e2e8f0",
-                  padding: "1.5rem",
-                  marginBottom: "1.5rem",
+                  padding: isMobile ? "1rem" : "1.5rem",
+                  marginBottom: isMobile ? "1rem" : "1.5rem",
                 }}
               >
                 <h2
                   style={{
                     color: "#1e293b",
-                    fontSize: "1.25rem",
+                    fontSize: isMobile ? "1.1rem" : "1.25rem",
                     fontWeight: "600",
                     marginBottom: "1rem",
                   }}

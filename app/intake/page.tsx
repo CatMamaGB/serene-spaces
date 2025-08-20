@@ -10,7 +10,8 @@ export default function IntakePage() {
     email: "",
     phone: "",
     address: "",
-    pickupDate: "",
+    pickupMonth: "",
+    pickupDay: "",
     services: [] as string[],
     repairNotes: "",
     waterproofingNotes: "",
@@ -486,35 +487,92 @@ export default function IntakePage() {
                     color: "#374151",
                   }}
                 >
-                  Preferred Pickup Date
+                  Preferred Pickup (Month & Day)
                 </label>
-                <input
-                  type="date"
-                  name="pickupDate"
-                  value={formData.pickupDate}
-                  onChange={handleInputChange}
-                  style={{
-                    width: "100%",
-                    padding: "12px 16px",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "8px",
-                    fontSize: "1rem",
-                    backgroundColor: "#fafafa",
-                    color: "#374151",
-                    transition: "all 0.2s ease",
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = "#7a6990";
-                    e.target.style.backgroundColor = "#ffffff";
-                    e.target.style.boxShadow =
-                      "0 0 0 3px rgba(122, 105, 144, 0.1)";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = "#e5e7eb";
-                    e.target.style.backgroundColor = "#fafafa";
-                    e.target.style.boxShadow = "none";
-                  }}
-                />
+                <div style={{ display: "flex", gap: "12px" }}>
+                  <div style={{ flex: 1 }}>
+                    <select
+                      name="pickupMonth"
+                      value={formData.pickupMonth || ""}
+                      onChange={handleInputChange}
+                      style={{
+                        width: "100%",
+                        padding: "12px 16px",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "8px",
+                        fontSize: "1rem",
+                        backgroundColor: "#fafafa",
+                        color: "#374151",
+                        transition: "all 0.2s ease",
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = "#7a6990";
+                        e.target.style.backgroundColor = "#ffffff";
+                        e.target.style.boxShadow =
+                          "0 0 0 3px rgba(122, 105, 144, 0.1)";
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = "#e5e7eb";
+                        e.target.style.backgroundColor = "#fafafa";
+                        e.target.style.boxShadow = "none";
+                      }}
+                    >
+                      <option value="">Select Month</option>
+                      <option value="01">January</option>
+                      <option value="02">February</option>
+                      <option value="03">March</option>
+                      <option value="04">April</option>
+                      <option value="05">May</option>
+                      <option value="06">June</option>
+                      <option value="07">July</option>
+                      <option value="08">August</option>
+                      <option value="09">September</option>
+                      <option value="10">October</option>
+                      <option value="11">November</option>
+                      <option value="12">December</option>
+                    </select>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <select
+                      name="pickupDay"
+                      value={formData.pickupDay || ""}
+                      onChange={handleInputChange}
+                      style={{
+                        width: "100%",
+                        padding: "12px 16px",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "8px",
+                        fontSize: "1rem",
+                        backgroundColor: "#fafafa",
+                        color: "#374151",
+                        transition: "all 0.2s ease",
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = "#7a6990";
+                        e.target.style.backgroundColor = "#ffffff";
+                        e.target.style.boxShadow =
+                          "0 0 0 3px rgba(122, 105, 144, 0.1)";
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = "#e5e7eb";
+                        e.target.style.backgroundColor = "#fafafa";
+                        e.target.style.boxShadow = "none";
+                      }}
+                    >
+                      <option value="">Select Day</option>
+                      {Array.from({ length: 31 }, (_, i) => i + 1).map(
+                        (day) => (
+                          <option
+                            key={day}
+                            value={day.toString().padStart(2, "0")}
+                          >
+                            {day}
+                          </option>
+                        ),
+                      )}
+                    </select>
+                  </div>
+                </div>
               </div>
             </div>
 

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
+import { useSession, signIn, signOut } from "next-auth/react";
 
 interface ServiceRequest {
   id: string;
@@ -20,9 +21,9 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const { data: session, status } = useSession();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [pendingRequests, setPendingRequests] = useState<ServiceRequest[]>([]);
   const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
@@ -42,7 +43,6 @@ export default function AdminLayout({
           const pending = data.filter(
             (req: ServiceRequest) => req.status === "pending",
           );
-          setPendingRequests(pending);
           setPendingCount(pending.length);
         }
       } catch (error) {
@@ -71,6 +71,94 @@ export default function AdminLayout({
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
   };
+
+  // Show loading state while checking authentication
+  if (status === "loading") {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "#f9fafb",
+        }}
+      >
+        <div style={{ textAlign: "center" }}>
+          <div
+            style={{
+              fontSize: "1.5rem",
+              color: "#7a6990",
+              marginBottom: "1rem",
+            }}
+          >
+            Loading...
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to sign in if not authenticated
+  if (status === "unauthenticated") {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "#f9fafb",
+        }}
+      >
+        <div
+          style={{
+            textAlign: "center",
+            padding: "2rem",
+            backgroundColor: "white",
+            borderRadius: "12px",
+            boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
+            maxWidth: "400px",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "1.5rem",
+              color: "#7a6990",
+              marginBottom: "1rem",
+            }}
+          >
+            Admin Access Required
+          </div>
+          <p style={{ color: "#6b7280", marginBottom: "2rem" }}>
+            Please sign in to access the admin dashboard.
+          </p>
+          <button
+            onClick={() => signIn("google")}
+            style={{
+              padding: "12px 24px",
+              backgroundColor: "#7a6990",
+              color: "white",
+              border: "none",
+              borderRadius: "8px",
+              fontSize: "1rem",
+              fontWeight: "500",
+              cursor: "pointer",
+              transition: "background-color 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "#6b5b7a";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "#7a6990";
+            }}
+          >
+            Sign in with Google
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#f9fafb" }}>
@@ -270,6 +358,43 @@ export default function AdminLayout({
               gap: "1rem",
             }}
           >
+            {/* User Info */}
+            {session?.user && (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  fontSize: "0.875rem",
+                  color: "#6b7280",
+                }}
+              >
+                <span>Welcome, {session.user.name}</span>
+                <button
+                  onClick={() => signOut()}
+                  style={{
+                    padding: "0.5rem 1rem",
+                    backgroundColor: "#ef4444",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    fontSize: "0.875rem",
+                    fontWeight: "500",
+                    cursor: "pointer",
+                    transition: "background-color 0.2s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#dc2626";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "#ef4444";
+                  }}
+                >
+                  Sign Out
+                </button>
+              </div>
+            )}
+
             {!isMobile && (
               <Link
                 href="/"
@@ -534,6 +659,24 @@ export default function AdminLayout({
               >
                 View Site
               </Link>
+
+              {/* Sign Out for Mobile */}
+              <button
+                onClick={() => signOut()}
+                style={{
+                  padding: "16px",
+                  backgroundColor: "#ef4444",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontWeight: "500",
+                  fontSize: "1.1rem",
+                  cursor: "pointer",
+                  transition: "background-color 0.2s ease",
+                }}
+              >
+                Sign Out
+              </button>
             </div>
           </div>
         </div>

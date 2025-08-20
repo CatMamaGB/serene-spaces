@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
-const resend = new Resend("re_Tjn1PQUf_5RNFxHdpKb7deMjTqPXQmyTu");
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: Request) {
   try {
@@ -12,7 +12,8 @@ export async function POST(req: Request) {
       email,
       phone,
       address,
-      pickupDate,
+      pickupMonth,
+      pickupDay,
       services,
       repairNotes,
       waterproofingNotes,
@@ -56,7 +57,10 @@ export async function POST(req: Request) {
         customerId: customer.id,
         services: services,
         address: address,
-        pickupDate: pickupDate ? new Date(pickupDate) : null,
+        pickupDate:
+          pickupMonth && pickupDay
+            ? new Date(`2024-${pickupMonth}-${pickupDay}`)
+            : null,
         repairNotes: repairNotes || null,
         waterproofingNotes: waterproofingNotes || null,
         allergies: allergies || null,
@@ -71,7 +75,8 @@ export async function POST(req: Request) {
         email,
         phone,
         address,
-        pickupDate,
+        pickupDate:
+          pickupMonth && pickupDay ? `${pickupMonth}/${pickupDay}` : null,
         services,
         repairNotes,
         waterproofingNotes,
@@ -129,6 +134,27 @@ function generateConfirmationEmail(data: any) {
 
   const formatDate = (date: string) => {
     if (!date) return "To be scheduled";
+    // Handle the new MM/DD format
+    if (date.includes("/")) {
+      const [month, day] = date.split("/");
+      const monthNames = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+      ];
+      const monthName = monthNames[parseInt(month) - 1];
+      return `${monthName} ${parseInt(day)}`;
+    }
+    // Fallback for old date format
     return new Date(date).toLocaleDateString("en-US", {
       weekday: "long",
       year: "numeric",
@@ -216,7 +242,7 @@ function generateConfirmationEmail(data: any) {
               <div class="info-value">${address}</div>
             </div>
             <div class="info-row">
-              <div class="info-label">Pickup Date:</div>
+              <div class="info-label">Preferred Pickup:</div>
               <div class="info-value">${formatDate(pickupDate)}</div>
             </div>
           </div>

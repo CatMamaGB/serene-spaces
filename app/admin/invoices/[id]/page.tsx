@@ -37,60 +37,125 @@ export default function ViewInvoice() {
   const [emailMessage, setEmailMessage] = useState("");
   const [sendToEmail, setSendToEmail] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    // For demo purposes, create a mock invoice
-    // In a real app, you'd fetch this from your API
-    const mockInvoice: Invoice = {
-      id: params.id as string,
-      customerName: "Sarah Johnson",
-      customerEmail: "sarah.johnson@email.com",
-      customerPhone: "(555) 123-4567",
-      customerAddress: "123 Main Street, Portland, OR 97201",
-      invoiceDate: "2024-01-15",
-      dueDate: "2024-02-15",
-      status: "open",
-      items: [
-        {
-          description: "Blanket (with fill)",
-          quantity: 2,
-          rate: 25,
-          amount: 50,
-        },
-        { description: "Wraps", quantity: 1, rate: 5, amount: 5 },
-        { description: "Boots", quantity: 1, rate: 5, amount: 5 },
-      ],
-      notes: "Thank you for your business!",
-      terms: "Payment due before delivery",
-      subtotal: 60,
-      tax: 4.8,
-      total: 64.8,
+    // Check if mobile
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
     };
 
-    setInvoice(mockInvoice);
-    setSendToEmail(mockInvoice.customerEmail);
-    setIsLoading(false);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
+    const fetchInvoice = async () => {
+      try {
+        const response = await fetch(`/api/invoices/${params.id}`);
+
+        if (response.ok) {
+          const invoiceData = await response.json();
+          setInvoice(invoiceData);
+          setSendToEmail(invoiceData.customerEmail);
+        } else {
+          console.error("Failed to fetch invoice:", response.status);
+          // Fallback to mock data if API fails
+          const mockInvoice: Invoice = {
+            id: params.id as string,
+            customerName: "Sarah Johnson",
+            customerEmail: "sarah.johnson@email.com",
+            customerPhone: "(555) 123-4567",
+            customerAddress: "123 Main Street, Portland, OR 97201",
+            invoiceDate: "2024-01-15",
+            dueDate: "2024-02-15",
+            status: "open",
+            items: [
+              {
+                description: "Blanket (with fill)",
+                quantity: 2,
+                rate: 25,
+                amount: 50,
+              },
+              { description: "Wraps", quantity: 1, rate: 5, amount: 5 },
+              { description: "Boots", quantity: 1, rate: 5, amount: 5 },
+            ],
+            notes: "Thank you for your business!",
+            terms: "Payment due before delivery",
+            subtotal: 60,
+            tax: 4.8,
+            total: 64.8,
+          };
+          setInvoice(mockInvoice);
+          setSendToEmail(mockInvoice.customerEmail);
+        }
+      } catch (error) {
+        console.error("Error fetching invoice:", error);
+        // Fallback to mock data if API fails
+        const mockInvoice: Invoice = {
+          id: params.id as string,
+          customerName: "Sarah Johnson",
+          customerEmail: "sarah.johnson@email.com",
+          customerPhone: "(555) 123-4567",
+          customerAddress: "123 Main Street, Portland, OR 97201",
+          invoiceDate: "2024-01-15",
+          dueDate: "2024-02-15",
+          status: "open",
+          items: [
+            {
+              description: "Blanket (with fill)",
+              quantity: 2,
+              rate: 25,
+              amount: 50,
+            },
+            { description: "Wraps", quantity: 1, rate: 5, amount: 5 },
+            { description: "Boots", quantity: 1, rate: 5, amount: 5 },
+          ],
+          notes: "Thank you for your business!",
+          terms: "Payment due before delivery",
+          subtotal: 60,
+          tax: 4.8,
+          total: 64.8,
+        };
+        setInvoice(mockInvoice);
+        setSendToEmail(mockInvoice.customerEmail);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchInvoice();
+
+    return () => window.removeEventListener("resize", checkMobile);
   }, [params.id]);
 
   const handleSendInvoice = async () => {
     if (!invoice || !sendToEmail) return;
 
+    console.log("Sending invoice:", invoice);
+    console.log("Send to email:", sendToEmail);
+    console.log("Email message:", emailMessage);
+
     setIsSending(true);
 
     try {
+      const requestBody = {
+        ...invoice,
+        customerEmail: sendToEmail,
+        emailMessage: emailMessage,
+      };
+
+      console.log("Request body:", requestBody);
+
       const response = await fetch("/api/invoices/send", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          ...invoice,
-          customerEmail: sendToEmail,
-          emailMessage: emailMessage,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
+      console.log("Response status:", response.status);
       const result = await response.json();
+      console.log("Response result:", result);
 
       if (response.ok) {
         alert(`Invoice sent successfully to ${sendToEmail}!`);
@@ -138,19 +203,52 @@ export default function ViewInvoice() {
 
   if (isLoading) {
     return (
-      <div style={{ padding: "2rem", textAlign: "center" }}>
-        <div>Loading invoice...</div>
+      <div
+        style={{
+          padding: isMobile ? "1.5rem" : "2rem",
+          textAlign: "center",
+          backgroundColor: "#f8fafc",
+          minHeight: "100vh",
+        }}
+      >
+        <div
+          style={{
+            fontSize: isMobile ? "1rem" : "1.2rem",
+            color: "#666",
+          }}
+        >
+          Loading invoice...
+        </div>
       </div>
     );
   }
 
   if (!invoice) {
     return (
-      <div style={{ padding: "2rem", textAlign: "center" }}>
-        <div>Invoice not found</div>
+      <div
+        style={{
+          padding: isMobile ? "1.5rem" : "2rem",
+          textAlign: "center",
+          backgroundColor: "#f8fafc",
+          minHeight: "100vh",
+        }}
+      >
+        <div
+          style={{
+            fontSize: isMobile ? "1.2rem" : "1.5rem",
+            marginBottom: "1rem",
+            color: "#333",
+          }}
+        >
+          Invoice not found
+        </div>
         <Link
           href="/admin/invoices"
-          style={{ color: "#7a6990", textDecoration: "none" }}
+          style={{
+            color: "#7a6990",
+            textDecoration: "none",
+            fontSize: isMobile ? "1rem" : "1.1rem",
+          }}
         >
           ← Back to Invoices
         </Link>
@@ -171,7 +269,7 @@ export default function ViewInvoice() {
         style={{
           backgroundColor: "white",
           borderBottom: "1px solid #e2e8f0",
-          padding: "1rem 2rem",
+          padding: isMobile ? "1rem" : "1rem 2rem",
         }}
       >
         <div
@@ -180,14 +278,19 @@ export default function ViewInvoice() {
             margin: "0 auto",
             display: "flex",
             justifyContent: "space-between",
-            alignItems: "center",
+            alignItems: isMobile ? "flex-start" : "center",
+            flexDirection: isMobile ? "column" : "row",
+            gap: isMobile ? "1rem" : "0",
           }}
         >
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "1rem",
+              gap: isMobile ? "0.5rem" : "1rem",
+              flexDirection: isMobile ? "column" : "row",
+              textAlign: isMobile ? "center" : "left",
+              width: isMobile ? "100%" : "auto",
             }}
           >
             <Link
@@ -195,7 +298,7 @@ export default function ViewInvoice() {
               style={{
                 color: "#7a6990",
                 textDecoration: "none",
-                fontSize: "0.875rem",
+                fontSize: isMobile ? "0.8rem" : "0.875rem",
                 fontWeight: "500",
               }}
             >
@@ -204,22 +307,36 @@ export default function ViewInvoice() {
             <h1
               style={{
                 color: "#1e293b",
-                fontSize: "1.875rem",
+                fontSize: isMobile ? "1.5rem" : "1.875rem",
                 fontWeight: "700",
                 margin: 0,
               }}
             >
-              Invoice #{invoice.id}
+              Invoice #{invoice.id.slice(-6)}
             </h1>
           </div>
 
-          <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+          <div
+            style={{
+              display: "flex",
+              gap: isMobile ? "0.75rem" : "1rem",
+              alignItems: "center",
+              flexDirection: isMobile ? "column" : "row",
+              width: isMobile ? "100%" : "auto",
+            }}
+          >
             <div
-              style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                width: isMobile ? "100%" : "auto",
+                justifyContent: isMobile ? "center" : "flex-start",
+              }}
             >
               <label
                 style={{
-                  fontSize: "0.875rem",
+                  fontSize: isMobile ? "0.8rem" : "0.875rem",
                   fontWeight: "500",
                   color: "#374151",
                 }}
@@ -253,12 +370,13 @@ export default function ViewInvoice() {
                   }
                 }}
                 style={{
-                  padding: "0.5rem",
+                  padding: isMobile ? "0.6rem" : "0.5rem",
                   border: "1px solid #d1d5db",
                   borderRadius: "0.375rem",
-                  fontSize: "0.875rem",
+                  fontSize: isMobile ? "0.8rem" : "0.875rem",
                   backgroundColor: "white",
                   color: "#374151",
+                  width: isMobile ? "120px" : "auto",
                 }}
               >
                 <option value="draft">Draft</option>
@@ -269,57 +387,70 @@ export default function ViewInvoice() {
               </select>
             </div>
 
-            <button
-              onClick={() => setShowSendModal(true)}
+            <div
               style={{
-                backgroundColor: "#10b981",
-                color: "white",
-                border: "none",
-                padding: "0.75rem 1.5rem",
-                borderRadius: "0.5rem",
-                fontSize: "0.875rem",
-                fontWeight: "600",
-                cursor: "pointer",
-                transition: "all 0.2s ease",
+                display: "flex",
+                gap: isMobile ? "0.5rem" : "1rem",
+                flexDirection: isMobile ? "column" : "row",
+                width: isMobile ? "100%" : "auto",
               }}
             >
-              📧 Send Invoice
-            </button>
+              <button
+                onClick={() => setShowSendModal(true)}
+                style={{
+                  backgroundColor: "#10b981",
+                  color: "white",
+                  border: "none",
+                  padding: isMobile ? "0.75rem" : "0.75rem 1.5rem",
+                  borderRadius: "0.5rem",
+                  fontSize: isMobile ? "0.8rem" : "0.875rem",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                  width: isMobile ? "100%" : "auto",
+                }}
+              >
+                📧 Send Invoice
+              </button>
 
-            <Link
-              href={`/admin/invoices/${invoice.id}/edit`}
-              style={{
-                backgroundColor: "#7a6990",
-                color: "white",
-                border: "none",
-                padding: "0.75rem 1.5rem",
-                borderRadius: "0.5rem",
-                fontSize: "0.875rem",
-                fontWeight: "600",
-                textDecoration: "none",
-                display: "inline-block",
-                transition: "all 0.2s ease",
-              }}
-            >
-              ✏️ Edit Invoice
-            </Link>
+              <Link
+                href={`/admin/invoices/${invoice.id}/edit`}
+                style={{
+                  backgroundColor: "#7a6990",
+                  color: "white",
+                  border: "none",
+                  padding: isMobile ? "0.75rem" : "0.75rem 1.5rem",
+                  borderRadius: "0.5rem",
+                  fontSize: isMobile ? "0.8rem" : "0.875rem",
+                  fontWeight: "600",
+                  textDecoration: "none",
+                  display: "inline-block",
+                  transition: "all 0.2s ease",
+                  width: isMobile ? "100%" : "auto",
+                  textAlign: "center",
+                }}
+              >
+                ✏️ Edit Invoice
+              </Link>
 
-            <button
-              onClick={handleDeleteClick}
-              style={{
-                backgroundColor: "#dc2626",
-                color: "white",
-                border: "none",
-                padding: "0.75rem 1.5rem",
-                borderRadius: "0.5rem",
-                fontSize: "0.875rem",
-                fontWeight: "600",
-                cursor: "pointer",
-                transition: "all 0.2s ease",
-              }}
-            >
-              🗑️ Delete Invoice
-            </button>
+              <button
+                onClick={handleDeleteClick}
+                style={{
+                  backgroundColor: "#dc2626",
+                  color: "white",
+                  border: "none",
+                  padding: isMobile ? "0.75rem" : "0.75rem 1.5rem",
+                  borderRadius: "0.5rem",
+                  fontSize: isMobile ? "0.8rem" : "0.875rem",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                  width: isMobile ? "100%" : "auto",
+                }}
+              >
+                🗑️ Delete Invoice
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -328,7 +459,7 @@ export default function ViewInvoice() {
         style={{
           maxWidth: "800px",
           margin: "0 auto",
-          padding: "2rem",
+          padding: isMobile ? "1rem" : "2rem",
         }}
       >
         {/* Invoice Display */}
@@ -337,23 +468,23 @@ export default function ViewInvoice() {
             backgroundColor: "white",
             borderRadius: "0.75rem",
             border: "1px solid #e2e8f0",
-            padding: "2rem",
-            marginBottom: "2rem",
+            padding: isMobile ? "1rem" : "2rem",
+            marginBottom: isMobile ? "1rem" : "2rem",
           }}
         >
           {/* Company Header */}
           <div
             style={{
               textAlign: "center",
-              marginBottom: "2rem",
+              marginBottom: isMobile ? "1.5rem" : "2rem",
               borderBottom: "2px solid #7a6990",
-              paddingBottom: "1rem",
+              paddingBottom: isMobile ? "0.75rem" : "1rem",
             }}
           >
             <h1
               style={{
                 color: "#7a6990",
-                fontSize: "2.5rem",
+                fontSize: isMobile ? "1.75rem" : "2.5rem",
                 fontWeight: "bold",
                 margin: "0 0 0.5rem 0",
               }}
@@ -363,7 +494,7 @@ export default function ViewInvoice() {
             <p
               style={{
                 color: "#64748b",
-                fontSize: "1.125rem",
+                fontSize: isMobile ? "0.9rem" : "1.125rem",
                 margin: 0,
               }}
             >
@@ -375,65 +506,107 @@ export default function ViewInvoice() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "2rem",
-              marginBottom: "2rem",
+              gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+              gap: isMobile ? "1.5rem" : "2rem",
+              marginBottom: isMobile ? "1.5rem" : "2rem",
             }}
           >
             <div>
               <h3
                 style={{
                   color: "#374151",
-                  fontSize: "1.125rem",
+                  fontSize: isMobile ? "1rem" : "1.125rem",
                   fontWeight: "600",
                   marginBottom: "0.75rem",
                 }}
               >
                 Bill To:
               </h3>
-              <p style={{ margin: "0.25rem 0", color: "#1f2937" }}>
+              <p
+                style={{
+                  margin: "0.25rem 0",
+                  color: "#1f2937",
+                  fontSize: isMobile ? "0.9rem" : "1rem",
+                }}
+              >
                 <strong>{invoice.customerName}</strong>
               </p>
               {invoice.customerEmail && (
-                <p style={{ margin: "0.25rem 0", color: "#1f2937" }}>
+                <p
+                  style={{
+                    margin: "0.25rem 0",
+                    color: "#1f2937",
+                    fontSize: isMobile ? "0.9rem" : "1rem",
+                  }}
+                >
                   {invoice.customerEmail}
                 </p>
               )}
               {invoice.customerPhone && (
-                <p style={{ margin: "0.25rem 0", color: "#1f2937" }}>
+                <p
+                  style={{
+                    margin: "0.25rem 0",
+                    color: "#1f2937",
+                    fontSize: isMobile ? "0.9rem" : "1rem",
+                  }}
+                >
                   {invoice.customerPhone}
                 </p>
               )}
               {invoice.customerAddress && (
-                <p style={{ margin: "0.25rem 0", color: "#1f2937" }}>
+                <p
+                  style={{
+                    margin: "0.25rem 0",
+                    color: "#1f2937",
+                    fontSize: isMobile ? "0.9rem" : "1rem",
+                  }}
+                >
                   {invoice.customerAddress}
                 </p>
               )}
             </div>
 
-            <div style={{ textAlign: "right" }}>
+            <div style={{ textAlign: isMobile ? "left" : "right" }}>
               <h3
                 style={{
                   color: "#374151",
-                  fontSize: "1.125rem",
+                  fontSize: isMobile ? "1rem" : "1.125rem",
                   fontWeight: "600",
                   marginBottom: "0.75rem",
                 }}
               >
                 Invoice Details:
               </h3>
-              <p style={{ margin: "0.25rem 0", color: "#1f2937" }}>
+              <p
+                style={{
+                  margin: "0.25rem 0",
+                  color: "#1f2937",
+                  fontSize: isMobile ? "0.9rem" : "1rem",
+                }}
+              >
                 <strong>Date:</strong>{" "}
                 {new Date(invoice.invoiceDate).toLocaleDateString()}
               </p>
               {invoice.dueDate && (
-                <p style={{ margin: "0.25rem 0", color: "#1f2937" }}>
+                <p
+                  style={{
+                    margin: "0.25rem 0",
+                    color: "#1f2937",
+                    fontSize: isMobile ? "0.9rem" : "1rem",
+                  }}
+                >
                   <strong>Due Date:</strong>{" "}
                   {new Date(invoice.dueDate).toLocaleDateString()}
                 </p>
               )}
-              <p style={{ margin: "0.25rem 0", color: "#1f2937" }}>
-                <strong>Invoice #:</strong> {invoice.id}
+              <p
+                style={{
+                  margin: "0.25rem 0",
+                  color: "#1f2937",
+                  fontSize: isMobile ? "0.9rem" : "1rem",
+                }}
+              >
+                <strong>Invoice #:</strong> {invoice.id.slice(-6)}
               </p>
             </div>
           </div>

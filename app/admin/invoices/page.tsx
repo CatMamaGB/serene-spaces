@@ -4,14 +4,20 @@ import Link from "next/link";
 
 type Invoice = {
   id: string;
-  customerName: string;
-  invoiceNumber: string;
-  issueDate: string;
-  dueDate: string;
+  customerId: string;
+  customer?: {
+    name: string;
+  };
+  customerName?: string; // For backward compatibility with mock data
+  invoiceNumber?: string;
+  issueDate?: string;
+  dueDate?: string;
   total: number;
   status: string;
   hostedUrl?: string;
   pdfUrl?: string;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 export default function InvoicesPage() {
@@ -23,6 +29,9 @@ export default function InvoicesPage() {
     id: string;
     customerName: string;
   } | null>(null);
+  const [deletingInvoiceId, setDeletingInvoiceId] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     // Check if mobile
@@ -37,6 +46,7 @@ export default function InvoicesPage() {
     const mockInvoices: Invoice[] = [
       {
         id: "1",
+        customerId: "mock-customer-1",
         customerName: "Sarah Johnson",
         invoiceNumber: "INV-001",
         issueDate: "2024-01-15",
@@ -46,6 +56,7 @@ export default function InvoicesPage() {
       },
       {
         id: "2",
+        customerId: "mock-customer-2",
         customerName: "Mike Chen",
         invoiceNumber: "INV-002",
         issueDate: "2024-01-14",
@@ -55,6 +66,7 @@ export default function InvoicesPage() {
       },
       {
         id: "3",
+        customerId: "mock-customer-3",
         customerName: "Emily Rodriguez",
         invoiceNumber: "INV-003",
         issueDate: "2024-01-13",
@@ -64,35 +76,51 @@ export default function InvoicesPage() {
       },
     ];
 
-    // For now, just use mock data directly since the API isn't fully set up
-    setInvoices(mockInvoices);
-    setLoading(false);
-
-    return () => window.removeEventListener("resize", checkMobile);
-
-    // TODO: Uncomment this when the API is properly set up
-    /*
-    fetch('/api/invoices/list')
-      .then(r => {
+    // Fetch real data from the API
+    fetch("/api/invoices/list")
+      .then((r) => {
         if (!r.ok) {
           throw new Error(`HTTP error! status: ${r.status}`);
         }
         return r.json();
       })
-      .then(data => {
+      .then((data) => {
         if (Array.isArray(data)) {
-          setInvoices(data);
+          // Normalize the data to ensure it has the expected structure
+          const normalizedData = data.map((invoice) => ({
+            ...invoice,
+            customerName:
+              invoice.customerName ||
+              invoice.customer?.name ||
+              "Unknown Customer",
+            invoiceNumber:
+              invoice.invoiceNumber || `INV-${invoice.id.slice(-6)}`,
+            issueDate:
+              invoice.issueDate ||
+              invoice.createdAt ||
+              new Date().toISOString(),
+            dueDate:
+              invoice.dueDate ||
+              (invoice.createdAt
+                ? new Date(
+                    new Date(invoice.createdAt).getTime() +
+                      30 * 24 * 60 * 60 * 1000,
+                  ).toISOString()
+                : new Date().toISOString()),
+          }));
+          setInvoices(normalizedData);
         } else {
-          console.warn('API returned non-array data, using mock data');
+          console.warn("API returned non-array data, using mock data");
           setInvoices(mockInvoices);
         }
       })
-      .catch(error => {
-        console.error('Error fetching invoices, using mock data:', error);
+      .catch((error) => {
+        console.error("Error fetching invoices, using mock data:", error);
         setInvoices(mockInvoices);
       })
       .finally(() => setLoading(false));
-    */
+
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   const formatCurrency = (cents: number) => {
@@ -118,10 +146,15 @@ export default function InvoicesPage() {
   const confirmDelete = async () => {
     if (!invoiceToDelete) return;
 
+    console.log("Attempting to delete invoice:", invoiceToDelete);
+    setDeletingInvoiceId(invoiceToDelete.id);
     try {
       const response = await fetch(`/api/invoices/${invoiceToDelete.id}`, {
         method: "DELETE",
       });
+
+      console.log("Delete response status:", response.status);
+      console.log("Delete response headers:", response.headers);
 
       if (response.ok) {
         // Remove the invoice from the local state
@@ -130,13 +163,17 @@ export default function InvoicesPage() {
         );
         setShowDeleteModal(false);
         setInvoiceToDelete(null);
+        alert("Invoice deleted successfully!");
       } else {
         const error = await response.json();
+        console.error("Delete failed with error:", error);
         alert(`Failed to delete invoice: ${error.error || "Unknown error"}`);
       }
     } catch (error) {
       console.error("Error deleting invoice:", error);
       alert("Failed to delete invoice. Please try again.");
+    } finally {
+      setDeletingInvoiceId(null);
     }
   };
 
@@ -172,7 +209,7 @@ export default function InvoicesPage() {
   return (
     <div
       style={{
-        padding: isMobile ? "16px" : "24px",
+        padding: isMobile ? "12px" : "24px",
         backgroundColor: "#f5f5f5",
         minHeight: "100vh",
       }}
@@ -184,9 +221,10 @@ export default function InvoicesPage() {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            marginBottom: "32px",
+            marginBottom: isMobile ? "24px" : "32px",
             flexDirection: isMobile ? "column" : "row",
             gap: isMobile ? "1rem" : "0",
+            padding: isMobile ? "0 8px" : "0",
           }}
         >
           <div style={{ textAlign: isMobile ? "center" : "left" }}>
@@ -760,30 +798,47 @@ export default function InvoicesPage() {
                               onClick={() =>
                                 handleDeleteInvoice(
                                   invoice.id,
-                                  invoice.customerName,
+                                  invoice.customerName ||
+                                    invoice.customer?.name ||
+                                    "Unknown Customer",
                                 )
                               }
+                              disabled={deletingInvoiceId === invoice.id}
                               style={{
                                 padding: "6px 12px",
-                                backgroundColor: "#dc2626",
+                                backgroundColor:
+                                  deletingInvoiceId === invoice.id
+                                    ? "#6c757d"
+                                    : "#dc2626",
                                 color: "white",
                                 border: "none",
                                 borderRadius: "4px",
                                 fontSize: "0.8rem",
                                 fontWeight: "500",
-                                cursor: "pointer",
+                                cursor:
+                                  deletingInvoiceId === invoice.id
+                                    ? "not-allowed"
+                                    : "pointer",
                                 transition: "background-color 0.2s ease",
+                                opacity:
+                                  deletingInvoiceId === invoice.id ? 0.6 : 1,
                               }}
                               onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor =
-                                  "#b91c1c";
+                                if (deletingInvoiceId !== invoice.id) {
+                                  e.currentTarget.style.backgroundColor =
+                                    "#b91c1c";
+                                }
                               }}
                               onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor =
-                                  "#dc2626";
+                                if (deletingInvoiceId !== invoice.id) {
+                                  e.currentTarget.style.backgroundColor =
+                                    "#dc2626";
+                                }
                               }}
                             >
-                              Delete
+                              {deletingInvoiceId === invoice.id
+                                ? "Deleting..."
+                                : "Delete"}
                             </button>
                           </div>
                         </td>
@@ -905,19 +960,23 @@ export default function InvoicesPage() {
               </button>
               <button
                 onClick={confirmDelete}
+                disabled={deletingInvoiceId !== null}
                 style={{
                   padding: "10px 20px",
-                  backgroundColor: "#dc2626",
+                  backgroundColor:
+                    deletingInvoiceId !== null ? "#6c757d" : "#dc2626",
                   color: "white",
                   border: "none",
                   borderRadius: "8px",
                   fontSize: "0.875rem",
                   fontWeight: "600",
-                  cursor: "pointer",
+                  cursor:
+                    deletingInvoiceId !== null ? "not-allowed" : "pointer",
                   transition: "all 0.2s ease",
+                  opacity: deletingInvoiceId !== null ? 0.6 : 1,
                 }}
               >
-                Delete Invoice
+                {deletingInvoiceId !== null ? "Deleting..." : "Delete Invoice"}
               </button>
             </div>
           </div>

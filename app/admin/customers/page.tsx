@@ -20,7 +20,9 @@ export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
-  const [deletingCustomerId, setDeletingCustomerId] = useState<string | null>(null);
+  const [deletingCustomerId, setDeletingCustomerId] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     // Check if mobile
@@ -61,7 +63,7 @@ export default function CustomersPage() {
       setDeletingCustomerId(customerId);
       try {
         const response = await fetch(`/api/customers?id=${customerId}`, {
-          method: 'DELETE',
+          method: "DELETE",
         });
 
         if (response.ok) {
@@ -69,14 +71,14 @@ export default function CustomersPage() {
           setCustomers((prev) =>
             prev.filter((customer) => customer.id !== customerId),
           );
-          alert('Customer deleted successfully!');
+          alert("Customer deleted successfully!");
         } else {
           const errorData = await response.json();
           alert(`Failed to delete customer: ${errorData.error}`);
         }
       } catch (error) {
-        console.error('Error deleting customer:', error);
-        alert('Failed to delete customer. Please try again.');
+        console.error("Error deleting customer:", error);
+        alert("Failed to delete customer. Please try again.");
       } finally {
         setDeletingCustomerId(null);
       }
@@ -87,14 +89,21 @@ export default function CustomersPage() {
     return (
       <div
         style={{
-          padding: "24px",
+          padding: isMobile ? "12px" : "24px",
           backgroundColor: "#f5f5f5",
           minHeight: "100vh",
         }}
       >
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-          <div style={{ textAlign: "center", padding: "60px" }}>
-            <div style={{ fontSize: "1.2rem", color: "#666" }}>
+          <div
+            style={{
+              textAlign: "center",
+              padding: isMobile ? "40px 20px" : "60px",
+            }}
+          >
+            <div
+              style={{ fontSize: isMobile ? "1rem" : "1.2rem", color: "#666" }}
+            >
               Loading customers...
             </div>
           </div>
@@ -106,7 +115,7 @@ export default function CustomersPage() {
   return (
     <div
       style={{
-        padding: "24px",
+        padding: isMobile ? "12px" : "24px",
         backgroundColor: "#f5f5f5",
         minHeight: "100vh",
       }}
@@ -118,9 +127,10 @@ export default function CustomersPage() {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            marginBottom: "32px",
+            marginBottom: isMobile ? "24px" : "32px",
             flexDirection: isMobile ? "column" : "row",
             gap: isMobile ? "1rem" : "0",
+            padding: isMobile ? "0 8px" : "0",
           }}
         >
           <div style={{ textAlign: isMobile ? "center" : "left" }}>
@@ -289,8 +299,9 @@ export default function CustomersPage() {
                       <div
                         style={{
                           display: "flex",
-                          gap: "8px",
+                          gap: "6px",
                           flexWrap: "wrap",
+                          justifyContent: "flex-end",
                         }}
                       >
                         <Link
@@ -548,28 +559,39 @@ export default function CustomersPage() {
                               disabled={deletingCustomerId === customer.id}
                               style={{
                                 padding: "6px 12px",
-                                backgroundColor: deletingCustomerId === customer.id ? "#6c757d" : "#dc3545",
+                                backgroundColor:
+                                  deletingCustomerId === customer.id
+                                    ? "#6c757d"
+                                    : "#dc3545",
                                 color: "white",
                                 border: "none",
                                 borderRadius: "4px",
                                 fontSize: "0.8rem",
                                 fontWeight: "500",
-                                cursor: deletingCustomerId === customer.id ? "not-allowed" : "pointer",
+                                cursor:
+                                  deletingCustomerId === customer.id
+                                    ? "not-allowed"
+                                    : "pointer",
                                 transition: "background-color 0.2s ease",
-                                opacity: deletingCustomerId === customer.id ? 0.6 : 1,
+                                opacity:
+                                  deletingCustomerId === customer.id ? 0.6 : 1,
                               }}
                               onMouseEnter={(e) => {
                                 if (deletingCustomerId !== customer.id) {
-                                  e.currentTarget.style.backgroundColor = "#c82333";
+                                  e.currentTarget.style.backgroundColor =
+                                    "#c82333";
                                 }
                               }}
                               onMouseLeave={(e) => {
                                 if (deletingCustomerId !== customer.id) {
-                                  e.currentTarget.style.backgroundColor = "#dc3545";
+                                  e.currentTarget.style.backgroundColor =
+                                    "#dc3545";
                                 }
                               }}
                             >
-                              {deletingCustomerId === customer.id ? "Deleting..." : "Delete"}
+                              {deletingCustomerId === customer.id
+                                ? "Deleting..."
+                                : "Delete"}
                             </button>
                           </div>
                         </td>
