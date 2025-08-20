@@ -13,15 +13,23 @@ const requiredEnvVars = {
 };
 
 const missingVars = Object.entries(requiredEnvVars)
-  .filter(([_, value]) => !value)
+  .filter(([, value]) => !value)
   .map(([key]) => key);
 
 if (missingVars.length > 0) {
   console.error("❌ Missing required environment variables for NextAuth:");
-  missingVars.forEach(key => {
+  missingVars.forEach((key) => {
     console.error(`  ${key}: NOT SET`);
   });
-  console.error("Available variables:", Object.keys(process.env).filter(key => key.includes('AUTH') || key.includes('GOOGLE') || key.includes('DATABASE')));
+  console.error(
+    "Available variables:",
+    Object.keys(process.env).filter(
+      (key) =>
+        key.includes("AUTH") ||
+        key.includes("GOOGLE") ||
+        key.includes("DATABASE"),
+    ),
+  );
 }
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
