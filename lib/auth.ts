@@ -48,8 +48,9 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   },
   // Add error handling
   debug: process.env.NODE_ENV === "development",
-  // Add error pages
+  // Add custom pages
   pages: {
+    signIn: "/auth/signin",
     error: "/auth/error",
   },
 });
