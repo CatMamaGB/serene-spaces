@@ -5,18 +5,8 @@ const globalForPrisma = global as unknown as { prisma: PrismaClient };
 export const prisma =
   globalForPrisma.prisma ||
   new PrismaClient({
-    log: ["error", "warn"],
+    log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
     errorFormat: "pretty",
   });
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
-
-// Test database connection
-prisma
-  .$connect()
-  .then(() => {
-    console.log("✅ Database connected successfully");
-  })
-  .catch((error: unknown) => {
-    console.error("❌ Database connection failed:", error);
-  });
