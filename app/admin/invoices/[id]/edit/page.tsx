@@ -6,21 +6,27 @@ import Link from "next/link";
 type Invoice = {
   id: string;
   customerName: string;
-  invoiceNumber: string;
-  issueDate: string;
+  customerEmail: string;
+  customerPhone: string;
+  customerAddress: string;
+  invoiceDate: string;
   dueDate: string;
-  total: number;
   status: string;
-  notes?: string;
-  items?: InvoiceItem[];
+  notes: string;
+  terms: string;
+  subtotal: number;
+  tax: number;
+  total: number;
+  invoiceNumber: string;
+  items: InvoiceItem[];
 };
 
 type InvoiceItem = {
-  id: string;
+  id?: string;
   description: string;
   quantity: number;
-  unitPrice: number;
-  total: number;
+  rate: number;
+  amount: number;
 };
 
 export default function EditInvoicePage() {
@@ -42,46 +48,62 @@ export default function EditInvoicePage() {
     checkMobile();
     window.addEventListener("resize", checkMobile);
 
-    // Mock data for now - in a real app, this would come from an API
-    const mockInvoice: Invoice = {
-      id: params.id as string,
-      customerName: "Sarah Johnson",
-      invoiceNumber: "INV-001",
-      issueDate: "2024-01-15",
-      dueDate: "2024-02-14",
-      total: 24500, // $245.00 in cents
-      status: "open",
-      notes: "Barn organization and blanket cleaning services completed.",
-      items: [
-        {
-          id: "1",
-          description: "Barn Organization & Cleanup",
-          quantity: 1,
-          unitPrice: 15000, // $150.00
-          total: 15000,
-        },
-        {
-          id: "2",
-          description: "Blanket Cleaning & Repair",
-          quantity: 3,
-          unitPrice: 2500, // $25.00
-          total: 7500,
-        },
-        {
-          id: "3",
-          description: "Wraps & Boots",
-          quantity: 4,
-          unitPrice: 500, // $5.00
-          total: 2000,
-        },
-      ],
+    // Fetch the actual invoice data from the API
+    const fetchInvoice = async () => {
+      try {
+        const response = await fetch(`/api/invoices/${params.id}`);
+        if (response.ok) {
+          const invoiceData = await response.json();
+          setInvoice(invoiceData);
+        } else {
+          console.error("Failed to fetch invoice:", response.status);
+          // Fallback to mock data if API fails
+          const mockInvoice: Invoice = {
+            id: params.id as string,
+            customerName: "Error loading invoice",
+            customerEmail: "",
+            customerPhone: "",
+            customerAddress: "",
+            invoiceNumber: "INV-ERROR",
+            invoiceDate: new Date().toISOString().split("T")[0],
+            dueDate: "",
+            status: "error",
+            notes: "Failed to load invoice data",
+            terms: "",
+            subtotal: 0,
+            tax: 0,
+            total: 0,
+            items: [],
+          };
+          setInvoice(mockInvoice);
+        }
+      } catch (error) {
+        console.error("Error fetching invoice:", error);
+        // Fallback to mock data if API fails
+        const mockInvoice: Invoice = {
+          id: params.id as string,
+          customerName: "Error loading invoice",
+          customerEmail: "",
+          customerPhone: "",
+          customerAddress: "",
+          invoiceNumber: "INV-ERROR",
+          invoiceDate: new Date().toISOString().split("T")[0],
+          dueDate: "",
+          status: "error",
+          notes: "Failed to load invoice data",
+          terms: "",
+          subtotal: 0,
+          tax: 0,
+          total: 0,
+          items: [],
+        };
+        setInvoice(mockInvoice);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    // Simulate API call
-    setTimeout(() => {
-      setInvoice(mockInvoice);
-      setLoading(false);
-    }, 500);
+    fetchInvoice();
 
     return () => window.removeEventListener("resize", checkMobile);
   }, [params.id]);
@@ -93,31 +115,37 @@ export default function EditInvoicePage() {
   };
 
   const handleItemChange = (
-    itemId: string,
+    itemDescription: string,
     field: keyof InvoiceItem,
     value: string | number,
   ) => {
     if (invoice && invoice.items) {
       const updatedItems = invoice.items.map((item) =>
-        item.id === itemId ? { ...item, [field]: value } : item,
+        item.description === itemDescription
+          ? { ...item, [field]: value }
+          : item,
       );
 
       // Recalculate totals
       const recalculatedItems = updatedItems.map((item) => ({
         ...item,
-        total: item.quantity * item.unitPrice,
+        amount: item.quantity * item.rate,
       }));
 
-      const newTotal = recalculatedItems.reduce(
-        (sum, item) => sum + item.total,
+      const newSubtotal = recalculatedItems.reduce(
+        (sum, item) => sum + item.amount,
         0,
       );
+      const newTax = newSubtotal * 0.0625; // 6.25% tax
+      const newTotal = newSubtotal + newTax;
 
       setInvoice((prev) =>
         prev
           ? {
               ...prev,
               items: recalculatedItems,
+              subtotal: newSubtotal,
+              tax: newTax,
               total: newTotal,
             }
           : null,
@@ -128,11 +156,11 @@ export default function EditInvoicePage() {
   const addItem = () => {
     if (invoice) {
       const newItem: InvoiceItem = {
-        id: Date.now().toString(),
+        id: `new-${Date.now()}`,
         description: "",
         quantity: 1,
-        unitPrice: 0,
-        total: 0,
+        rate: 0,
+        amount: 0,
       };
 
       setInvoice((prev) =>
@@ -146,16 +174,25 @@ export default function EditInvoicePage() {
     }
   };
 
-  const removeItem = (itemId: string) => {
+  const removeItem = (itemDescription: string) => {
     if (invoice && invoice.items) {
-      const updatedItems = invoice.items.filter((item) => item.id !== itemId);
-      const newTotal = updatedItems.reduce((sum, item) => sum + item.total, 0);
+      const updatedItems = invoice.items.filter(
+        (item) => item.description !== itemDescription,
+      );
+      const newSubtotal = updatedItems.reduce(
+        (sum, item) => sum + item.amount,
+        0,
+      );
+      const newTax = newSubtotal * 0.0625; // 6.25% tax
+      const newTotal = newSubtotal + newTax;
 
       setInvoice((prev) =>
         prev
           ? {
               ...prev,
               items: updatedItems,
+              subtotal: newSubtotal,
+              tax: newTax,
               total: newTotal,
             }
           : null,
@@ -167,9 +204,48 @@ export default function EditInvoicePage() {
     e.preventDefault();
     setSaving(true);
 
+    if (!invoice) {
+      alert("No invoice data to save");
+      setSaving(false);
+      return;
+    }
+
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Prepare the invoice data for the API
+      const invoicePayload = {
+        customerName: invoice.customerName,
+        customerEmail: invoice.customerEmail,
+        customerPhone: invoice.customerPhone,
+        customerAddress: invoice.customerAddress,
+        invoiceDate: invoice.invoiceDate,
+        dueDate: invoice.dueDate,
+        items: invoice.items.map((item) => ({
+          description: item.description,
+          quantity: item.quantity,
+          rate: item.rate,
+          amount: item.amount,
+        })),
+        notes: invoice.notes,
+        terms: invoice.terms,
+        subtotal: invoice.subtotal,
+        tax: invoice.tax,
+        total: invoice.total,
+        status: invoice.status,
+      };
+
+      // Update the invoice via API
+      const response = await fetch(`/api/invoices/${invoice.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(invoicePayload),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to update invoice");
+      }
 
       setSaved(true);
       setTimeout(() => {
@@ -178,7 +254,9 @@ export default function EditInvoicePage() {
       }, 2000);
     } catch (error) {
       console.error("Error saving invoice:", error);
-      alert("Error saving invoice");
+      alert(
+        `Error saving invoice: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     } finally {
       setSaving(false);
     }
@@ -190,11 +268,6 @@ export default function EditInvoicePage() {
 
   const formatCurrencyInput = (cents: number) => {
     return (cents / 100).toFixed(2);
-  };
-
-  const parseCurrencyInput = (value: string) => {
-    const dollars = parseFloat(value) || 0;
-    return Math.round(dollars * 100);
   };
 
   const handleDeleteClick = () => {
@@ -479,6 +552,122 @@ export default function EditInvoicePage() {
                       fontSize: isMobile ? "0.9rem" : "1rem",
                     }}
                   >
+                    Customer Email
+                  </label>
+                  <input
+                    type="email"
+                    value={invoice.customerEmail || ""}
+                    onChange={(e) =>
+                      handleInputChange("customerEmail", e.target.value)
+                    }
+                    style={{
+                      width: "100%",
+                      padding: isMobile ? "10px" : "12px",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "8px",
+                      fontSize: isMobile ? "0.9rem" : "1rem",
+                      backgroundColor: "white",
+                      color: "#374151",
+                      transition: "border-color 0.2s ease",
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = "#7a6990";
+                      e.target.style.outline = "none";
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = "#e5e7eb";
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "8px",
+                      fontWeight: "600",
+                      color: "#333",
+                      fontSize: isMobile ? "0.9rem" : "1rem",
+                    }}
+                  >
+                    Customer Phone
+                  </label>
+                  <input
+                    type="tel"
+                    value={invoice.customerPhone || ""}
+                    onChange={(e) =>
+                      handleInputChange("customerPhone", e.target.value)
+                    }
+                    style={{
+                      width: "100%",
+                      padding: isMobile ? "10px" : "12px",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "8px",
+                      fontSize: isMobile ? "0.9rem" : "1rem",
+                      backgroundColor: "white",
+                      color: "#374151",
+                      transition: "border-color 0.2s ease",
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = "#7a6990";
+                      e.target.style.outline = "none";
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = "#e5e7eb";
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "8px",
+                      fontWeight: "600",
+                      color: "#333",
+                      fontSize: isMobile ? "0.9rem" : "1rem",
+                    }}
+                  >
+                    Customer Address
+                  </label>
+                  <textarea
+                    value={invoice.customerAddress || ""}
+                    onChange={(e) =>
+                      handleInputChange("customerAddress", e.target.value)
+                    }
+                    placeholder="Enter customer address..."
+                    style={{
+                      width: "100%",
+                      padding: isMobile ? "10px" : "12px",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "8px",
+                      fontSize: isMobile ? "0.9rem" : "1rem",
+                      backgroundColor: "white",
+                      color: "#374151",
+                      transition: "border-color 0.2s ease",
+                      minHeight: "60px",
+                      resize: "vertical",
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = "#7a6990";
+                      e.target.style.outline = "none";
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = "#e5e7eb";
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "8px",
+                      fontWeight: "600",
+                      color: "#333",
+                      fontSize: isMobile ? "0.9rem" : "1rem",
+                    }}
+                  >
                     Invoice Number *
                   </label>
                   <input
@@ -531,9 +720,9 @@ export default function EditInvoicePage() {
                   <input
                     type="date"
                     required
-                    value={invoice.issueDate}
+                    value={invoice.invoiceDate}
                     onChange={(e) =>
-                      handleInputChange("issueDate", e.target.value)
+                      handleInputChange("invoiceDate", e.target.value)
                     }
                     style={{
                       width: "100%",
@@ -693,7 +882,7 @@ export default function EditInvoicePage() {
               {invoice.items &&
                 invoice.items.map((item, index) => (
                   <div
-                    key={item.id}
+                    key={`${item.description}-${index}`}
                     style={{
                       border: "1px solid #e9ecef",
                       borderRadius: "8px",
@@ -723,7 +912,7 @@ export default function EditInvoicePage() {
                       </h4>
                       <button
                         type="button"
-                        onClick={() => removeItem(item.id)}
+                        onClick={() => removeItem(item.description)}
                         style={{
                           padding: "6px 12px",
                           backgroundColor: "#dc3545",
@@ -764,7 +953,7 @@ export default function EditInvoicePage() {
                           value={item.description}
                           onChange={(e) =>
                             handleItemChange(
-                              item.id,
+                              item.description,
                               "description",
                               e.target.value,
                             )
@@ -800,7 +989,7 @@ export default function EditInvoicePage() {
                           value={item.quantity}
                           onChange={(e) =>
                             handleItemChange(
-                              item.id,
+                              item.description,
                               "quantity",
                               parseInt(e.target.value) || 1,
                             )
@@ -834,12 +1023,12 @@ export default function EditInvoicePage() {
                           required
                           min="0"
                           step="0.01"
-                          value={formatCurrencyInput(item.unitPrice)}
+                          value={formatCurrencyInput(item.rate * 100)}
                           onChange={(e) =>
                             handleItemChange(
-                              item.id,
-                              "unitPrice",
-                              parseCurrencyInput(e.target.value),
+                              item.description,
+                              "rate",
+                              parseFloat(e.target.value) || 0,
                             )
                           }
                           style={{
@@ -871,7 +1060,7 @@ export default function EditInvoicePage() {
                           color: "#1a1a1a",
                         }}
                       >
-                        Item Total: {formatCurrency(item.total)}
+                        Item Total: {formatCurrency(item.amount)}
                       </span>
                     </div>
                   </div>
@@ -879,7 +1068,7 @@ export default function EditInvoicePage() {
             </div>
           </div>
 
-          {/* Notes */}
+          {/* Notes & Terms */}
           <div
             style={{
               backgroundColor: "white",
@@ -890,32 +1079,71 @@ export default function EditInvoicePage() {
               marginBottom: "24px",
             }}
           >
-            <h3
+            <div
               style={{
-                fontSize: "1.25rem",
-                margin: "0 0 16px 0",
-                color: "#1a1a1a",
+                display: "grid",
+                gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+                gap: "16px",
               }}
             >
-              Notes
-            </h3>
-            <textarea
-              value={invoice.notes || ""}
-              onChange={(e) => handleInputChange("notes", e.target.value)}
-              placeholder="Add any notes or special instructions..."
-              style={{
-                width: "100%",
-                padding: "12px",
-                border: "1px solid #e5e7eb",
-                borderRadius: "8px",
-                fontSize: "0.9rem",
-                minHeight: "100px",
-                resize: "vertical",
-                backgroundColor: "white",
-                color: "#374151",
-                fontFamily: "inherit",
-              }}
-            />
+              <div>
+                <h3
+                  style={{
+                    fontSize: "1.25rem",
+                    margin: "0 0 16px 0",
+                    color: "#1a1a1a",
+                  }}
+                >
+                  Notes
+                </h3>
+                <textarea
+                  value={invoice.notes || ""}
+                  onChange={(e) => handleInputChange("notes", e.target.value)}
+                  placeholder="Add any notes or special instructions..."
+                  style={{
+                    width: "100%",
+                    padding: "12px",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "8px",
+                    fontSize: "0.9rem",
+                    minHeight: "100px",
+                    resize: "vertical",
+                    backgroundColor: "white",
+                    color: "#374151",
+                    fontFamily: "inherit",
+                  }}
+                />
+              </div>
+
+              <div>
+                <h3
+                  style={{
+                    fontSize: "1.25rem",
+                    margin: "0 0 16px 0",
+                    color: "#1a1a1a",
+                  }}
+                >
+                  Terms
+                </h3>
+                <textarea
+                  value={invoice.terms || ""}
+                  onChange={(e) => handleInputChange("terms", e.target.value)}
+                  placeholder="Payment terms and conditions..."
+                  style={{
+                    width: "100%",
+                    padding: "12px",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "8px",
+                    fontSize: "0.9rem",
+                    minHeight: "100px",
+                    resize: "vertical",
+                    backgroundColor: "white",
+                    color: "#374151",
+                    fontFamily: "inherit",
+                  }}
+                />
+              </div>
+            </div>
           </div>
 
           {/* Payment Instructions */}

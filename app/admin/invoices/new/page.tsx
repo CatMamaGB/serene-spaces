@@ -394,7 +394,11 @@ export default function CreateInvoice() {
             <h1
               style={{
                 color: "#1e293b",
-                fontSize: isMobile ? "1.5rem" : isTablet ? "1.75rem" : "1.875rem",
+                fontSize: isMobile
+                  ? "1.5rem"
+                  : isTablet
+                    ? "1.75rem"
+                    : "1.875rem",
                 fontWeight: "700",
                 margin: 0,
                 lineHeight: "1.2",
@@ -417,7 +421,11 @@ export default function CreateInvoice() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: isMobile ? "1fr" : isTablet ? "1fr" : "2fr 1fr",
+              gridTemplateColumns: isMobile
+                ? "1fr"
+                : isTablet
+                  ? "1fr"
+                  : "2fr 1fr",
               gap: isMobile ? "1.5rem" : isTablet ? "2rem" : "2rem",
             }}
           >
@@ -520,7 +528,11 @@ export default function CreateInvoice() {
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns: isMobile ? "1fr" : isTablet ? "1fr 1fr" : "1fr 1fr",
+                    gridTemplateColumns: isMobile
+                      ? "1fr"
+                      : isTablet
+                        ? "1fr 1fr"
+                        : "1fr 1fr",
                     gap: isMobile ? "1rem" : "1rem",
                   }}
                 >
@@ -807,7 +819,11 @@ export default function CreateInvoice() {
                   <div
                     style={{
                       display: "grid",
-                      gridTemplateColumns: isMobile ? "1fr" : isTablet ? "2fr 1fr 1fr" : "2fr 1fr 1fr 1fr auto",
+                      gridTemplateColumns: isMobile
+                        ? "1fr"
+                        : isTablet
+                          ? "2fr 1fr 1fr"
+                          : "2fr 1fr 1fr 1fr auto",
                       gap: isMobile ? "0.5rem" : "1rem",
                       padding: isMobile ? "0.5rem" : "0.75rem",
                       backgroundColor: "#f8fafc",
@@ -829,7 +845,11 @@ export default function CreateInvoice() {
                       key={index}
                       style={{
                         display: "grid",
-                        gridTemplateColumns: isMobile ? "1fr" : isTablet ? "2fr 1fr 1fr" : "2fr 1fr 1fr 1fr auto",
+                        gridTemplateColumns: isMobile
+                          ? "1fr"
+                          : isTablet
+                            ? "2fr 1fr 1fr"
+                            : "2fr 1fr 1fr 1fr auto",
                         gap: isMobile ? "0.5rem" : "1rem",
                         padding: isMobile ? "0.5rem 0" : "0.75rem 0",
                         alignItems: "center",

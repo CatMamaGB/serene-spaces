@@ -92,18 +92,113 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await req.json();
-    const { status } = body;
 
-    if (!status) {
+    // Handle status-only updates (for status changes)
+    if (body.status && Object.keys(body).length === 1) {
+      const updatedInvoice = await prisma.invoiceMirror.update({
+        where: { id },
+        data: { status: body.status },
+        include: {
+          customer: true,
+          items: true,
+        },
+      });
+      return NextResponse.json(updatedInvoice);
+    }
+
+    // Handle full invoice updates
+    const {
+      customerName,
+      customerEmail,
+      customerPhone,
+      customerAddress,
+      invoiceDate,
+      dueDate,
+      items,
+      notes,
+      subtotal,
+      tax,
+      total,
+      status,
+    } = body;
+
+    // Validate required fields
+    if (!customerName || !items || items.length === 0) {
       return NextResponse.json(
-        { error: "Status is required" },
+        { error: "Customer name and items are required" },
         { status: 400 },
       );
     }
 
+    // Find or create customer
+    let customer = await prisma.customer.findFirst({
+      where: {
+        OR: [{ email: customerEmail }, { name: customerName }],
+      },
+    });
+
+    if (!customer) {
+      // Create new customer
+      customer = await prisma.customer.create({
+        data: {
+          name: customerName,
+          email: customerEmail || null,
+          phone: customerPhone || null,
+          address: customerAddress || null,
+          addressLine1: customerAddress?.split(",")[0]?.trim() || null,
+          city:
+            customerAddress
+              ?.split(",")
+              .find((part: string) => part.trim().match(/^[A-Za-z\s]+$/))
+              ?.trim() || null,
+          state:
+            customerAddress
+              ?.split(",")
+              .find((part: string) => part.trim().match(/^[A-Z]{2}$/))
+              ?.trim() || null,
+          postalCode:
+            customerAddress
+              ?.split(",")
+              .find((part: string) => part.trim().match(/^\d{5}(-\d{4})?$/))
+              ?.trim() || null,
+        },
+      });
+    }
+
+    // Update invoice items first (delete existing and create new)
+    await prisma.invoiceItemMirror.deleteMany({
+      where: { invoiceId: id },
+    });
+
+    // Update the invoice
     const updatedInvoice = await prisma.invoiceMirror.update({
       where: { id },
-      data: { status },
+      data: {
+        customerId: customer.id,
+        status: status || "draft",
+        subtotal: Math.round(subtotal * 100), // Convert to cents
+        tax: Math.round(tax * 100), // Convert to cents
+        total: Math.round(total * 100), // Convert to cents
+        issueDate: invoiceDate ? new Date(invoiceDate) : new Date(),
+        dueDate: dueDate ? new Date(dueDate) : null,
+        notes: notes || null,
+        items: {
+          create: items.map(
+            (item: {
+              description: string;
+              quantity: number;
+              rate: number;
+              amount: number;
+            }) => ({
+              description: item.description,
+              quantity: item.quantity,
+              unitAmount: Math.round(item.rate * 100), // Convert to cents
+              taxable: true,
+              notes: null,
+            }),
+          ),
+        },
+      },
       include: {
         customer: true,
         items: true,

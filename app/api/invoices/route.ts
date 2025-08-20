@@ -81,6 +81,7 @@ export async function POST(req: Request) {
         issueDate: invoiceDate ? new Date(invoiceDate) : new Date(),
         dueDate: dueDate ? new Date(dueDate) : null,
         notes: notes || null,
+
         items: {
           create: items.map(
             (item: {

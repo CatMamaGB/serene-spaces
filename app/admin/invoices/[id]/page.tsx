@@ -770,8 +770,6 @@ export default function ViewInvoice() {
             </div>
           </div>
 
-
-
           {/* Notes & Terms */}
           {(invoice.notes || invoice.terms) && (
             <div

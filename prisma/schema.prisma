@@ -118,6 +118,7 @@ model InvoiceMirror {
   issueDate      DateTime?
   dueDate        DateTime?
   notes          String?
+
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   items          InvoiceItemMirror[]
