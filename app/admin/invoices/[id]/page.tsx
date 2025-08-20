@@ -770,6 +770,8 @@ export default function ViewInvoice() {
             </div>
           </div>
 
+
+
           {/* Notes & Terms */}
           {(invoice.notes || invoice.terms) && (
             <div
@@ -778,7 +780,7 @@ export default function ViewInvoice() {
                 paddingTop: "1.5rem",
               }}
             >
-              {invoice.notes && (
+              {invoice.notes !== null && invoice.notes !== undefined && (
                 <div style={{ marginBottom: "1rem" }}>
                   <h4
                     style={{
@@ -790,7 +792,9 @@ export default function ViewInvoice() {
                   >
                     Notes:
                   </h4>
-                  <p style={{ color: "#1f2937", margin: 0 }}>{invoice.notes}</p>
+                  <p style={{ color: "#1f2937", margin: 0 }}>
+                    {invoice.notes || "No notes provided"}
+                  </p>
                 </div>
               )}
 
