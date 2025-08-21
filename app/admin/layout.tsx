@@ -57,7 +57,10 @@ export default function AdminLayout({
           );
           setPendingCount(pending.length);
         } else {
-          console.warn("Service requests API returned non-OK status:", response.status);
+          console.warn(
+            "Service requests API returned non-OK status:",
+            response.status,
+          );
           setPendingCount(0);
         }
       } catch (error) {

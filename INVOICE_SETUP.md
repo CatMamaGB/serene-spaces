@@ -27,13 +27,13 @@ The invoice system is now working with **in-memory storage** (no database requir
    - Fill out the invoice form
    - Click "Save as Draft" - should save and redirect to invoice view
    - Click "Create Invoice" - should create and redirect to invoice view
-   - Click "📧 Send Invoice" - should send email (if RESEND_API_KEY is configured)
+   - Click "📧 Send Invoice" - should send email via Gmail SMTP
 
 ## What Works Now
 
 ✅ **Save as Draft** - Saves invoice and redirects to view page  
 ✅ **Create Invoice** - Creates invoice and redirects to view page  
-✅ **Send Invoice** - Sends email via Resend API  
+✅ **Send Invoice** - Sends email via Gmail SMTP  
 ✅ **Invoice List** - Shows all created invoices  
 ✅ **Invoice View** - Displays invoice details  
 ✅ **Invoice Edit** - Links to edit page  
@@ -55,14 +55,16 @@ To use this with a real database instead of in-memory storage:
    ```
 4. **The system will automatically switch to database storage**
 
-## Email Configuration (Optional)
+## Email Configuration
 
 To enable email sending:
 
-1. **Get a Resend API key** from [resend.com](https://resend.com)
+1. **Follow the Gmail OAuth2 setup guide** in `GMAIL_SETUP.md`
 2. **Add to `.env.local`:**
    ```bash
-   RESEND_API_KEY="your-api-key-here"
+   GOOGLE_CLIENT_ID=your_oauth2_client_id
+   GOOGLE_CLIENT_SECRET=your_oauth2_client_secret
+   GMAIL_USER=loveserenespaces@gmail.com
    ```
 
 ## Quick Test
@@ -76,7 +78,7 @@ To enable email sending:
 ## Troubleshooting
 
 - **If you see "Failed to create invoice"** - Check the browser console for detailed error messages
-- **If emails aren't sending** - Make sure RESEND_API_KEY is set in your environment
+- **If emails aren't sending** - Make sure OAuth2 credentials are set and complete the setup at `/admin/gmail-setup`
 - **If the page doesn't load** - Make sure the development server is running
 
 The invoice system is now fully functional and ready for testing!

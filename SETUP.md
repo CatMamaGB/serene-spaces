@@ -23,8 +23,10 @@ STRIPE_WEBHOOK_SECRET="whsec_..."   # set after creating webhook endpoint
 # Stripe tax rate (create in Stripe Dashboard and paste id)
 STRIPE_TAX_RATE_ID="txr_..."        # Illinois 6.25% for example
 
-# Resend (optional)
-RESEND_API_KEY=""
+# Gmail OAuth2 (for email functionality)
+GOOGLE_CLIENT_ID="your_oauth2_client_id"
+GOOGLE_CLIENT_SECRET="your_oauth2_client_secret"
+GMAIL_USER="loveserenespaces@gmail.com"
 ```
 
 ## Setup Steps

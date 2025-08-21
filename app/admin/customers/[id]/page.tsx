@@ -152,8 +152,10 @@ export default function ViewCustomer() {
       customer.state,
       customer.postalCode,
     ].filter(Boolean);
-    
-    return parts.length > 0 ? parts.join(", ") : customer.address || "No address provided";
+
+    return parts.length > 0
+      ? parts.join(", ")
+      : customer.address || "No address provided";
   };
 
   const formatDate = (dateString: string) => {
@@ -610,8 +612,9 @@ export default function ViewCustomer() {
                 lineHeight: "1.5",
               }}
             >
-              Are you sure you want to delete <strong>{customer.name}</strong>? 
-              This will also delete all associated invoices and service requests.
+              Are you sure you want to delete <strong>{customer.name}</strong>?
+              This will also delete all associated invoices and service
+              requests.
             </p>
 
             <div

@@ -24,8 +24,10 @@ DATABASE_URL="your-neon-connection-string-here"
 NEXTAUTH_URL="http://localhost:3000"
 NEXTAUTH_SECRET="your-secret-key-here"
 
-# Resend (optional - for email functionality)
-RESEND_API_KEY="your-resend-api-key-here"
+# Gmail OAuth2 (for email functionality)
+GOOGLE_CLIENT_ID="your_oauth2_client_id"
+GOOGLE_CLIENT_SECRET="your_oauth2_client_secret"
+GMAIL_USER="loveserenespaces@gmail.com"
 ```
 
 **⚠️ IMPORTANT**: Replace `your-neon-connection-string-here` with the actual connection string from Neon!

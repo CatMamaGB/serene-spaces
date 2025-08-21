@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
@@ -11,7 +11,7 @@ export async function GET(
     if (!id) {
       return NextResponse.json(
         { error: "Customer ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -22,7 +22,7 @@ export async function GET(
     if (!customer) {
       return NextResponse.json(
         { error: "Customer not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -31,14 +31,14 @@ export async function GET(
     console.error("Error fetching customer:", error);
     return NextResponse.json(
       { error: "Failed to fetch customer" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function PUT(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
@@ -47,7 +47,7 @@ export async function PUT(
     if (!id) {
       return NextResponse.json(
         { error: "Customer ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -67,7 +67,7 @@ export async function PUT(
     if (!name || name.trim() === "") {
       return NextResponse.json(
         { error: "Customer name is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -92,14 +92,14 @@ export async function PUT(
     console.error("Error updating customer:", error);
     return NextResponse.json(
       { error: "Failed to update customer" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function DELETE(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
@@ -107,7 +107,7 @@ export async function DELETE(
     if (!id) {
       return NextResponse.json(
         { error: "Customer ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -125,10 +125,11 @@ export async function DELETE(
 
     if (invoices.length > 0 || serviceRequests.length > 0) {
       return NextResponse.json(
-        { 
-          error: "Cannot delete customer with associated invoices or service requests. Please delete those first." 
+        {
+          error:
+            "Cannot delete customer with associated invoices or service requests. Please delete those first.",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -141,7 +142,7 @@ export async function DELETE(
     console.error("Error deleting customer:", error);
     return NextResponse.json(
       { error: "Failed to delete customer" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

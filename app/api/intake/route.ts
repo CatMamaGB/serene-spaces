@@ -1,8 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { Resend } from "resend";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { createGmailTransporter } from "@/lib/gmail-oauth";
 
 export async function POST(req: Request) {
   try {
@@ -84,8 +82,10 @@ export async function POST(req: Request) {
         serviceRequestId: serviceRequest.id,
       });
 
-      await resend.emails.send({
-        from: "Serene Spaces <onboarding@resend.dev>",
+      const transporter = await createGmailTransporter();
+
+      await transporter.sendMail({
+        from: "Serene Spaces <loveserenespaces@gmail.com>",
         to: email,
         subject: "Service Request Confirmation - Serene Spaces",
         html: confirmationHtml,

@@ -1,53 +1,72 @@
 import { NextResponse } from "next/server";
-import { Resend } from "resend";
+import { createGmailTransporter, testGmailConnection } from "@/lib/gmail-oauth";
 
 export async function GET() {
   try {
-    // Check if API key is set
-    if (!process.env.RESEND_API_KEY) {
+    // Check if OAuth2 credentials are set
+    if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
       return NextResponse.json({
-        error: "RESEND_API_KEY not set",
-        status: "missing"
+        error: "Google OAuth2 credentials not set",
+        status: "missing",
+        details: {
+          clientId: process.env.GOOGLE_CLIENT_ID ? "Set" : "Missing",
+          clientSecret: process.env.GOOGLE_CLIENT_SECRET ? "Set" : "Missing",
+        },
       });
     }
 
-    console.log("API Key found:", process.env.RESEND_API_KEY ? "Yes" : "No");
-    console.log("API Key length:", process.env.RESEND_API_KEY?.length || 0);
+    if (!process.env.GMAIL_REFRESH_TOKEN) {
+      return NextResponse.json({
+        error: "Gmail refresh token not set",
+        status: "missing",
+        details: {
+          refreshToken: "Missing - Complete OAuth2 setup first",
+          setupUrl: "/api/auth/gmail-setup",
+        },
+      });
+    }
 
-    // Initialize Resend
-    const resend = new Resend(process.env.RESEND_API_KEY);
-
-    // Try to send a simple test email
-    const { data, error } = await resend.emails.send({
-      from: "onboarding@resend.dev", // Use Resend's default domain for testing
-      to: "test@example.com",
-      subject: "Test Email from Serene Spaces",
-      html: "<p>This is a test email to verify Resend is working.</p>",
+    console.log("Gmail OAuth2 credentials found:", {
+      clientId: process.env.GOOGLE_CLIENT_ID ? "Set" : "Missing",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET ? "Set" : "Missing",
+      refreshToken: process.env.GMAIL_REFRESH_TOKEN ? "Set" : "Missing",
     });
 
-    if (error) {
-      console.error("Resend test error:", JSON.stringify(error, null, 2));
+    // Test Gmail connection
+    const connectionTest = await testGmailConnection();
+
+    if (!connectionTest.success) {
       return NextResponse.json({
-        error: "Resend API error",
-        details: error.message || "Unknown error",
-        code: "resend_error",
-        status: "resend_error"
+        error: "Gmail OAuth2 connection failed",
+        status: "connection_failed",
+        details: connectionTest.error,
       });
     }
+
+    // Try to send a simple test email
+    const transporter = await createGmailTransporter();
+
+    const mailOptions = {
+      from: "Serene Spaces <loveserenespaces@gmail.com>",
+      to: "test@example.com",
+      subject: "Test Email from Serene Spaces",
+      html: "<p>This is a test email to verify Gmail OAuth2 is working.</p>",
+    };
+
+    const info = await transporter.sendMail(mailOptions);
 
     return NextResponse.json({
       success: true,
-      message: "Resend connection successful",
-      messageId: data?.id,
-      status: "working"
+      message: "Gmail OAuth2 connection successful",
+      messageId: info.messageId,
+      status: "working",
     });
-
   } catch (error) {
     console.error("Test email error:", error);
     return NextResponse.json({
       error: "Test failed",
       details: error instanceof Error ? error.message : "Unknown error",
-      status: "exception"
+      status: "exception",
     });
   }
 }

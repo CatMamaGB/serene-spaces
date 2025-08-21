@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
-
-// Use environment variable for API key
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { createGmailTransporter } from "@/lib/gmail-oauth";
 
 export async function POST(req: NextRequest) {
   try {
@@ -41,16 +38,37 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validate Resend API key
-    if (!process.env.RESEND_API_KEY) {
-      console.error("RESEND_API_KEY environment variable is not set");
+    // Validate Gmail OAuth2 configuration
+    if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+      console.error("Google OAuth2 configuration missing:", {
+        clientId: process.env.GOOGLE_CLIENT_ID ? "Set" : "Missing",
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET ? "Set" : "Missing",
+      });
       return NextResponse.json(
-        { error: "Email service configuration error - RESEND_API_KEY not set" },
+        {
+          error:
+            "Email service configuration error - Google OAuth2 credentials not set",
+        },
         { status: 500 },
       );
     }
 
-    console.log("Resend API key configured:", process.env.RESEND_API_KEY ? "Yes" : "No");
+    if (!process.env.GMAIL_REFRESH_TOKEN) {
+      console.error("Gmail refresh token missing");
+      return NextResponse.json(
+        {
+          error:
+            "Email service configuration error - Gmail refresh token not set. Complete OAuth2 setup first.",
+        },
+        { status: 500 },
+      );
+    }
+
+    console.log("Gmail OAuth2 configuration:", {
+      clientId: process.env.GOOGLE_CLIENT_ID ? "Set" : "Missing",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET ? "Set" : "Missing",
+      refreshToken: process.env.GMAIL_REFRESH_TOKEN ? "Set" : "Missing",
+    });
 
     // Generate invoice HTML
     const invoiceHtml = generateInvoiceHtml({
@@ -69,52 +87,49 @@ export async function POST(req: NextRequest) {
       emailMessage,
     });
 
-    // Send email via Resend
-    console.log("Attempting to send email via Resend...");
+    // Send email via Gmail OAuth2
+    console.log("Attempting to send email via Gmail OAuth2...");
     console.log("From:", "Serene Spaces <loveserenespaces@gmail.com>");
     console.log("To:", customerEmail);
     console.log("Subject:", `Invoice from Serene Spaces - ${invoiceDate}`);
-    
-    const { data, error } = await resend.emails.send({
+
+    const transporter = await createGmailTransporter();
+
+    const mailOptions = {
       from: "Serene Spaces <loveserenespaces@gmail.com>",
       to: customerEmail,
       subject: `Invoice from Serene Spaces - ${invoiceDate}`,
       html: invoiceHtml,
       replyTo: "loveserenespaces@gmail.com",
-    });
+    };
 
-    if (error) {
-      console.error("Resend API error details:", JSON.stringify(error, null, 2));
-              return NextResponse.json(
-          { 
-            error: "Failed to send email", 
-            details: error.message || "Unknown Resend API error",
-            code: "resend_error"
-          },
-          { status: 500 },
-        );
-    }
+    const info = await transporter.sendMail(mailOptions);
+
+    console.log("✅ Email sent successfully via Gmail:", {
+      messageId: info.messageId,
+      response: info.response,
+    });
 
     return NextResponse.json({
       success: true,
-      messageId: data?.id,
-      message: "Invoice sent successfully",
+      messageId: info.messageId,
+      message: "Invoice sent successfully via Gmail OAuth2",
     });
   } catch (error) {
     console.error("Error sending invoice:", error);
     console.error("Error details:", JSON.stringify(error, null, 2));
-    
+
     // Provide more specific error information
     let errorMessage = "Internal server error";
     if (error instanceof Error) {
       errorMessage = error.message;
     }
-    
+
     return NextResponse.json(
-      { 
-        error: "Internal server error", 
+      {
+        error: "Internal server error",
         details: errorMessage,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       },
       { status: 500 },
     );
@@ -142,46 +157,34 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Validate Resend API key
-    if (!process.env.RESEND_API_KEY) {
-      return NextResponse.json(
-        { error: "RESEND_API_KEY environment variable is not set" },
-        { status: 500 },
-      );
-    }
+    // Send test email via Gmail OAuth2
+    const transporter = await createGmailTransporter();
 
-    // Send test email
-    const { data, error } = await resend.emails.send({
-      from: "Serene Spaces <noreply@serenespaces.com>",
+    const mailOptions = {
+      from: "Serene Spaces <loveserenespaces@gmail.com>",
       to: testEmail,
       subject: "Test Email from Serene Spaces",
       html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
           <h1 style="color: #7a6990;">🧪 Test Email</h1>
-          <p>This is a test email to verify your Resend setup is working correctly.</p>
+          <p>This is a test email to verify your Gmail OAuth2 setup is working correctly.</p>
           <p><strong>Sent at:</strong> ${new Date().toLocaleString()}</p>
           <p><strong>From:</strong> Serene Spaces</p>
           <p><strong>To:</strong> ${testEmail}</p>
           <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;">
           <p style="color: #6b7280; font-size: 14px;">
-            If you received this email, your Resend configuration is working! 🎉
+            If you received this email, your Gmail OAuth2 configuration is working! 🎉
           </p>
         </div>
       `,
-    });
+    };
 
-    if (error) {
-      console.error("Resend test error:", error);
-      return NextResponse.json(
-        { error: "Failed to send test email" },
-        { status: 500 },
-      );
-    }
+    const info = await transporter.sendMail(mailOptions);
 
     return NextResponse.json({
       success: true,
-      messageId: data?.id,
-      message: "Test email sent successfully",
+      messageId: info.messageId,
+      message: "Test email sent successfully via Gmail OAuth2",
     });
   } catch (error) {
     console.error("Error sending test email:", error);
