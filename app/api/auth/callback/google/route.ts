@@ -39,8 +39,13 @@ export async function GET(req: NextRequest) {
 
     await saveRefreshTokenToDB(userId, tokens.refresh_token);
 
-    // Redirect back to an admin page that can show "Connected"
-    return NextResponse.redirect("/admin/gmail-setup?connected=1");
+    // ✅ absolute redirect URL (works in Edge/middleware)
+    const base =
+      process.env.NEXT_PUBLIC_APP_URL               // e.g. https://www.loveserenespaces.com
+      || req.nextUrl.origin;                        // falls back to request origin
+
+    const redirectUrl = new URL("/admin/gmail-setup?connected=1", base);
+    return NextResponse.redirect(redirectUrl, { status: 303 }); // 303 = "see other"
   } catch (e: unknown) {
     console.error("OAuth callback error", e);
     const errorMessage = e instanceof Error ? e.message : "Unknown error";
