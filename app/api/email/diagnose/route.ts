@@ -48,17 +48,20 @@ export async function GET() {
     const { token } = await oauth2.getAccessToken();
     report.oauth = { mintedAccessToken: !!token, email: "" };
 
-    // 2) Which Google account does this token belong to?
-    // Set the access token in credentials before making the API call
-    oauth2.setCredentials({ 
-      refresh_token: process.env.GMAIL_REFRESH_TOKEN!,
-      access_token: token 
-    });
-    
-    const who = google.oauth2({ version: "v2", auth: oauth2 });
-    const { data: me } = await who.userinfo.get();
+    // 2) Which Gmail account does this token belong to?
+    // Get a fresh access token (optional but fine)
+    if (token) {
+      oauth2.setCredentials({ 
+        refresh_token: process.env.GMAIL_REFRESH_TOKEN!, 
+        access_token: token 
+      });
+    }
+
+    // ✅ Ask Gmail who we are (works with gmail.* scopes)
+    const gmail = google.gmail({ version: "v1", auth: oauth2 });
+    const { data: profile } = await gmail.users.getProfile({ userId: "me" });
     if (report.oauth) {
-      report.oauth.email = me.email || "(unknown)";
+      report.oauth.email = profile.emailAddress || "(unknown)";
     }
 
     // 3) Build the transporter with XOAUTH2 (no password!)
