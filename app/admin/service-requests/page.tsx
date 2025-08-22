@@ -16,17 +16,22 @@ interface ServiceRequest {
   address: string;
   status: string;
   createdAt: string;
+  pickupDate?: string;
   estimatedCost?: number;
   scheduledPickupDate?: string;
   repairNotes?: string;
   waterproofingNotes?: string;
   allergies?: string;
+  notes?: string;
 }
 
 export default function ServiceRequestsPage() {
   const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showHandled, setShowHandled] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -39,9 +44,14 @@ export default function ServiceRequestsPage() {
     const fetchServiceRequests = async () => {
       try {
         const response = await fetch("/api/service-requests");
+        console.log("Service requests response status:", response.status);
         if (response.ok) {
           const data = await response.json();
+          console.log("Service requests data:", data);
+          console.log("Number of service requests:", data.length);
           setServiceRequests(data);
+        } else {
+          console.log("Failed to fetch service requests");
         }
       } catch (error) {
         console.error("Error fetching service requests:", error);
@@ -55,27 +65,7 @@ export default function ServiceRequestsPage() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  const updateStatus = async (id: string, newStatus: string) => {
-    try {
-      const response = await fetch("/api/service-requests", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id, status: newStatus }),
-      });
 
-      if (response.ok) {
-        setServiceRequests((prev) =>
-          prev.map((req) =>
-            req.id === id ? { ...req, status: newStatus } : req,
-          ),
-        );
-      }
-    } catch (error) {
-      console.error("Error updating status:", error);
-    }
-  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -161,27 +151,94 @@ export default function ServiceRequestsPage() {
                 Manage incoming service requests from customers
               </p>
             </div>
-            <Link
-              href="/admin"
-              style={{
-                padding: isMobile ? "0.75rem 1rem" : "0.5rem 1rem",
-                backgroundColor: "#7a6990",
-                color: "white",
-                textDecoration: "none",
-                borderRadius: "8px",
-                fontSize: isMobile ? "0.875rem" : "0.875rem",
-                fontWeight: "500",
-                transition: "background-color 0.2s",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "#6b5b7a";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "#7a6990";
-              }}
-            >
-              Back to Dashboard
-            </Link>
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <button
+                onClick={() => setShowHandled(!showHandled)}
+                style={{
+                  padding: isMobile ? "0.75rem 1rem" : "0.5rem 1rem",
+                  backgroundColor: showHandled ? "#6b7280" : "#7a6990",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontSize: isMobile ? "0.875rem" : "0.875rem",
+                  fontWeight: "500",
+                  cursor: "pointer",
+                  transition: "background-color 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = showHandled ? "#4b5563" : "#6b5b7a";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = showHandled ? "#6b7280" : "#7a6990";
+                }}
+              >
+                {showHandled ? "Hide Handled" : "Show Handled"}
+              </button>
+              <button
+                onClick={() => {
+                  setLoading(true);
+                  const fetchServiceRequests = async () => {
+                    try {
+                      const response = await fetch("/api/service-requests");
+                      console.log("Service requests response status:", response.status);
+                      if (response.ok) {
+                        const data = await response.json();
+                        console.log("Service requests data:", data);
+                        console.log("Number of service requests:", data.length);
+                        setServiceRequests(data);
+                      } else {
+                        console.log("Failed to fetch service requests");
+                      }
+                    } catch (error) {
+                      console.error("Error fetching service requests:", error);
+                    } finally {
+                      setLoading(false);
+                    }
+                  };
+                  fetchServiceRequests();
+                }}
+                style={{
+                  padding: isMobile ? "0.75rem 1rem" : "0.5rem 1rem",
+                  backgroundColor: "#10b981",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontSize: isMobile ? "0.875rem" : "0.875rem",
+                  fontWeight: "500",
+                  cursor: "pointer",
+                  transition: "background-color 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#059669";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "#10b981";
+                }}
+              >
+                Refresh
+              </button>
+              <Link
+                href="/admin"
+                style={{
+                  padding: isMobile ? "0.75rem 1rem" : "0.5rem 1rem",
+                  backgroundColor: "#7a6990",
+                  color: "white",
+                  textDecoration: "none",
+                  borderRadius: "8px",
+                  fontSize: isMobile ? "0.875rem" : "0.875rem",
+                  fontWeight: "500",
+                  transition: "background-color 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#6b5b7a";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "#7a6990";
+                }}
+              >
+                Back to Dashboard
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -246,7 +303,9 @@ export default function ServiceRequestsPage() {
               {isMobile ? (
                 // Mobile card layout
                 <div style={{ padding: "0" }}>
-                  {serviceRequests.map((request, index) => (
+                  {serviceRequests
+                    .filter(request => showHandled || request.status !== "handled")
+                    .map((request, index) => (
                     <div
                       key={request.id}
                       style={{
@@ -295,24 +354,56 @@ export default function ServiceRequestsPage() {
                             {request.address}
                           </div>
                         </div>
-                        <select
-                          value={request.status}
-                          onChange={(e) =>
-                            updateStatus(request.id, e.target.value)
-                          }
-                          style={{
-                            padding: "0.25rem 0.5rem",
-                            border: "1px solid #d1d5db",
-                            borderRadius: "4px",
-                            fontSize: "0.75rem",
-                            backgroundColor: "white",
-                          }}
-                        >
-                          <option value="pending">Pending</option>
-                          <option value="scheduled">Scheduled</option>
-                          <option value="completed">Completed</option>
-                          <option value="cancelled">Cancelled</option>
-                        </select>
+                        <div style={{
+                          padding: "0.25rem 0.5rem",
+                          border: "1px solid #d1d5db",
+                          borderRadius: "4px",
+                          fontSize: "0.75rem",
+                          backgroundColor: "#f3f4f6",
+                          color: "#6b7280",
+                          minWidth: "100px",
+                          textAlign: "center",
+                        }}>
+                          {request.status || "New"}
+                        </div>
+                        {request.status === "pending" && (
+                          <button
+                            onClick={async () => {
+                              try {
+                                const response = await fetch("/api/service-requests", {
+                                  method: "PUT",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({
+                                    id: request.id,
+                                    status: "handled",
+                                  }),
+                                });
+                                if (response.ok) {
+                                  // Update local state
+                                  setServiceRequests((prev) =>
+                                    prev.map((req) =>
+                                      req.id === request.id ? { ...req, status: "handled" } : req,
+                                    ),
+                                  );
+                                }
+                              } catch (error) {
+                                console.error("Error marking as handled:", error);
+                              }
+                            }}
+                            style={{
+                              padding: "0.25rem 0.5rem",
+                              backgroundColor: "#10b981",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "4px",
+                              fontSize: "0.75rem",
+                              cursor: "pointer",
+                              marginTop: "0.25rem",
+                            }}
+                          >
+                            Mark Handled
+                          </button>
+                        )}
                       </div>
 
                       <div
@@ -400,17 +491,7 @@ export default function ServiceRequestsPage() {
                         >
                           Address
                         </th>
-                        <th
-                          style={{
-                            padding: "1rem 1.5rem",
-                            textAlign: "left",
-                            fontSize: "0.875rem",
-                            fontWeight: "600",
-                            color: "#374151",
-                          }}
-                        >
-                          Status
-                        </th>
+
                         <th
                           style={{
                             padding: "1rem 1.5rem",
@@ -436,7 +517,9 @@ export default function ServiceRequestsPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {serviceRequests.map((request) => (
+                      {serviceRequests
+                        .filter(request => showHandled || request.status !== "handled")
+                        .map((request) => (
                         <tr
                           key={request.id}
                           style={{
@@ -526,32 +609,7 @@ export default function ServiceRequestsPage() {
                               {request.address}
                             </div>
                           </td>
-                          <td
-                            style={{
-                              padding: "1rem 1.5rem",
-                              verticalAlign: "top",
-                            }}
-                          >
-                            <select
-                              value={request.status}
-                              onChange={(e) =>
-                                updateStatus(request.id, e.target.value)
-                              }
-                              style={{
-                                padding: "0.5rem",
-                                border: "1px solid #d1d5db",
-                                borderRadius: "6px",
-                                fontSize: "0.875rem",
-                                backgroundColor: "white",
-                                minWidth: "120px",
-                              }}
-                            >
-                              <option value="pending">Pending</option>
-                              <option value="scheduled">Scheduled</option>
-                              <option value="completed">Completed</option>
-                              <option value="cancelled">Cancelled</option>
-                            </select>
-                          </td>
+
                           <td
                             style={{
                               padding: "1rem 1.5rem",
@@ -577,14 +635,14 @@ export default function ServiceRequestsPage() {
                               style={{
                                 display: "flex",
                                 gap: "0.5rem",
+                                flexDirection: "column",
+                                alignItems: "flex-start",
                               }}
                             >
                               <button
                                 onClick={() => {
-                                  // TODO: Implement view details modal
-                                  alert(
-                                    "View details functionality coming soon!",
-                                  );
+                                  setSelectedRequest(request);
+                                  setShowDetailsModal(true);
                                 }}
                                 style={{
                                   padding: "0.5rem 1rem",
@@ -596,6 +654,7 @@ export default function ServiceRequestsPage() {
                                   fontWeight: "500",
                                   cursor: "pointer",
                                   transition: "background-color 0.2s",
+                                  width: "100%",
                                 }}
                                 onMouseEnter={(e) => {
                                   e.currentTarget.style.backgroundColor =
@@ -608,6 +667,52 @@ export default function ServiceRequestsPage() {
                               >
                                 View Details
                               </button>
+                              {request.status === "pending" && (
+                                <button
+                                  onClick={async () => {
+                                    try {
+                                      const response = await fetch("/api/service-requests", {
+                                        method: "PUT",
+                                        headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify({
+                                          id: request.id,
+                                          status: "handled",
+                                        }),
+                                      });
+                                      if (response.ok) {
+                                        // Update local state
+                                        setServiceRequests((prev) =>
+                                          prev.map((req) =>
+                                            req.id === request.id ? { ...req, status: "handled" } : req,
+                                          ),
+                                        );
+                                      }
+                                    } catch (error) {
+                                      console.error("Error marking as handled:", error);
+                                    }
+                                  }}
+                                  style={{
+                                    padding: "0.5rem 1rem",
+                                    backgroundColor: "#10b981",
+                                    color: "white",
+                                    border: "none",
+                                    borderRadius: "6px",
+                                    fontSize: "0.875rem",
+                                    fontWeight: "500",
+                                    cursor: "pointer",
+                                    transition: "background-color 0.2s",
+                                    width: "100%",
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = "#059669";
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = "#10b981";
+                                  }}
+                                >
+                                  Mark Handled
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -620,6 +725,373 @@ export default function ServiceRequestsPage() {
           )}
         </div>
       </div>
+
+      {/* Service Request Details Modal */}
+      {showDetailsModal && selectedRequest && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            padding: "1rem",
+          }}
+          onClick={() => setShowDetailsModal(false)}
+        >
+          <div
+            style={{
+              backgroundColor: "white",
+              borderRadius: "12px",
+              padding: "2rem",
+              maxWidth: "600px",
+              width: "100%",
+              maxHeight: "90vh",
+              overflow: "auto",
+              position: "relative",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setShowDetailsModal(false)}
+              style={{
+                position: "absolute",
+                top: "1rem",
+                right: "1rem",
+                background: "none",
+                border: "none",
+                fontSize: "1.5rem",
+                cursor: "pointer",
+                color: "#6b7280",
+                padding: "0.5rem",
+                borderRadius: "4px",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "#f3f4f6";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "transparent";
+              }}
+            >
+              ×
+            </button>
+
+            {/* Header */}
+            <div style={{ marginBottom: "2rem" }}>
+              <h2
+                style={{
+                  fontSize: "1.5rem",
+                  fontWeight: "600",
+                  color: "#1f2937",
+                  marginBottom: "0.5rem",
+                }}
+              >
+                Service Request Details
+              </h2>
+              <p
+                style={{
+                  color: "#6b7280",
+                  fontSize: "0.875rem",
+                }}
+              >
+                Submitted on {formatDate(selectedRequest.createdAt)}
+              </p>
+            </div>
+
+            {/* Customer Information */}
+            <div style={{ marginBottom: "2rem" }}>
+              <h3
+                style={{
+                  fontSize: "1.125rem",
+                  fontWeight: "600",
+                  color: "#374151",
+                  marginBottom: "1rem",
+                  borderBottom: "1px solid #e5e7eb",
+                  paddingBottom: "0.5rem",
+                }}
+              >
+                Customer Information
+              </h3>
+              <div style={{ display: "grid", gap: "0.75rem" }}>
+                <div>
+                  <label style={{ fontWeight: "500", color: "#6b7280", fontSize: "0.875rem" }}>
+                    Name
+                  </label>
+                  <p style={{ margin: "0.25rem 0 0 0", color: "#1f2937" }}>
+                    {selectedRequest.customer.name}
+                  </p>
+                </div>
+                <div>
+                  <label style={{ fontWeight: "500", color: "#6b7280", fontSize: "0.875rem" }}>
+                    Email
+                  </label>
+                  <p style={{ margin: "0.25rem 0 0 0", color: "#1f2937" }}>
+                    {selectedRequest.customer.email}
+                  </p>
+                </div>
+                {selectedRequest.customer.phone && (
+                  <div>
+                    <label style={{ fontWeight: "500", color: "#6b7280", fontSize: "0.875rem" }}>
+                      Phone
+                    </label>
+                    <p style={{ margin: "0.25rem 0 0 0", color: "#1f2937" }}>
+                      {selectedRequest.customer.phone}
+                    </p>
+                  </div>
+                )}
+                <div>
+                  <label style={{ fontWeight: "500", color: "#6b7280", fontSize: "0.875rem" }}>
+                    Full Address (from intake form)
+                  </label>
+                  <p style={{ 
+                    margin: "0.25rem 0 0 0", 
+                    color: "#1f2937", 
+                    whiteSpace: "pre-wrap",
+                    backgroundColor: "#f9fafb",
+                    padding: "0.75rem",
+                    borderRadius: "6px",
+                    border: "1px solid #e5e7eb"
+                  }}>
+                    {selectedRequest.address || "No address provided"}
+                  </p>
+                  {!selectedRequest.address && (
+                    <p style={{ fontSize: "0.75rem", color: "#ef4444", marginTop: "0.25rem" }}>
+                      ⚠️ Address field is empty - check if data is being saved correctly
+                    </p>
+                  )}
+                  {selectedRequest.address && (
+                    <p style={{ fontSize: "0.75rem", color: "#10b981", marginTop: "0.25rem" }}>
+                      ✅ Address captured from intake form
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Services Requested */}
+            <div style={{ marginBottom: "2rem" }}>
+              <h3
+                style={{
+                  fontSize: "1.125rem",
+                  fontWeight: "600",
+                  color: "#374151",
+                  marginBottom: "1rem",
+                  borderBottom: "1px solid #e5e7eb",
+                  paddingBottom: "0.5rem",
+                }}
+              >
+                Services Requested
+              </h3>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+                {selectedRequest.services.map((service, idx) => (
+                  <span
+                    key={idx}
+                    style={{
+                      padding: "0.5rem 0.75rem",
+                      backgroundColor: "#7a6990",
+                      color: "white",
+                      borderRadius: "6px",
+                      fontSize: "0.875rem",
+                      fontWeight: "500",
+                    }}
+                  >
+                    {service}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Additional Details */}
+            {(selectedRequest.pickupDate || selectedRequest.repairNotes || selectedRequest.waterproofingNotes || selectedRequest.allergies) && (
+              <div style={{ marginBottom: "2rem" }}>
+                <h3
+                  style={{
+                    fontSize: "1.125rem",
+                    fontWeight: "600",
+                    color: "#374151",
+                    marginBottom: "1rem",
+                    borderBottom: "1px solid #e5e7eb",
+                    paddingBottom: "0.5rem",
+                  }}
+                >
+                  Additional Details
+                </h3>
+                <div style={{ display: "grid", gap: "0.75rem" }}>
+                  {selectedRequest.pickupDate && (
+                    <div>
+                      <label style={{ fontWeight: "500", color: "#6b7280", fontSize: "0.875rem" }}>
+                        Preferred Pickup Date
+                      </label>
+                      <p style={{ margin: "0.25rem 0 0 0", color: "#1f2937" }}>
+                        {(() => {
+                          try {
+                            const date = new Date(selectedRequest.pickupDate);
+                            if (isNaN(date.getTime())) {
+                              return selectedRequest.pickupDate; // Return raw value if parsing fails
+                            }
+                            return date.toLocaleDateString('en-US', {
+                              weekday: 'long',
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            });
+                          } catch (error) {
+                            return selectedRequest.pickupDate; // Return raw value if error
+                          }
+                        })()}
+                      </p>
+                      <p style={{ fontSize: "0.75rem", color: "#6b7280", marginTop: "0.25rem" }}>
+                        📅 Customer selected this date from the intake form
+                      </p>
+                    </div>
+                  )}
+                  {selectedRequest.repairNotes && (
+                    <div>
+                      <label style={{ fontWeight: "500", color: "#6b7280", fontSize: "0.875rem" }}>
+                        Repair Notes
+                      </label>
+                      <p style={{ margin: "0.25rem 0 0 0", color: "#1f2937", whiteSpace: "pre-wrap" }}>
+                        {selectedRequest.repairNotes}
+                      </p>
+                    </div>
+                  )}
+                  {selectedRequest.waterproofingNotes && (
+                    <div>
+                      <label style={{ fontWeight: "500", color: "#6b7280", fontSize: "0.875rem" }}>
+                        Waterproofing Notes
+                      </label>
+                      <p style={{ margin: "0.25rem 0 0 0", color: "#1f2937", whiteSpace: "pre-wrap" }}>
+                        {selectedRequest.waterproofingNotes}
+                      </p>
+                    </div>
+                  )}
+                  {selectedRequest.allergies && (
+                    <div>
+                      <label style={{ fontWeight: "500", color: "#6b7280", fontSize: "0.875rem" }}>
+                        Allergies
+                      </label>
+                      <p style={{ margin: "0.25rem 0 0 0", color: "#1f2937", whiteSpace: "pre-wrap" }}>
+                        {selectedRequest.allergies}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Notes Management */}
+            <div style={{ marginBottom: "2rem" }}>
+              <h3
+                style={{
+                  fontSize: "1.125rem",
+                  fontWeight: "600",
+                  color: "#374151",
+                  marginBottom: "1rem",
+                  borderBottom: "1px solid #e5e7eb",
+                  paddingBottom: "0.5rem",
+                }}
+              >
+                Notes & Management
+              </h3>
+              <div style={{ display: "grid", gap: "0.75rem" }}>
+                <div>
+                  <label style={{ fontWeight: "500", color: "#6b7280", fontSize: "0.875rem" }}>
+                    Internal Notes
+                  </label>
+                  <textarea
+                    value={selectedRequest.notes || ""}
+                    onChange={async (e) => {
+                      try {
+                        const newNotes = e.target.value;
+                        // Update notes via API
+                        const response = await fetch("/api/service-requests", {
+                          method: "PUT",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            id: selectedRequest.id,
+                            notes: newNotes,
+                          }),
+                        });
+                        if (response.ok) {
+                          setSelectedRequest({ ...selectedRequest, notes: newNotes });
+                        }
+                      } catch (error) {
+                        console.error("Error updating notes:", error);
+                      }
+                    }}
+                    placeholder="Add internal notes about this request..."
+                    rows={3}
+                    style={{
+                      padding: "0.5rem",
+                      border: "1px solid #d1d5db",
+                      borderRadius: "6px",
+                      fontSize: "0.875rem",
+                      backgroundColor: "white",
+                      width: "100%",
+                      marginTop: "0.25rem",
+                      resize: "vertical",
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Debug Information (Development Only) */}
+            {process.env.NODE_ENV === 'development' && (
+              <div style={{ marginBottom: "2rem", padding: "1rem", backgroundColor: "#f3f4f6", borderRadius: "6px", border: "1px solid #d1d5db" }}>
+                <h4 style={{ fontSize: "0.875rem", fontWeight: "600", color: "#374151", marginBottom: "0.5rem" }}>
+                  Debug Info (Raw Data)
+                </h4>
+                <details style={{ fontSize: "0.75rem", color: "#6b7280" }}>
+                  <summary style={{ cursor: "pointer", marginBottom: "0.5rem" }}>Click to view raw data</summary>
+                  <pre style={{ 
+                    backgroundColor: "white", 
+                    padding: "0.5rem", 
+                    borderRadius: "4px", 
+                    overflow: "auto",
+                    fontSize: "0.7rem",
+                    whiteSpace: "pre-wrap"
+                  }}>
+                    {JSON.stringify(selectedRequest, null, 2)}
+                  </pre>
+                </details>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div style={{ display: "flex", gap: "1rem", justifyContent: "flex-end" }}>
+              <button
+                onClick={() => setShowDetailsModal(false)}
+                style={{
+                  padding: "0.75rem 1.5rem",
+                  backgroundColor: "#6b7280",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontSize: "0.875rem",
+                  fontWeight: "500",
+                  cursor: "pointer",
+                  transition: "background-color 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#4b5563";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "#6b7280";
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

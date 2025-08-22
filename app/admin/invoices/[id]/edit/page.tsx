@@ -10,7 +10,6 @@ type Invoice = {
   customerPhone: string;
   customerAddress: string;
   invoiceDate: string;
-  dueDate: string;
   status: string;
   notes: string;
   terms: string;
@@ -66,7 +65,7 @@ export default function EditInvoicePage() {
             customerAddress: "",
             invoiceNumber: "INV-ERROR",
             invoiceDate: new Date().toISOString().split("T")[0],
-            dueDate: "",
+
             status: "error",
             notes: "Failed to load invoice data",
             terms: "",
@@ -88,7 +87,6 @@ export default function EditInvoicePage() {
           customerAddress: "",
           invoiceNumber: "INV-ERROR",
           invoiceDate: new Date().toISOString().split("T")[0],
-          dueDate: "",
           status: "error",
           notes: "Failed to load invoice data",
           terms: "",
@@ -218,7 +216,6 @@ export default function EditInvoicePage() {
         customerPhone: invoice.customerPhone,
         customerAddress: invoice.customerAddress,
         invoiceDate: invoice.invoiceDate,
-        dueDate: invoice.dueDate,
         items: invoice.items.map((item) => ({
           description: item.description,
           quantity: item.quantity,
@@ -740,44 +737,7 @@ export default function EditInvoicePage() {
                   />
                 </div>
 
-                <div>
-                  <label
-                    style={{
-                      display: "block",
-                      marginBottom: "8px",
-                      fontWeight: "600",
-                      color: "#333",
-                      fontSize: isMobile ? "0.9rem" : "1rem",
-                    }}
-                  >
-                    Due Date *
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={invoice.dueDate}
-                    onChange={(e) =>
-                      handleInputChange("dueDate", e.target.value)
-                    }
-                    style={{
-                      width: "100%",
-                      padding: isMobile ? "10px" : "12px",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: "8px",
-                      fontSize: isMobile ? "0.9rem" : "1rem",
-                      backgroundColor: "white",
-                      color: "#374151",
-                      transition: "border-color 0.2s ease",
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = "#7a6990";
-                      e.target.style.outline = "none";
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = "#e5e7eb";
-                    }}
-                  />
-                </div>
+
 
                 <div>
                   <label

@@ -35,12 +35,32 @@ interface ServiceRequest {
 
 interface Invoice {
   id: string;
+  customerId: string;
+  customer: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+  };
   customerName: string;
   invoiceNumber: string;
   issueDate: string;
-  dueDate: string;
+  dueDate?: string; // Optional since we're removing it
   total: number;
   status: string;
+  hostedUrl?: string;
+  pdfUrl?: string;
+  createdAt: string;
+  updatedAt: string;
+  notes?: string;
+  subtotal: number;
+  tax: number;
+  items: Array<{
+    id: string;
+    description: string;
+    quantity: number;
+    unitAmount: number;
+  }>;
 }
 
 export default function AdminDashboard() {
@@ -74,12 +94,33 @@ export default function AdminDashboard() {
     () => [
       {
         id: "1",
+        customerId: "mock-customer-1",
+        customer: {
+          id: "mock-customer-1",
+          name: "Sarah Johnson",
+          email: "sarah.johnson@email.com",
+          phone: "(555) 123-4567",
+        },
         customerName: "Sarah Johnson",
         invoiceNumber: "INV-001",
         issueDate: "2024-01-15",
-        dueDate: "2024-02-15",
-        total: 245.0,
-        status: "Paid",
+        total: 24500, // $245.00 in cents
+        status: "paid",
+        hostedUrl: undefined,
+        pdfUrl: undefined,
+        createdAt: "2024-01-15T00:00:00Z",
+        updatedAt: "2024-01-15T00:00:00Z",
+        notes: "Mock invoice for testing",
+        subtotal: 23000,
+        tax: 1500,
+        items: [
+          {
+            id: "mock-item-1",
+            description: "Blanket (with fill)",
+            quantity: 2,
+            unitAmount: 11500,
+          },
+        ],
       },
     ],
     [],
@@ -101,8 +142,10 @@ export default function AdminDashboard() {
         const customersResponse = await fetch("/api/customers");
         if (customersResponse.ok) {
           const customersData = await customersResponse.json();
+          console.log("Fetched customers:", customersData);
           setCustomers(customersData);
         } else {
+          console.log("Failed to fetch customers, using mock data");
           setCustomers(mockCustomers); // Fallback to mock data
         }
 
@@ -119,8 +162,10 @@ export default function AdminDashboard() {
         const invoicesResponse = await fetch("/api/invoices/list");
         if (invoicesResponse.ok) {
           const invoicesData = await invoicesResponse.json();
+          console.log("Fetched invoices:", invoicesData);
           setInvoices(invoicesData);
         } else {
+          console.log("Failed to fetch invoices, using mock data");
           setInvoices(mockInvoices); // Fallback to mock data
         }
       } catch (error) {
@@ -132,6 +177,12 @@ export default function AdminDashboard() {
       }
 
       setLoading(false);
+      
+      // Debug logging
+      console.log("Dashboard data loaded:");
+      console.log("- Customers:", customers.length);
+      console.log("- Service Requests:", serviceRequests.length);
+      console.log("- Invoices:", invoices.length);
     };
 
     fetchData();
@@ -142,11 +193,19 @@ export default function AdminDashboard() {
   const stats = {
     totalCustomers: customers.length,
     pendingServiceRequests: serviceRequests.filter(
-      (req) => req.status === "pending",
+      (req) => req.status === "pending", // Only truly pending, not reviewed
     ).length,
-    pendingInvoices: invoices.filter((inv) => inv.status === "Pending").length,
+    pendingInvoices: invoices.filter((inv) => inv.status === "pending" || inv.status === "open").length,
     monthlyRevenue: invoices
-      .filter((inv) => inv.status === "Paid")
+      .filter((inv) => {
+        // Only count paid invoices from the current month
+        if (inv.status !== "paid") return false;
+        
+        const invoiceDate = new Date(inv.issueDate);
+        const now = new Date();
+        return invoiceDate.getMonth() === now.getMonth() && 
+               invoiceDate.getFullYear() === now.getFullYear();
+      })
       .reduce((sum, inv) => sum + inv.total, 0),
   };
 
@@ -165,8 +224,12 @@ export default function AdminDashboard() {
         return { bg: "#dcfce7", text: "#166534", border: "#bbf7d0" };
       case "pending":
         return { bg: "#fef3c7", text: "#92400e", border: "#fde68a" };
+      case "open":
+        return { bg: "#dbeafe", text: "#1e40af", border: "#93c5fd" };
       case "draft":
         return { bg: "#f3f4f6", text: "#374151", border: "#d1d5db" };
+      case "void":
+        return { bg: "#fee2e2", text: "#991b1b", border: "#fca5a5" };
       default:
         return { bg: "#f3f4f6", text: "#374151", border: "#d1d5db" };
     }
@@ -201,12 +264,11 @@ export default function AdminDashboard() {
 
   const exportInvoiceList = () => {
     const csvContent = [
-      ["Invoice #", "Customer", "Issue Date", "Due Date", "Total", "Status"],
+              ["Invoice #", "Customer", "Issue Date", "Total", "Status"],
       ...invoices.map((invoice, index) => [
         `Invoice #${index + 1}`,
         invoice.customerName,
         invoice.issueDate,
-        invoice.dueDate,
         formatCurrency(invoice.total),
         invoice.status,
       ]),

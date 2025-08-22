@@ -18,7 +18,6 @@ interface Invoice {
   customerPhone: string;
   customerAddress: string;
   invoiceDate: string;
-  dueDate: string;
   status: string;
   items: InvoiceItem[];
   notes: string;
@@ -66,7 +65,6 @@ export default function ViewInvoice() {
             customerPhone: "(555) 123-4567",
             customerAddress: "123 Main Street, Portland, OR 97201",
             invoiceDate: "2024-01-15",
-            dueDate: "2024-02-15",
             status: "open",
             items: [
               {
@@ -97,7 +95,6 @@ export default function ViewInvoice() {
           customerPhone: "(555) 123-4567",
           customerAddress: "123 Main Street, Portland, OR 97201",
           invoiceDate: "2024-01-15",
-          dueDate: "2024-02-15",
           status: "open",
           items: [
             {
@@ -587,18 +584,7 @@ export default function ViewInvoice() {
                 <strong>Date:</strong>{" "}
                 {new Date(invoice.invoiceDate).toLocaleDateString()}
               </p>
-              {invoice.dueDate && (
-                <p
-                  style={{
-                    margin: "0.25rem 0",
-                    color: "#1f2937",
-                    fontSize: isMobile ? "0.9rem" : "1rem",
-                  }}
-                >
-                  <strong>Due Date:</strong>{" "}
-                  {new Date(invoice.dueDate).toLocaleDateString()}
-                </p>
-              )}
+
               <p
                 style={{
                   margin: "0.25rem 0",

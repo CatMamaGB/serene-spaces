@@ -12,7 +12,6 @@ export async function POST(req: Request) {
       customerPhone,
       customerAddress,
       invoiceDate,
-      dueDate,
       items,
       notes,
       subtotal,
@@ -79,7 +78,6 @@ export async function POST(req: Request) {
         total: Math.round(total * 100), // Convert to cents
         invoiceNumber: invoiceNumber,
         issueDate: invoiceDate ? new Date(invoiceDate) : new Date(),
-        dueDate: dueDate ? new Date(dueDate) : null,
         notes: notes || null,
 
         items: {

@@ -57,7 +57,18 @@ export async function POST(req: Request) {
         address: address,
         pickupDate:
           pickupMonth && pickupDay
-            ? new Date(`2024-${pickupMonth}-${pickupDay}`)
+            ? (() => {
+                const currentYear = new Date().getFullYear(); // This will be 2025
+                const currentDate = new Date();
+                const selectedDate = new Date(`${currentYear}-${pickupMonth}-${pickupDay}`);
+                
+                // If the selected date is in the past, use next year
+                if (selectedDate < currentDate) {
+                  selectedDate.setFullYear(currentYear + 1);
+                }
+                
+                return selectedDate;
+              })()
             : null,
         repairNotes: repairNotes || null,
         waterproofingNotes: waterproofingNotes || null,

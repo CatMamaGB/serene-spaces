@@ -24,7 +24,6 @@ type InvoicePreviewProps = {
   items: InvoiceItem[];
   invoiceNumber: string;
   issueDate: string;
-  dueDate: string;
   notes?: string;
   onEdit: () => void;
   onSend: () => void;
@@ -36,7 +35,6 @@ export default function InvoicePreview({
   items,
   invoiceNumber,
   issueDate,
-  dueDate,
   notes,
   onEdit,
   onSend,
@@ -168,18 +166,7 @@ export default function InvoicePreview({
               <p style={{ margin: "0", color: "#1a1a1a", fontWeight: "600" }}>
                 {formatDate(issueDate)}
               </p>
-              <p
-                style={{
-                  margin: "8px 0 0 0",
-                  color: "#666",
-                  fontSize: "0.9rem",
-                }}
-              >
-                Due Date
-              </p>
-              <p style={{ margin: "0", color: "#1a1a1a", fontWeight: "600" }}>
-                {formatDate(dueDate)}
-              </p>
+
             </div>
           </div>
         </div>
@@ -443,7 +430,7 @@ export default function InvoicePreview({
               textAlign: "center",
             }}
           >
-            Payment Instructions
+            How to Pay
           </h4>
           <div
             style={{
@@ -462,15 +449,6 @@ export default function InvoicePreview({
                 boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
               }}
             >
-              <div
-                style={{
-                  fontSize: "2rem",
-                  marginBottom: "12px",
-                  color: "#7a6990",
-                }}
-              >
-                💳
-              </div>
               <h5
                 style={{
                   fontSize: "1.1rem",
@@ -504,15 +482,6 @@ export default function InvoicePreview({
                 boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
               }}
             >
-              <div
-                style={{
-                  fontSize: "2rem",
-                  marginBottom: "12px",
-                  color: "#7a6990",
-                }}
-              >
-                📱
-              </div>
               <h5
                 style={{
                   fontSize: "1.1rem",
@@ -545,15 +514,6 @@ export default function InvoicePreview({
                 boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
               }}
             >
-              <div
-                style={{
-                  fontSize: "2rem",
-                  marginBottom: "12px",
-                  color: "#7a6990",
-                }}
-              >
-                💵
-              </div>
               <h5
                 style={{
                   fontSize: "1.1rem",

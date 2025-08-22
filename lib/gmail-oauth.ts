@@ -1,8 +1,7 @@
 import { google } from "googleapis";
 import nodemailer from "nodemailer";
 
-// Gmail OAuth2 configuration
-const SCOPES = ["https://mail.google.com/"]; // Changed from gmail.send to enable SMTP
+
 
 // Create OAuth2 client
 const createOAuth2Client = () => {
@@ -53,47 +52,4 @@ export const createGmailTransporter = async () => {
   });
 };
 
-// Generate OAuth2 authorization URL
-export const getAuthUrl = () => {
-  const oauth2Client = createOAuth2Client();
 
-  return oauth2Client.generateAuthUrl({
-    access_type: "offline",
-    scope: SCOPES, // https://mail.google.com/ - enables both Gmail API and SMTP
-    prompt: "consent", // Force consent to get refresh token
-  });
-};
-
-// Exchange authorization code for tokens
-export const exchangeCodeForTokens = async (code: string) => {
-  const oauth2Client = createOAuth2Client();
-
-  try {
-    const { tokens } = await oauth2Client.getToken(code);
-    return tokens;
-  } catch (error) {
-    console.error("Error exchanging code for tokens:", error);
-    throw error;
-  }
-};
-
-// Test Gmail connection
-export const testGmailConnection = async () => {
-  try {
-    const transporter = await createGmailTransporter();
-
-    // Verify connection
-    await transporter.verify();
-
-    return {
-      success: true,
-      message: "Gmail OAuth2 connection successful",
-    };
-  } catch (error) {
-    return {
-      success: false,
-      message: "Gmail OAuth2 connection failed",
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
-};

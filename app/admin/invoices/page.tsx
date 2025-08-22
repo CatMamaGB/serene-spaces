@@ -11,7 +11,6 @@ type Invoice = {
   customerName?: string; // For backward compatibility with mock data
   invoiceNumber?: string;
   issueDate?: string;
-  dueDate?: string;
   total: number;
   status: string;
   hostedUrl?: string;
@@ -50,7 +49,6 @@ export default function InvoicesPage() {
         customerName: "Sarah Johnson",
         invoiceNumber: "INV-001",
         issueDate: "2024-01-15",
-        dueDate: "2024-02-14",
         total: 24500, // $245.00 in cents
         status: "open",
       },
@@ -60,7 +58,6 @@ export default function InvoicesPage() {
         customerName: "Mike Chen",
         invoiceNumber: "INV-002",
         issueDate: "2024-01-14",
-        dueDate: "2024-02-13",
         total: 18050, // $180.50 in cents
         status: "paid",
       },
@@ -70,7 +67,6 @@ export default function InvoicesPage() {
         customerName: "Emily Rodriguez",
         invoiceNumber: "INV-003",
         issueDate: "2024-01-13",
-        dueDate: "2024-02-12",
         total: 32000, // $320.00 in cents
         status: "draft",
       },
@@ -99,14 +95,6 @@ export default function InvoicesPage() {
               invoice.issueDate ||
               invoice.createdAt ||
               new Date().toISOString(),
-            dueDate:
-              invoice.dueDate ||
-              (invoice.createdAt
-                ? new Date(
-                    new Date(invoice.createdAt).getTime() +
-                      30 * 24 * 60 * 60 * 1000,
-                  ).toISOString()
-                : new Date().toISOString()),
           }));
           setInvoices(normalizedData);
         } else {
@@ -464,20 +452,7 @@ export default function InvoicesPage() {
                             : "N/A"}
                         </span>
                       </div>
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                        }}
-                      >
-                        <span style={{ color: "#666" }}>Due Date:</span>
-                        <span style={{ color: "#1a1a1a", fontWeight: "500" }}>
-                          {invoice.dueDate
-                            ? formatDate(invoice.dueDate)
-                            : "N/A"}
-                        </span>
-                      </div>
+
                       <div
                         style={{
                           display: "flex",
@@ -588,18 +563,7 @@ export default function InvoicesPage() {
                       >
                         Issue Date
                       </th>
-                      <th
-                        style={{
-                          padding: "16px",
-                          textAlign: "left",
-                          borderBottom: "1px solid #e9ecef",
-                          color: "#1a1a1a",
-                          fontWeight: "600",
-                          fontSize: "0.9rem",
-                        }}
-                      >
-                        Due Date
-                      </th>
+
                       <th
                         style={{
                           padding: "16px",
@@ -674,17 +638,7 @@ export default function InvoicesPage() {
                             ? formatDate(invoice.issueDate)
                             : "N/A"}
                         </td>
-                        <td
-                          style={{
-                            padding: "16px",
-                            color: "#666",
-                            fontSize: "0.9rem",
-                          }}
-                        >
-                          {invoice.dueDate
-                            ? formatDate(invoice.dueDate)
-                            : "N/A"}
-                        </td>
+
                         <td
                           style={{
                             padding: "16px",

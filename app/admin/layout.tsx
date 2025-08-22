@@ -318,26 +318,7 @@ export default function AdminLayout({
                   Service Requests
                 </Link>
 
-                <Link
-                  href="/admin/gmail-setup"
-                  style={{
-                    padding: "0.5rem 1rem",
-                    borderRadius: "6px",
-                    textDecoration: "none",
-                    fontSize: "0.875rem",
-                    fontWeight: "500",
-                    transition: "all 0.2s ease",
-                    backgroundColor: isActive("/admin/gmail-setup")
-                      ? "#7a6990"
-                      : "transparent",
-                    color: isActive("/admin/gmail-setup") ? "white" : "#6b7280",
-                    border: isActive("/admin/gmail-setup")
-                      ? "none"
-                      : "1px solid transparent",
-                  }}
-                >
-                  Gmail Setup
-                </Link>
+
               </nav>
             )}
           </div>
@@ -648,25 +629,7 @@ export default function AdminLayout({
                 Service Requests
               </Link>
 
-              <Link
-                href="/admin/gmail-setup"
-                style={{
-                  textDecoration: "none",
-                  padding: "16px",
-                  borderRadius: "8px",
-                  fontWeight: "500",
-                  fontSize: "1.1rem",
-                  border: "1px solid #e5e7eb",
-                  transition: "all 0.2s ease",
-                  backgroundColor: isActive("/admin/gmail-setup")
-                    ? "#7a6990"
-                    : "transparent",
-                  color: isActive("/admin/gmail-setup") ? "white" : "#6b7280",
-                }}
-                onClick={closeMobileMenu}
-              >
-                Gmail Setup
-              </Link>
+
 
               <Link
                 href="/"

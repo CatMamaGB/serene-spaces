@@ -215,7 +215,6 @@ function generateInvoiceHtml(invoiceData: any) {
     customerPhone,
     customerAddress,
     invoiceDate,
-    dueDate,
     items,
     notes,
     terms,
@@ -367,7 +366,6 @@ function generateInvoiceHtml(invoiceData: any) {
           <div class="invoice-info">
             <h3>Invoice Details:</h3>
             <p><strong>Date:</strong> ${invoiceDate}</p>
-            ${dueDate ? `<p><strong>Due Date:</strong> ${dueDate}</p>` : ""}
           </div>
         </div>
         
@@ -419,28 +417,28 @@ function generateInvoiceHtml(invoiceData: any) {
         }
         
         <div class="payment-methods">
-          <div class="payment-method">
-            <div style="font-size: 2rem; margin-bottom: 12px;">💳</div>
-            <h4 style="margin: 0 0 8px 0; color: #1a1a1a;">Zelle</h4>
-            <p style="margin: 0; font-size: 0.9rem; color: #666; word-break: break-all;">
-              loveserenespaces@gmail.com
-            </p>
-          </div>
-          
-          <div class="payment-method">
-            <div style="font-size: 2rem; margin-bottom: 12px;">📱</div>
-            <h4 style="margin: 0 0 8px 0; color: #1a1a1a;">Venmo</h4>
-            <p style="margin: 0; font-size: 0.9rem; color: #666;">
-              @beth-contos
-            </p>
-          </div>
-          
-          <div class="payment-method">
-            <div style="font-size: 2rem; margin-bottom: 12px;">💵</div>
-            <h4 style="margin: 0 0 8px 0; color: #1a1a1a;">Cash</h4>
-            <p style="margin: 0; font-size: 0.9rem; color: #666;">
-              Due at delivery
-            </p>
+          <h4 style="margin: 0 0 20px 0; color: #1a1a1a; text-align: center;">How to Pay</h4>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+            <div style="text-align: center; padding: 20px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+              <h5 style="margin: 0 0 8px 0; color: #1a1a1a; font-size: 1.1rem;">Zelle</h5>
+              <p style="margin: 0; font-size: 0.9rem; color: #666; word-break: break-all;">
+                loveserenespaces@gmail.com
+              </p>
+            </div>
+            
+            <div style="text-align: center; padding: 20px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+              <h5 style="margin: 0 0 8px 0; color: #1a1a1a; font-size: 1.1rem;">Venmo</h5>
+              <p style="margin: 0; font-size: 0.9rem; color: #666;">
+                @beth-contos
+              </p>
+            </div>
+            
+            <div style="text-align: center; padding: 20px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+              <h5 style="margin: 0 0 8px 0; color: #1a1a1a; font-size: 1.1rem;">Cash</h5>
+              <p style="margin: 0; font-size: 0.9rem; color: #666;">
+                Due at delivery
+              </p>
+            </div>
           </div>
         </div>
         

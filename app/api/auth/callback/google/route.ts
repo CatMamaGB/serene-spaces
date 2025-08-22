@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { exchangeCodeForTokens } from "@/lib/gmail-oauth";
+import { google } from "googleapis";
 
 // TODO: replace with your real persistence (DB/secret manager)
 async function saveRefreshTokenToDB(userId: string, refreshToken: string) {
@@ -20,7 +20,21 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Missing code" }, { status: 400 });
     }
 
-    const tokens = await exchangeCodeForTokens(code);
+    // Create OAuth2 client
+    const redirectUri =
+      process.env.GOOGLE_REDIRECT_URI ||
+      (process.env.NODE_ENV === "production"
+        ? "https://www.loveserenespaces.com/api/auth/callback/google"
+        : "http://localhost:3000/api/auth/callback/google");
+
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID!,
+      process.env.GOOGLE_CLIENT_SECRET!,
+      redirectUri,
+    );
+
+    // Exchange code for tokens
+    const { tokens } = await oauth2Client.getToken(code);
 
     if (!tokens.refresh_token) {
       // Most common causes: not using prompt=consent + access_type=offline,
@@ -44,7 +58,7 @@ export async function GET(req: NextRequest) {
       process.env.NEXT_PUBLIC_APP_URL               // e.g. https://www.loveserenespaces.com
       || req.nextUrl.origin;                        // falls back to request origin
 
-    const redirectUrl = new URL("/admin/gmail-setup?connected=1", base);
+    const redirectUrl = new URL("/admin?gmail-connected=1", base);
     return NextResponse.redirect(redirectUrl, { status: 303 }); // 303 = "see other"
   } catch (e: unknown) {
     console.error("OAuth callback error", e);

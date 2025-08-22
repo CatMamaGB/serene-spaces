@@ -113,7 +113,6 @@ export async function PATCH(
       customerPhone,
       customerAddress,
       invoiceDate,
-      dueDate,
       items,
       notes,
       subtotal,
@@ -180,7 +179,6 @@ export async function PATCH(
         tax: Math.round(tax * 100), // Convert to cents
         total: Math.round(total * 100), // Convert to cents
         issueDate: invoiceDate ? new Date(invoiceDate) : new Date(),
-        dueDate: dueDate ? new Date(dueDate) : null,
         notes: notes || null,
         items: {
           create: items.map(

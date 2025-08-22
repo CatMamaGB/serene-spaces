@@ -26,7 +26,7 @@ export default function CreateInvoice() {
     dueDate: "",
     items: [{ description: "", quantity: 1, rate: 0, amount: 0 }],
     notes: "",
-    terms: "Payment due before delivery",
+    terms: "Payment due before delivery\n\nHow to pay:\n• Zelle: loveserenespaces@gmail.com\n• Venmo: @beth-contos\n• Cash: Due at delivery",
     emailMessage: "",
   });
 
@@ -183,7 +183,6 @@ export default function CreateInvoice() {
         customerPhone: invoiceData.customerPhone,
         customerAddress: invoiceData.customerAddress,
         invoiceDate: invoiceData.invoiceDate,
-        dueDate: invoiceData.dueDate,
         items: invoiceData.items.map((item) => ({
           description: item.description,
           quantity: item.quantity,
@@ -1110,13 +1109,19 @@ export default function CreateInvoice() {
                         color: "#374151",
                       }}
                     >
-                      Terms
+                      Terms & Payment Instructions
                     </label>
                     <textarea
                       name="terms"
                       value={invoiceData.terms}
                       onChange={handleInputChange}
-                      rows={4}
+                      rows={6}
+                      placeholder="Payment due before delivery
+
+How to pay:
+• Zelle: loveserenespaces@gmail.com
+• Venmo: @beth-contos
+• Cash: Due at delivery"
                       style={{
                         width: "100%",
                         padding: "0.75rem",
@@ -1140,152 +1145,7 @@ export default function CreateInvoice() {
                 </div>
               </div>
 
-              {/* Payment Instructions */}
-              <div
-                style={{
-                  backgroundColor: "white",
-                  borderRadius: "0.75rem",
-                  border: "1px solid #e2e8f0",
-                  padding: "1.5rem",
-                  marginBottom: "1.5rem",
-                }}
-              >
-                <h2
-                  style={{
-                    color: "#1e293b",
-                    fontSize: "1.25rem",
-                    fontWeight: "600",
-                    marginBottom: "1rem",
-                  }}
-                >
-                  Payment Instructions
-                </h2>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr 1fr",
-                    gap: "1rem",
-                  }}
-                >
-                  <div
-                    style={{
-                      backgroundColor: "#f8f9fa",
-                      padding: "1rem",
-                      borderRadius: "0.5rem",
-                      border: "1px solid #e9ecef",
-                      textAlign: "center",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: "1.5rem",
-                        marginBottom: "0.5rem",
-                        color: "#7a6990",
-                      }}
-                    >
-                      💳
-                    </div>
-                    <h3
-                      style={{
-                        fontSize: "1rem",
-                        fontWeight: "600",
-                        margin: "0 0 0.5rem 0",
-                        color: "#1a1a1a",
-                      }}
-                    >
-                      Zelle
-                    </h3>
-                    <p
-                      style={{
-                        margin: "0",
-                        fontSize: "0.875rem",
-                        color: "#666",
-                        wordBreak: "break-all",
-                      }}
-                    >
-                      loveserenespaces@gmail.com
-                    </p>
-                  </div>
 
-                  <div
-                    style={{
-                      backgroundColor: "#f8f9fa",
-                      padding: "1rem",
-                      borderRadius: "0.5rem",
-                      border: "1px solid #e9ecef",
-                      textAlign: "center",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: "1.5rem",
-                        marginBottom: "0.5rem",
-                        color: "#7a6990",
-                      }}
-                    >
-                      📱
-                    </div>
-                    <h3
-                      style={{
-                        fontSize: "1rem",
-                        fontWeight: "600",
-                        margin: "0 0 0.5rem 0",
-                        color: "#1a1a1a",
-                      }}
-                    >
-                      Venmo
-                    </h3>
-                    <p
-                      style={{
-                        margin: "0",
-                        fontSize: "0.875rem",
-                        color: "#666",
-                      }}
-                    >
-                      @beth-contos
-                    </p>
-                  </div>
-
-                  <div
-                    style={{
-                      backgroundColor: "#f8f9fa",
-                      padding: "1rem",
-                      borderRadius: "0.5rem",
-                      border: "1px solid #e9ecef",
-                      textAlign: "center",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: "1.5rem",
-                        marginBottom: "0.5rem",
-                        color: "#7a6990",
-                      }}
-                    >
-                      💵
-                    </div>
-                    <h3
-                      style={{
-                        fontSize: "1rem",
-                        fontWeight: "600",
-                        margin: "0 0 0.5rem 0",
-                        color: "#1a1a1a",
-                      }}
-                    >
-                      Cash
-                    </h3>
-                    <p
-                      style={{
-                        margin: "0",
-                        fontSize: "0.875rem",
-                        color: "#666",
-                      }}
-                    >
-                      Due at delivery
-                    </p>
-                  </div>
-                </div>
-              </div>
             </div>
 
             {/* Invoice Summary */}
@@ -1316,7 +1176,7 @@ export default function CreateInvoice() {
                   <div
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "1fr 1fr",
+                      gridTemplateColumns: "1fr",
                       gap: "1rem",
                     }}
                   >
@@ -1357,42 +1217,7 @@ export default function CreateInvoice() {
                       />
                     </div>
 
-                    <div>
-                      <label
-                        style={{
-                          display: "block",
-                          marginBottom: "0.5rem",
-                          fontWeight: "500",
-                          color: "#374151",
-                          fontSize: "0.875rem",
-                        }}
-                      >
-                        Due Date
-                      </label>
-                      <input
-                        type="date"
-                        name="dueDate"
-                        value={invoiceData.dueDate}
-                        onChange={handleInputChange}
-                        style={{
-                          width: "100%",
-                          padding: "0.5rem",
-                          border: "1px solid #e5e7eb",
-                          borderRadius: "0.375rem",
-                          fontSize: "0.875rem",
-                          backgroundColor: "white",
-                          color: "#374151",
-                          transition: "border-color 0.2s ease",
-                        }}
-                        onFocus={(e) => {
-                          e.target.style.borderColor = "#7a6990";
-                          e.target.style.outline = "none";
-                        }}
-                        onBlur={(e) => {
-                          e.target.style.borderColor = "#e5e7eb";
-                        }}
-                      />
-                    </div>
+
                   </div>
                 </div>
 
