@@ -262,12 +262,8 @@ export default function EditInvoicePage() {
     }
   };
 
-  const formatCurrency = (cents: number) => {
-    return `$${(cents / 100).toFixed(2)}`;
-  };
-
-  const formatCurrencyInput = (cents: number) => {
-    return (cents / 100).toFixed(2);
+  const formatCurrency = (dollars: number) => {
+    return `$${dollars.toFixed(2)}`;
   };
 
   const handleDeleteClick = () => {
@@ -1023,7 +1019,7 @@ export default function EditInvoicePage() {
                           required
                           min="0"
                           step="0.01"
-                          value={formatCurrencyInput(item.rate * 100)}
+                          value={item.rate.toFixed(2)}
                           onChange={(e) =>
                             handleItemChange(
                               item.description,

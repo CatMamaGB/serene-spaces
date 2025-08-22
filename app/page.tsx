@@ -135,7 +135,7 @@ export default function HomePage() {
                 🔧 Expert Repairs
               </h3>
               <p style={{ color: "#666", lineHeight: "1.6" }}>
-                Rip repairs, strap replacement, and zipper fixes
+                Rip repairs, strap replacement, and other repairs as needed
               </p>
             </div>
             <div
@@ -156,7 +156,7 @@ export default function HomePage() {
                 🌧️ Waterproofing
               </h3>
               <p style={{ color: "#666", lineHeight: "1.6" }}>
-                Professional waterproofing treatment and seam sealing
+                Professional waterproofing treatment
               </p>
             </div>
           </div>

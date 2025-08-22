@@ -41,10 +41,10 @@ export async function POST(req: Request) {
           name: fullName,
           email,
           phone: phone || null,
-          address: address, // Use the address field from schema
-          city: "", // Will be extracted from address if needed
-          state: "", // Will be extracted from address if needed
-          postalCode: "", // Use postalCode instead of zipCode
+          address: address,
+          city: "",
+          state: "",
+          postalCode: "",
         },
       });
     }
@@ -74,7 +74,7 @@ export async function POST(req: Request) {
         phone,
         address,
         pickupDate:
-          pickupMonth && pickupDay ? `${pickupMonth}/${pickupDay}` : null,
+          pickupMonth && pickupDay ? `${pickupMonth}/${pickupDay}` : undefined,
         services,
         repairNotes,
         waterproofingNotes,
@@ -84,12 +84,36 @@ export async function POST(req: Request) {
 
       const transporter = await createGmailTransporter();
 
+      // Send confirmation email to customer
       await transporter.sendMail({
         from: "Serene Spaces <loveserenespaces@gmail.com>",
         to: email,
         subject: "Service Request Confirmation - Serene Spaces",
         html: confirmationHtml,
         replyTo: "loveserenespaces@gmail.com",
+      });
+
+      // Send notification email to Serene Spaces
+      const notificationHtml = generateNotificationEmail({
+        fullName,
+        email,
+        phone,
+        address,
+        pickupDate:
+          pickupMonth && pickupDay ? `${pickupMonth}/${pickupDay}` : undefined,
+        services,
+        repairNotes,
+        waterproofingNotes,
+        allergies,
+        serviceRequestId: serviceRequest.id,
+      });
+
+      await transporter.sendMail({
+        from: "Serene Spaces <loveserenespaces@gmail.com>",
+        to: "loveserenespaces@gmail.com",
+        subject: `New Service Request: ${fullName} - ${services.join(", ")}`,
+        html: notificationHtml,
+        replyTo: email, // So you can reply directly to the customer
       });
     } catch (emailError) {
       console.error("Failed to send confirmation email:", emailError);
@@ -117,8 +141,19 @@ export async function POST(req: Request) {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function generateConfirmationEmail(data: any) {
+// Generate confirmation email for customer
+function generateConfirmationEmail(data: {
+  fullName: string;
+  email: string;
+  phone?: string;
+  address: string;
+  pickupDate?: string;
+  services: string[];
+  repairNotes?: string;
+  waterproofingNotes?: string;
+  allergies?: string;
+  serviceRequestId: string;
+}) {
   const {
     fullName,
     email,
@@ -132,9 +167,8 @@ function generateConfirmationEmail(data: any) {
     serviceRequestId,
   } = data;
 
-  const formatDate = (date: string) => {
+  const formatDate = (date: string | undefined) => {
     if (!date) return "To be scheduled";
-    // Handle the new MM/DD format
     if (date.includes("/")) {
       const [month, day] = date.split("/");
       const monthNames = [
@@ -154,7 +188,6 @@ function generateConfirmationEmail(data: any) {
       const monthName = monthNames[parseInt(month) - 1];
       return `${monthName} ${parseInt(day)}`;
     }
-    // Fallback for old date format
     return new Date(date).toLocaleDateString("en-US", {
       weekday: "long",
       year: "numeric",
@@ -315,6 +348,214 @@ function generateConfirmationEmail(data: any) {
         </div>
       </div>
     </body>
-    </html>
+  `;
+}
+
+// Generate notification email for Serene Spaces staff
+function generateNotificationEmail(data: {
+  fullName: string;
+  email: string;
+  phone?: string;
+  address: string;
+  pickupDate?: string;
+  services: string[];
+  repairNotes?: string;
+  waterproofingNotes?: string;
+  allergies?: string;
+  serviceRequestId: string;
+}) {
+  const {
+    fullName,
+    email,
+    phone,
+    address,
+    pickupDate,
+    services,
+    repairNotes,
+    waterproofingNotes,
+    allergies,
+    serviceRequestId,
+  } = data;
+
+  const formatDate = (date: string | undefined) => {
+    if (!date) return "To be scheduled";
+    if (date.includes("/")) {
+      const [month, day] = date.split("/");
+      const monthNames = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+      ];
+      const monthName = monthNames[parseInt(month) - 1];
+      return `${monthName} ${parseInt(day)}`;
+    }
+    return new Date(date).toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>New Service Request - Serene Spaces</title>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #7a6990; padding-bottom: 20px; }
+        .company-name { font-size: 32px; font-weight: bold; color: #7a6990; margin-bottom: 5px; }
+        .tagline { font-size: 16px; color: #666; margin-bottom: 0; }
+        .alert-box { background-color: #fef3c7; border: 2px solid #f59e0b; border-radius: 10px; padding: 20px; margin: 20px 0; text-align: center; }
+        .alert-title { font-size: 24px; font-weight: bold; color: #92400e; margin-bottom: 10px; }
+        .alert-message { font-size: 16px; color: #92400e; }
+        .section { margin: 25px 0; }
+        .section-title { font-size: 20px; font-weight: bold; color: #7a6990; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; }
+        .info-grid { display: table; width: 100%; }
+        .info-row { display: table-row; }
+        .info-label { display: table-cell; font-weight: bold; padding: 8px 15px 8px 0; color: #374151; width: 30%; }
+        .info-value { display: table-cell; padding: 8px 0; color: #1f2937; }
+        .services-list { list-style: none; padding: 0; margin: 0; }
+        .service-item { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; margin: 8px 0; font-weight: 500; }
+        .notes-section { background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 15px 0; }
+        .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0; color: #666; }
+        .request-id { background-color: #7a6990; color: white; padding: 10px; border-radius: 5px; text-align: center; font-weight: bold; margin: 20px 0; }
+        .action-buttons { text-align: center; margin: 20px 0; }
+        .action-button { display: inline-block; background-color: #7a6990; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 0 10px; font-weight: 500; }
+        @media (max-width: 600px) {
+          .container { padding: 10px; }
+          .info-grid { display: block; }
+          .info-row { display: block; margin-bottom: 10px; }
+          .info-label, .info-value { display: block; }
+          .info-label { margin-bottom: 5px; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <div class="company-name">Serene Spaces</div>
+          <p class="tagline">Professional Equestrian Cleaning Services</p>
+        </div>
+        
+        <div class="alert-box">
+          <div class="alert-title">🚨 New Service Request!</div>
+          <p class="alert-message">A customer has submitted a new service request that requires your attention.</p>
+        </div>
+
+        <div class="request-id">
+          Request ID: #${serviceRequestId}
+        </div>
+        
+        <div class="section">
+          <h2 class="section-title">Customer Information</h2>
+          <div class="info-grid">
+            <div class="info-row">
+              <div class="info-label">Name:</div>
+              <div class="info-value">${fullName}</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Email:</div>
+              <div class="info-value"><a href="mailto:${email}" style="color: #7a6990;">${email}</a></div>
+            </div>
+            ${
+              phone
+                ? `
+            <div class="info-row">
+              <div class="info-label">Phone:</div>
+              <div class="info-value"><a href="tel:${phone}" style="color: #7a6990;">${phone}</a></div>
+            </div>
+            `
+                : ""
+            }
+            <div class="info-row">
+              <div class="info-label">Address:</div>
+              <div class="info-value">${address}</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Preferred Pickup:</div>
+              <div class="info-value">${formatDate(pickupDate)}</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="section">
+          <h2 class="section-title">Services Requested</h2>
+          <ul class="services-list">
+            ${services.map((service: string) => `<li class="service-item">• ${service}</li>`).join("")}
+          </ul>
+        </div>
+        
+        ${
+          repairNotes || waterproofingNotes || allergies
+            ? `
+        <div class="section">
+          <h2 class="section-title">Additional Information</h2>
+          ${
+            repairNotes
+              ? `
+          <div class="notes-section">
+            <strong>Repair Notes:</strong><br>
+            ${repairNotes}
+          </div>
+          `
+              : ""
+          }
+          ${
+            waterproofingNotes
+              ? `
+          <div class="notes-section">
+            <strong>Waterproofing Notes:</strong><br>
+            ${waterproofingNotes}
+          </div>
+          `
+              : ""
+          }
+          ${
+            allergies
+              ? `
+          <div class="notes-section">
+            <strong>Allergies/Special Instructions:</strong><br>
+            ${allergies}
+          </div>
+          `
+              : ""
+          }
+        </div>
+        `
+            : ""
+        }
+        
+        <div class="action-buttons">
+          <a href="https://www.loveserenespaces.com/admin/service-requests" class="action-button">View in Admin Panel</a>
+          <a href="mailto:${email}?subject=Re: Service Request #${serviceRequestId}" class="action-button">Reply to Customer</a>
+        </div>
+        
+        <div class="footer">
+          <p><strong>Next Steps:</strong></p>
+          <p>1. Review the customer's request and requirements</p>
+          <p>2. Contact the customer within 24 hours to confirm details</p>
+          <p>3. Schedule pickup and discuss any special needs</p>
+          <p>4. Update the request status in your admin panel</p>
+          <br>
+          <p style="margin-top: 20px; font-size: 14px; color: #999;">
+            This email was automatically generated when a customer submitted a service request.
+          </p>
+        </div>
+      </div>
+    </body>
   `;
 }

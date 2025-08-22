@@ -437,8 +437,7 @@ export default function PricingPage() {
                 Starting at $15
               </div>
               <p style={{ color: "#666", lineHeight: "1.6", margin: "0" }}>
-                Rip repairs, strap replacement, zipper fixes, and custom
-                patchwork
+                Rip repairs, strap replacement, and other repairs as needed.
               </p>
             </div>
           </div>

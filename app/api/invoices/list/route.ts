@@ -31,8 +31,8 @@ export async function GET() {
       id: invoice.id,
       customerId: invoice.customerId,
       customer: invoice.customer,
-      customerName: invoice.customer.name,
-      invoiceNumber: invoice.invoiceNumber,
+      customerName: invoice.customer?.name || "Unknown Customer",
+      invoiceNumber: invoice.invoiceNumber || `INV-${invoice.id.slice(-6)}`,
       issueDate: invoice.issueDate?.toISOString(),
       dueDate: invoice.dueDate?.toISOString(),
       total: invoice.total,
@@ -50,8 +50,18 @@ export async function GET() {
     return NextResponse.json(formattedInvoices);
   } catch (error) {
     console.error("Error fetching invoices:", error);
+    
+    // Log more details about the error
+    if (error instanceof Error) {
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+    }
+    
     return NextResponse.json(
-      { error: "Failed to fetch invoices" },
+      { 
+        error: "Failed to fetch invoices",
+        details: error instanceof Error ? error.message : "Unknown error"
+      },
       { status: 500 },
     );
   }
