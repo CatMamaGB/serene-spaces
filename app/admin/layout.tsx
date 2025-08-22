@@ -317,8 +317,6 @@ export default function AdminLayout({
                 >
                   Service Requests
                 </Link>
-
-
               </nav>
             )}
           </div>
@@ -628,8 +626,6 @@ export default function AdminLayout({
               >
                 Service Requests
               </Link>
-
-
 
               <Link
                 href="/"

@@ -50,25 +50,28 @@ export async function GET() {
     const oauth2 = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID!,
       process.env.GOOGLE_CLIENT_SECRET!,
-      process.env.GOOGLE_REDIRECT_URI!
+      process.env.GOOGLE_REDIRECT_URI!,
     );
     oauth2.setCredentials({ refresh_token: process.env.GMAIL_REFRESH_TOKEN! });
 
     const { token } = await oauth2.getAccessToken();
-    report.oauth = { 
+    report.oauth = {
       mintedAccessToken: !!token,
       tokenValid: !!token,
       accessTokenLength: token?.length || 0,
-      refreshTokenLength: process.env.GMAIL_REFRESH_TOKEN?.length || 0
+      refreshTokenLength: process.env.GMAIL_REFRESH_TOKEN?.length || 0,
     };
 
     // Add debug info (be careful with sensitive data in production)
     report.debug = {
-      clientId: process.env.GOOGLE_CLIENT_ID?.substring(0, 20) + "..." || "missing",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET?.substring(0, 20) + "..." || "missing",
+      clientId:
+        process.env.GOOGLE_CLIENT_ID?.substring(0, 20) + "..." || "missing",
+      clientSecret:
+        process.env.GOOGLE_CLIENT_SECRET?.substring(0, 20) + "..." || "missing",
       redirectUri: process.env.GOOGLE_REDIRECT_URI || "missing",
-      refreshToken: process.env.GMAIL_REFRESH_TOKEN?.substring(0, 20) + "..." || "missing",
-      user: process.env.GMAIL_USER || "loveserenespaces@gmail.com"
+      refreshToken:
+        process.env.GMAIL_REFRESH_TOKEN?.substring(0, 20) + "..." || "missing",
+      user: process.env.GMAIL_USER || "loveserenespaces@gmail.com",
     };
 
     // 2) Build the transporter with XOAUTH2 - EXACTLY like createGmailTransporter
@@ -94,7 +97,7 @@ export async function GET() {
       response?: unknown;
       command?: string;
     };
-    
+
     report.error = {
       message: error?.message,
       code: error?.code,

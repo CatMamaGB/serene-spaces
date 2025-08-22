@@ -737,8 +737,6 @@ export default function EditInvoicePage() {
                   />
                 </div>
 
-
-
                 <div>
                   <label
                     style={{

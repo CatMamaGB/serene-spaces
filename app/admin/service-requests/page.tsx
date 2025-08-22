@@ -29,7 +29,9 @@ export default function ServiceRequestsPage() {
   const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(
+    null,
+  );
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showHandled, setShowHandled] = useState(false);
 
@@ -64,8 +66,6 @@ export default function ServiceRequestsPage() {
 
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
-
-
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -166,10 +166,14 @@ export default function ServiceRequestsPage() {
                   transition: "background-color 0.2s",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = showHandled ? "#4b5563" : "#6b5b7a";
+                  e.currentTarget.style.backgroundColor = showHandled
+                    ? "#4b5563"
+                    : "#6b5b7a";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = showHandled ? "#6b7280" : "#7a6990";
+                  e.currentTarget.style.backgroundColor = showHandled
+                    ? "#6b7280"
+                    : "#7a6990";
                 }}
               >
                 {showHandled ? "Hide Handled" : "Show Handled"}
@@ -180,7 +184,10 @@ export default function ServiceRequestsPage() {
                   const fetchServiceRequests = async () => {
                     try {
                       const response = await fetch("/api/service-requests");
-                      console.log("Service requests response status:", response.status);
+                      console.log(
+                        "Service requests response status:",
+                        response.status,
+                      );
                       if (response.ok) {
                         const data = await response.json();
                         console.log("Service requests data:", data);
@@ -304,143 +311,157 @@ export default function ServiceRequestsPage() {
                 // Mobile card layout
                 <div style={{ padding: "0" }}>
                   {serviceRequests
-                    .filter(request => showHandled || request.status !== "handled")
+                    .filter(
+                      (request) => showHandled || request.status !== "handled",
+                    )
                     .map((request, index) => (
-                    <div
-                      key={request.id}
-                      style={{
-                        padding: "1rem",
-                        borderBottom:
-                          index < serviceRequests.length - 1
-                            ? "1px solid #f3f4f6"
-                            : "none",
-                        backgroundColor: "white",
-                      }}
-                    >
                       <div
+                        key={request.id}
                         style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "flex-start",
-                          marginBottom: "0.75rem",
+                          padding: "1rem",
+                          borderBottom:
+                            index < serviceRequests.length - 1
+                              ? "1px solid #f3f4f6"
+                              : "none",
+                          backgroundColor: "white",
                         }}
                       >
-                        <div style={{ flex: 1 }}>
-                          <div
-                            style={{
-                              fontSize: "1rem",
-                              fontWeight: "600",
-                              color: "#1f2937",
-                              marginBottom: "0.25rem",
-                            }}
-                          >
-                            {request.customer.name}
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                            marginBottom: "0.75rem",
+                          }}
+                        >
+                          <div style={{ flex: 1 }}>
+                            <div
+                              style={{
+                                fontSize: "1rem",
+                                fontWeight: "600",
+                                color: "#1f2937",
+                                marginBottom: "0.25rem",
+                              }}
+                            >
+                              {request.customer.name}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: "0.875rem",
+                                color: "#6b7280",
+                                marginBottom: "0.5rem",
+                              }}
+                            >
+                              {request.customer.email}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: "0.875rem",
+                                color: "#6b7280",
+                              }}
+                            >
+                              {request.address}
+                            </div>
                           </div>
                           <div
                             style={{
-                              fontSize: "0.875rem",
+                              padding: "0.25rem 0.5rem",
+                              border: "1px solid #d1d5db",
+                              borderRadius: "4px",
+                              fontSize: "0.75rem",
+                              backgroundColor: "#f3f4f6",
                               color: "#6b7280",
-                              marginBottom: "0.5rem",
+                              minWidth: "100px",
+                              textAlign: "center",
                             }}
                           >
-                            {request.customer.email}
+                            {request.status || "New"}
                           </div>
-                          <div
-                            style={{
-                              fontSize: "0.875rem",
-                              color: "#6b7280",
-                            }}
-                          >
-                            {request.address}
-                          </div>
-                        </div>
-                        <div style={{
-                          padding: "0.25rem 0.5rem",
-                          border: "1px solid #d1d5db",
-                          borderRadius: "4px",
-                          fontSize: "0.75rem",
-                          backgroundColor: "#f3f4f6",
-                          color: "#6b7280",
-                          minWidth: "100px",
-                          textAlign: "center",
-                        }}>
-                          {request.status || "New"}
-                        </div>
-                        {request.status === "pending" && (
-                          <button
-                            onClick={async () => {
-                              try {
-                                const response = await fetch("/api/service-requests", {
-                                  method: "PUT",
-                                  headers: { "Content-Type": "application/json" },
-                                  body: JSON.stringify({
-                                    id: request.id,
-                                    status: "handled",
-                                  }),
-                                });
-                                if (response.ok) {
-                                  // Update local state
-                                  setServiceRequests((prev) =>
-                                    prev.map((req) =>
-                                      req.id === request.id ? { ...req, status: "handled" } : req,
-                                    ),
+                          {request.status === "pending" && (
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const response = await fetch(
+                                    "/api/service-requests",
+                                    {
+                                      method: "PUT",
+                                      headers: {
+                                        "Content-Type": "application/json",
+                                      },
+                                      body: JSON.stringify({
+                                        id: request.id,
+                                        status: "handled",
+                                      }),
+                                    },
+                                  );
+                                  if (response.ok) {
+                                    // Update local state
+                                    setServiceRequests((prev) =>
+                                      prev.map((req) =>
+                                        req.id === request.id
+                                          ? { ...req, status: "handled" }
+                                          : req,
+                                      ),
+                                    );
+                                  }
+                                } catch (error) {
+                                  console.error(
+                                    "Error marking as handled:",
+                                    error,
                                   );
                                 }
-                              } catch (error) {
-                                console.error("Error marking as handled:", error);
-                              }
-                            }}
-                            style={{
-                              padding: "0.25rem 0.5rem",
-                              backgroundColor: "#10b981",
-                              color: "white",
-                              border: "none",
-                              borderRadius: "4px",
-                              fontSize: "0.75rem",
-                              cursor: "pointer",
-                              marginTop: "0.25rem",
-                            }}
-                          >
-                            Mark Handled
-                          </button>
-                        )}
-                      </div>
+                              }}
+                              style={{
+                                padding: "0.25rem 0.5rem",
+                                backgroundColor: "#10b981",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "4px",
+                                fontSize: "0.75rem",
+                                cursor: "pointer",
+                                marginTop: "0.25rem",
+                              }}
+                            >
+                              Mark Handled
+                            </button>
+                          )}
+                        </div>
 
-                      <div
-                        style={{
-                          display: "flex",
-                          flexWrap: "wrap",
-                          gap: "0.5rem",
-                          marginBottom: "0.75rem",
-                        }}
-                      >
-                        {request.services.map((service, idx) => (
-                          <span
-                            key={idx}
-                            style={{
-                              padding: "0.25rem 0.5rem",
-                              backgroundColor: "#f3f4f6",
-                              color: "#374151",
-                              borderRadius: "4px",
-                              fontSize: "0.75rem",
-                              fontWeight: "500",
-                            }}
-                          >
-                            {service}
-                          </span>
-                        ))}
-                      </div>
+                        <div
+                          style={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                            gap: "0.5rem",
+                            marginBottom: "0.75rem",
+                          }}
+                        >
+                          {request.services.map((service, idx) => (
+                            <span
+                              key={idx}
+                              style={{
+                                padding: "0.25rem 0.5rem",
+                                backgroundColor: "#f3f4f6",
+                                color: "#374151",
+                                borderRadius: "4px",
+                                fontSize: "0.75rem",
+                                fontWeight: "500",
+                              }}
+                            >
+                              {service}
+                            </span>
+                          ))}
+                        </div>
 
-                      <div
-                        style={{
-                          fontSize: "0.75rem",
-                          color: "#6b7280",
-                        }}
-                      >
-                        Submitted: {formatDate(request.createdAt)}
+                        <div
+                          style={{
+                            fontSize: "0.75rem",
+                            color: "#6b7280",
+                          }}
+                        >
+                          Submitted: {formatDate(request.createdAt)}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               ) : (
                 // Desktop table layout
@@ -518,182 +539,138 @@ export default function ServiceRequestsPage() {
                     </thead>
                     <tbody>
                       {serviceRequests
-                        .filter(request => showHandled || request.status !== "handled")
+                        .filter(
+                          (request) =>
+                            showHandled || request.status !== "handled",
+                        )
                         .map((request) => (
-                        <tr
-                          key={request.id}
-                          style={{
-                            borderBottom: "1px solid #f3f4f6",
-                            backgroundColor: "white",
-                          }}
-                        >
-                          <td
+                          <tr
+                            key={request.id}
                             style={{
-                              padding: "1rem 1.5rem",
-                              verticalAlign: "top",
+                              borderBottom: "1px solid #f3f4f6",
+                              backgroundColor: "white",
                             }}
                           >
-                            <div
+                            <td
                               style={{
-                                fontSize: "0.875rem",
-                                fontWeight: "500",
-                                color: "#1f2937",
-                                marginBottom: "0.25rem",
+                                padding: "1rem 1.5rem",
+                                verticalAlign: "top",
                               }}
                             >
-                              {request.customer.name}
-                            </div>
-                            <div
-                              style={{
-                                fontSize: "0.75rem",
-                                color: "#6b7280",
-                              }}
-                            >
-                              {request.customer.email}
-                            </div>
-                            {request.customer.phone && (
+                              <div
+                                style={{
+                                  fontSize: "0.875rem",
+                                  fontWeight: "500",
+                                  color: "#1f2937",
+                                  marginBottom: "0.25rem",
+                                }}
+                              >
+                                {request.customer.name}
+                              </div>
                               <div
                                 style={{
                                   fontSize: "0.75rem",
                                   color: "#6b7280",
                                 }}
                               >
-                                {request.customer.phone}
+                                {request.customer.email}
                               </div>
-                            )}
-                          </td>
-                          <td
-                            style={{
-                              padding: "1rem 1.5rem",
-                              verticalAlign: "top",
-                            }}
-                          >
-                            <div
-                              style={{
-                                display: "flex",
-                                flexWrap: "wrap",
-                                gap: "0.25rem",
-                              }}
-                            >
-                              {request.services.map((service, idx) => (
-                                <span
-                                  key={idx}
+                              {request.customer.phone && (
+                                <div
                                   style={{
-                                    padding: "0.25rem 0.5rem",
-                                    backgroundColor: "#f3f4f6",
-                                    color: "#374151",
-                                    borderRadius: "4px",
                                     fontSize: "0.75rem",
-                                    fontWeight: "500",
+                                    color: "#6b7280",
                                   }}
                                 >
-                                  {service}
-                                </span>
-                              ))}
-                            </div>
-                          </td>
-                          <td
-                            style={{
-                              padding: "1rem 1.5rem",
-                              verticalAlign: "top",
-                              maxWidth: "200px",
-                            }}
-                          >
-                            <div
+                                  {request.customer.phone}
+                                </div>
+                              )}
+                            </td>
+                            <td
                               style={{
-                                fontSize: "0.875rem",
-                                color: "#374151",
-                                lineHeight: "1.4",
+                                padding: "1rem 1.5rem",
+                                verticalAlign: "top",
                               }}
                             >
-                              {request.address}
-                            </div>
-                          </td>
-
-                          <td
-                            style={{
-                              padding: "1rem 1.5rem",
-                              verticalAlign: "top",
-                            }}
-                          >
-                            <div
-                              style={{
-                                fontSize: "0.875rem",
-                                color: "#6b7280",
-                              }}
-                            >
-                              {formatDate(request.createdAt)}
-                            </div>
-                          </td>
-                          <td
-                            style={{
-                              padding: "1rem 1.5rem",
-                              verticalAlign: "top",
-                            }}
-                          >
-                            <div
-                              style={{
-                                display: "flex",
-                                gap: "0.5rem",
-                                flexDirection: "column",
-                                alignItems: "flex-start",
-                              }}
-                            >
-                              <button
-                                onClick={() => {
-                                  setSelectedRequest(request);
-                                  setShowDetailsModal(true);
-                                }}
+                              <div
                                 style={{
-                                  padding: "0.5rem 1rem",
-                                  backgroundColor: "#7a6990",
-                                  color: "white",
-                                  border: "none",
-                                  borderRadius: "6px",
-                                  fontSize: "0.875rem",
-                                  fontWeight: "500",
-                                  cursor: "pointer",
-                                  transition: "background-color 0.2s",
-                                  width: "100%",
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.backgroundColor =
-                                    "#6b5b7a";
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor =
-                                    "#7a6990";
+                                  display: "flex",
+                                  flexWrap: "wrap",
+                                  gap: "0.25rem",
                                 }}
                               >
-                                View Details
-                              </button>
-                              {request.status === "pending" && (
+                                {request.services.map((service, idx) => (
+                                  <span
+                                    key={idx}
+                                    style={{
+                                      padding: "0.25rem 0.5rem",
+                                      backgroundColor: "#f3f4f6",
+                                      color: "#374151",
+                                      borderRadius: "4px",
+                                      fontSize: "0.75rem",
+                                      fontWeight: "500",
+                                    }}
+                                  >
+                                    {service}
+                                  </span>
+                                ))}
+                              </div>
+                            </td>
+                            <td
+                              style={{
+                                padding: "1rem 1.5rem",
+                                verticalAlign: "top",
+                                maxWidth: "200px",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  fontSize: "0.875rem",
+                                  color: "#374151",
+                                  lineHeight: "1.4",
+                                }}
+                              >
+                                {request.address}
+                              </div>
+                            </td>
+
+                            <td
+                              style={{
+                                padding: "1rem 1.5rem",
+                                verticalAlign: "top",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  fontSize: "0.875rem",
+                                  color: "#6b7280",
+                                }}
+                              >
+                                {formatDate(request.createdAt)}
+                              </div>
+                            </td>
+                            <td
+                              style={{
+                                padding: "1rem 1.5rem",
+                                verticalAlign: "top",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  display: "flex",
+                                  gap: "0.5rem",
+                                  flexDirection: "column",
+                                  alignItems: "flex-start",
+                                }}
+                              >
                                 <button
-                                  onClick={async () => {
-                                    try {
-                                      const response = await fetch("/api/service-requests", {
-                                        method: "PUT",
-                                        headers: { "Content-Type": "application/json" },
-                                        body: JSON.stringify({
-                                          id: request.id,
-                                          status: "handled",
-                                        }),
-                                      });
-                                      if (response.ok) {
-                                        // Update local state
-                                        setServiceRequests((prev) =>
-                                          prev.map((req) =>
-                                            req.id === request.id ? { ...req, status: "handled" } : req,
-                                          ),
-                                        );
-                                      }
-                                    } catch (error) {
-                                      console.error("Error marking as handled:", error);
-                                    }
+                                  onClick={() => {
+                                    setSelectedRequest(request);
+                                    setShowDetailsModal(true);
                                   }}
                                   style={{
                                     padding: "0.5rem 1rem",
-                                    backgroundColor: "#10b981",
+                                    backgroundColor: "#7a6990",
                                     color: "white",
                                     border: "none",
                                     borderRadius: "6px",
@@ -704,19 +681,79 @@ export default function ServiceRequestsPage() {
                                     width: "100%",
                                   }}
                                   onMouseEnter={(e) => {
-                                    e.currentTarget.style.backgroundColor = "#059669";
+                                    e.currentTarget.style.backgroundColor =
+                                      "#6b5b7a";
                                   }}
                                   onMouseLeave={(e) => {
-                                    e.currentTarget.style.backgroundColor = "#10b981";
+                                    e.currentTarget.style.backgroundColor =
+                                      "#7a6990";
                                   }}
                                 >
-                                  Mark Handled
+                                  View Details
                                 </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                                {request.status === "pending" && (
+                                  <button
+                                    onClick={async () => {
+                                      try {
+                                        const response = await fetch(
+                                          "/api/service-requests",
+                                          {
+                                            method: "PUT",
+                                            headers: {
+                                              "Content-Type":
+                                                "application/json",
+                                            },
+                                            body: JSON.stringify({
+                                              id: request.id,
+                                              status: "handled",
+                                            }),
+                                          },
+                                        );
+                                        if (response.ok) {
+                                          // Update local state
+                                          setServiceRequests((prev) =>
+                                            prev.map((req) =>
+                                              req.id === request.id
+                                                ? { ...req, status: "handled" }
+                                                : req,
+                                            ),
+                                          );
+                                        }
+                                      } catch (error) {
+                                        console.error(
+                                          "Error marking as handled:",
+                                          error,
+                                        );
+                                      }
+                                    }}
+                                    style={{
+                                      padding: "0.5rem 1rem",
+                                      backgroundColor: "#10b981",
+                                      color: "white",
+                                      border: "none",
+                                      borderRadius: "6px",
+                                      fontSize: "0.875rem",
+                                      fontWeight: "500",
+                                      cursor: "pointer",
+                                      transition: "background-color 0.2s",
+                                      width: "100%",
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      e.currentTarget.style.backgroundColor =
+                                        "#059669";
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.currentTarget.style.backgroundColor =
+                                        "#10b981";
+                                    }}
+                                  >
+                                    Mark Handled
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
                     </tbody>
                   </table>
                 </div>
@@ -820,7 +857,13 @@ export default function ServiceRequestsPage() {
               </h3>
               <div style={{ display: "grid", gap: "0.75rem" }}>
                 <div>
-                  <label style={{ fontWeight: "500", color: "#6b7280", fontSize: "0.875rem" }}>
+                  <label
+                    style={{
+                      fontWeight: "500",
+                      color: "#6b7280",
+                      fontSize: "0.875rem",
+                    }}
+                  >
                     Name
                   </label>
                   <p style={{ margin: "0.25rem 0 0 0", color: "#1f2937" }}>
@@ -828,7 +871,13 @@ export default function ServiceRequestsPage() {
                   </p>
                 </div>
                 <div>
-                  <label style={{ fontWeight: "500", color: "#6b7280", fontSize: "0.875rem" }}>
+                  <label
+                    style={{
+                      fontWeight: "500",
+                      color: "#6b7280",
+                      fontSize: "0.875rem",
+                    }}
+                  >
                     Email
                   </label>
                   <p style={{ margin: "0.25rem 0 0 0", color: "#1f2937" }}>
@@ -837,7 +886,13 @@ export default function ServiceRequestsPage() {
                 </div>
                 {selectedRequest.customer.phone && (
                   <div>
-                    <label style={{ fontWeight: "500", color: "#6b7280", fontSize: "0.875rem" }}>
+                    <label
+                      style={{
+                        fontWeight: "500",
+                        color: "#6b7280",
+                        fontSize: "0.875rem",
+                      }}
+                    >
                       Phone
                     </label>
                     <p style={{ margin: "0.25rem 0 0 0", color: "#1f2937" }}>
@@ -846,27 +901,48 @@ export default function ServiceRequestsPage() {
                   </div>
                 )}
                 <div>
-                  <label style={{ fontWeight: "500", color: "#6b7280", fontSize: "0.875rem" }}>
+                  <label
+                    style={{
+                      fontWeight: "500",
+                      color: "#6b7280",
+                      fontSize: "0.875rem",
+                    }}
+                  >
                     Full Address (from intake form)
                   </label>
-                  <p style={{ 
-                    margin: "0.25rem 0 0 0", 
-                    color: "#1f2937", 
-                    whiteSpace: "pre-wrap",
-                    backgroundColor: "#f9fafb",
-                    padding: "0.75rem",
-                    borderRadius: "6px",
-                    border: "1px solid #e5e7eb"
-                  }}>
+                  <p
+                    style={{
+                      margin: "0.25rem 0 0 0",
+                      color: "#1f2937",
+                      whiteSpace: "pre-wrap",
+                      backgroundColor: "#f9fafb",
+                      padding: "0.75rem",
+                      borderRadius: "6px",
+                      border: "1px solid #e5e7eb",
+                    }}
+                  >
                     {selectedRequest.address || "No address provided"}
                   </p>
                   {!selectedRequest.address && (
-                    <p style={{ fontSize: "0.75rem", color: "#ef4444", marginTop: "0.25rem" }}>
-                      ⚠️ Address field is empty - check if data is being saved correctly
+                    <p
+                      style={{
+                        fontSize: "0.75rem",
+                        color: "#ef4444",
+                        marginTop: "0.25rem",
+                      }}
+                    >
+                      ⚠️ Address field is empty - check if data is being saved
+                      correctly
                     </p>
                   )}
                   {selectedRequest.address && (
-                    <p style={{ fontSize: "0.75rem", color: "#10b981", marginTop: "0.25rem" }}>
+                    <p
+                      style={{
+                        fontSize: "0.75rem",
+                        color: "#10b981",
+                        marginTop: "0.25rem",
+                      }}
+                    >
                       ✅ Address captured from intake form
                     </p>
                   )}
@@ -908,7 +984,10 @@ export default function ServiceRequestsPage() {
             </div>
 
             {/* Additional Details */}
-            {(selectedRequest.pickupDate || selectedRequest.repairNotes || selectedRequest.waterproofingNotes || selectedRequest.allergies) && (
+            {(selectedRequest.pickupDate ||
+              selectedRequest.repairNotes ||
+              selectedRequest.waterproofingNotes ||
+              selectedRequest.allergies) && (
               <div style={{ marginBottom: "2rem" }}>
                 <h3
                   style={{
@@ -925,7 +1004,13 @@ export default function ServiceRequestsPage() {
                 <div style={{ display: "grid", gap: "0.75rem" }}>
                   {selectedRequest.pickupDate && (
                     <div>
-                      <label style={{ fontWeight: "500", color: "#6b7280", fontSize: "0.875rem" }}>
+                      <label
+                        style={{
+                          fontWeight: "500",
+                          color: "#6b7280",
+                          fontSize: "0.875rem",
+                        }}
+                      >
                         Preferred Pickup Date
                       </label>
                       <p style={{ margin: "0.25rem 0 0 0", color: "#1f2937" }}>
@@ -935,48 +1020,90 @@ export default function ServiceRequestsPage() {
                             if (isNaN(date.getTime())) {
                               return selectedRequest.pickupDate; // Return raw value if parsing fails
                             }
-                            return date.toLocaleDateString('en-US', {
-                              weekday: 'long',
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric'
+                            return date.toLocaleDateString("en-US", {
+                              weekday: "long",
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
                             });
-                          } catch (error) {
+                          } catch {
                             return selectedRequest.pickupDate; // Return raw value if error
                           }
                         })()}
                       </p>
-                      <p style={{ fontSize: "0.75rem", color: "#6b7280", marginTop: "0.25rem" }}>
+                      <p
+                        style={{
+                          fontSize: "0.75rem",
+                          color: "#6b7280",
+                          marginTop: "0.25rem",
+                        }}
+                      >
                         📅 Customer selected this date from the intake form
                       </p>
                     </div>
                   )}
                   {selectedRequest.repairNotes && (
                     <div>
-                      <label style={{ fontWeight: "500", color: "#6b7280", fontSize: "0.875rem" }}>
+                      <label
+                        style={{
+                          fontWeight: "500",
+                          color: "#6b7280",
+                          fontSize: "0.875rem",
+                        }}
+                      >
                         Repair Notes
                       </label>
-                      <p style={{ margin: "0.25rem 0 0 0", color: "#1f2937", whiteSpace: "pre-wrap" }}>
+                      <p
+                        style={{
+                          margin: "0.25rem 0 0 0",
+                          color: "#1f2937",
+                          whiteSpace: "pre-wrap",
+                        }}
+                      >
                         {selectedRequest.repairNotes}
                       </p>
                     </div>
                   )}
                   {selectedRequest.waterproofingNotes && (
                     <div>
-                      <label style={{ fontWeight: "500", color: "#6b7280", fontSize: "0.875rem" }}>
+                      <label
+                        style={{
+                          fontWeight: "500",
+                          color: "#6b7280",
+                          fontSize: "0.875rem",
+                        }}
+                      >
                         Waterproofing Notes
                       </label>
-                      <p style={{ margin: "0.25rem 0 0 0", color: "#1f2937", whiteSpace: "pre-wrap" }}>
+                      <p
+                        style={{
+                          margin: "0.25rem 0 0 0",
+                          color: "#1f2937",
+                          whiteSpace: "pre-wrap",
+                        }}
+                      >
                         {selectedRequest.waterproofingNotes}
                       </p>
                     </div>
                   )}
                   {selectedRequest.allergies && (
                     <div>
-                      <label style={{ fontWeight: "500", color: "#6b7280", fontSize: "0.875rem" }}>
+                      <label
+                        style={{
+                          fontWeight: "500",
+                          color: "#6b7280",
+                          fontSize: "0.875rem",
+                        }}
+                      >
                         Allergies
                       </label>
-                      <p style={{ margin: "0.25rem 0 0 0", color: "#1f2937", whiteSpace: "pre-wrap" }}>
+                      <p
+                        style={{
+                          margin: "0.25rem 0 0 0",
+                          color: "#1f2937",
+                          whiteSpace: "pre-wrap",
+                        }}
+                      >
                         {selectedRequest.allergies}
                       </p>
                     </div>
@@ -1001,7 +1128,13 @@ export default function ServiceRequestsPage() {
               </h3>
               <div style={{ display: "grid", gap: "0.75rem" }}>
                 <div>
-                  <label style={{ fontWeight: "500", color: "#6b7280", fontSize: "0.875rem" }}>
+                  <label
+                    style={{
+                      fontWeight: "500",
+                      color: "#6b7280",
+                      fontSize: "0.875rem",
+                    }}
+                  >
                     Internal Notes
                   </label>
                   <textarea
@@ -1019,7 +1152,10 @@ export default function ServiceRequestsPage() {
                           }),
                         });
                         if (response.ok) {
-                          setSelectedRequest({ ...selectedRequest, notes: newNotes });
+                          setSelectedRequest({
+                            ...selectedRequest,
+                            notes: newNotes,
+                          });
                         }
                       } catch (error) {
                         console.error("Error updating notes:", error);
@@ -1043,21 +1179,42 @@ export default function ServiceRequestsPage() {
             </div>
 
             {/* Debug Information (Development Only) */}
-            {process.env.NODE_ENV === 'development' && (
-              <div style={{ marginBottom: "2rem", padding: "1rem", backgroundColor: "#f3f4f6", borderRadius: "6px", border: "1px solid #d1d5db" }}>
-                <h4 style={{ fontSize: "0.875rem", fontWeight: "600", color: "#374151", marginBottom: "0.5rem" }}>
+            {process.env.NODE_ENV === "development" && (
+              <div
+                style={{
+                  marginBottom: "2rem",
+                  padding: "1rem",
+                  backgroundColor: "#f3f4f6",
+                  borderRadius: "6px",
+                  border: "1px solid #d1d5db",
+                }}
+              >
+                <h4
+                  style={{
+                    fontSize: "0.875rem",
+                    fontWeight: "600",
+                    color: "#374151",
+                    marginBottom: "0.5rem",
+                  }}
+                >
                   Debug Info (Raw Data)
                 </h4>
                 <details style={{ fontSize: "0.75rem", color: "#6b7280" }}>
-                  <summary style={{ cursor: "pointer", marginBottom: "0.5rem" }}>Click to view raw data</summary>
-                  <pre style={{ 
-                    backgroundColor: "white", 
-                    padding: "0.5rem", 
-                    borderRadius: "4px", 
-                    overflow: "auto",
-                    fontSize: "0.7rem",
-                    whiteSpace: "pre-wrap"
-                  }}>
+                  <summary
+                    style={{ cursor: "pointer", marginBottom: "0.5rem" }}
+                  >
+                    Click to view raw data
+                  </summary>
+                  <pre
+                    style={{
+                      backgroundColor: "white",
+                      padding: "0.5rem",
+                      borderRadius: "4px",
+                      overflow: "auto",
+                      fontSize: "0.7rem",
+                      whiteSpace: "pre-wrap",
+                    }}
+                  >
                     {JSON.stringify(selectedRequest, null, 2)}
                   </pre>
                 </details>
@@ -1065,7 +1222,13 @@ export default function ServiceRequestsPage() {
             )}
 
             {/* Action Buttons */}
-            <div style={{ display: "flex", gap: "1rem", justifyContent: "flex-end" }}>
+            <div
+              style={{
+                display: "flex",
+                gap: "1rem",
+                justifyContent: "flex-end",
+              }}
+            >
               <button
                 onClick={() => setShowDetailsModal(false)}
                 style={{

@@ -55,8 +55,8 @@ export async function GET(req: NextRequest) {
 
     // ✅ absolute redirect URL (works in Edge/middleware)
     const base =
-      process.env.NEXT_PUBLIC_APP_URL               // e.g. https://www.loveserenespaces.com
-      || req.nextUrl.origin;                        // falls back to request origin
+      process.env.NEXT_PUBLIC_APP_URL || // e.g. https://www.loveserenespaces.com
+      req.nextUrl.origin; // falls back to request origin
 
     const redirectUrl = new URL("/admin?gmail-connected=1", base);
     return NextResponse.redirect(redirectUrl, { status: 303 }); // 303 = "see other"

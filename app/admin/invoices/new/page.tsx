@@ -26,7 +26,8 @@ export default function CreateInvoice() {
     dueDate: "",
     items: [{ description: "", quantity: 1, rate: 0, amount: 0 }],
     notes: "",
-    terms: "Payment due before delivery\n\nHow to pay:\n• Zelle: loveserenespaces@gmail.com\n• Venmo: @beth-contos\n• Cash: Due at delivery",
+    terms:
+      "Payment due before delivery\n\nHow to pay:\n• Zelle: loveserenespaces@gmail.com\n• Venmo: @beth-contos\n• Cash: Due at delivery",
     emailMessage: "",
   });
 
@@ -1144,8 +1145,6 @@ How to pay:
                   </div>
                 </div>
               </div>
-
-
             </div>
 
             {/* Invoice Summary */}
@@ -1216,8 +1215,6 @@ How to pay:
                         }}
                       />
                     </div>
-
-
                   </div>
                 </div>
 

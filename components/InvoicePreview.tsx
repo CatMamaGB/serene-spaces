@@ -166,7 +166,6 @@ export default function InvoicePreview({
               <p style={{ margin: "0", color: "#1a1a1a", fontWeight: "600" }}>
                 {formatDate(issueDate)}
               </p>
-
             </div>
           </div>
         </div>

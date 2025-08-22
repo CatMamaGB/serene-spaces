@@ -177,7 +177,7 @@ export default function AdminDashboard() {
       }
 
       setLoading(false);
-      
+
       // Debug logging
       console.log("Dashboard data loaded:");
       console.log("- Customers:", customers.length);
@@ -195,16 +195,20 @@ export default function AdminDashboard() {
     pendingServiceRequests: serviceRequests.filter(
       (req) => req.status === "pending", // Only truly pending, not reviewed
     ).length,
-    pendingInvoices: invoices.filter((inv) => inv.status === "pending" || inv.status === "open").length,
+    pendingInvoices: invoices.filter(
+      (inv) => inv.status === "pending" || inv.status === "open",
+    ).length,
     monthlyRevenue: invoices
       .filter((inv) => {
         // Only count paid invoices from the current month
         if (inv.status !== "paid") return false;
-        
+
         const invoiceDate = new Date(inv.issueDate);
         const now = new Date();
-        return invoiceDate.getMonth() === now.getMonth() && 
-               invoiceDate.getFullYear() === now.getFullYear();
+        return (
+          invoiceDate.getMonth() === now.getMonth() &&
+          invoiceDate.getFullYear() === now.getFullYear()
+        );
       })
       .reduce((sum, inv) => sum + inv.total, 0),
   };
@@ -264,7 +268,7 @@ export default function AdminDashboard() {
 
   const exportInvoiceList = () => {
     const csvContent = [
-              ["Invoice #", "Customer", "Issue Date", "Total", "Status"],
+      ["Invoice #", "Customer", "Issue Date", "Total", "Status"],
       ...invoices.map((invoice, index) => [
         `Invoice #${index + 1}`,
         invoice.customerName,

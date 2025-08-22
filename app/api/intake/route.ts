@@ -60,13 +60,15 @@ export async function POST(req: Request) {
             ? (() => {
                 const currentYear = new Date().getFullYear(); // This will be 2025
                 const currentDate = new Date();
-                const selectedDate = new Date(`${currentYear}-${pickupMonth}-${pickupDay}`);
-                
+                const selectedDate = new Date(
+                  `${currentYear}-${pickupMonth}-${pickupDay}`,
+                );
+
                 // If the selected date is in the past, use next year
                 if (selectedDate < currentDate) {
                   selectedDate.setFullYear(currentYear + 1);
                 }
-                
+
                 return selectedDate;
               })()
             : null,

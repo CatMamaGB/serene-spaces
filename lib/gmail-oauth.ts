@@ -1,8 +1,6 @@
 import { google } from "googleapis";
 import nodemailer from "nodemailer";
 
-
-
 // Create OAuth2 client
 const createOAuth2Client = () => {
   const redirectUri =
@@ -51,5 +49,3 @@ export const createGmailTransporter = async () => {
     },
   });
 };
-
-
