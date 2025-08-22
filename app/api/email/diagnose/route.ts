@@ -12,7 +12,7 @@ interface DiagnosticReport {
   };
   oauth?: {
     mintedAccessToken: boolean;
-    email: string;
+    tokenValid: boolean;
   };
   smtp?: {
     verified: boolean;
@@ -46,25 +46,12 @@ export async function GET() {
     oauth2.setCredentials({ refresh_token: process.env.GMAIL_REFRESH_TOKEN! });
 
     const { token } = await oauth2.getAccessToken();
-    report.oauth = { mintedAccessToken: !!token, email: "" };
+    report.oauth = { 
+      mintedAccessToken: !!token,
+      tokenValid: !!token
+    };
 
-    // 2) Which Gmail account does this token belong to?
-    // Get a fresh access token (optional but fine)
-    if (token) {
-      oauth2.setCredentials({ 
-        refresh_token: process.env.GMAIL_REFRESH_TOKEN!, 
-        access_token: token 
-      });
-    }
-
-    // ✅ Ask Gmail who we are (works with gmail.* scopes)
-    const gmail = google.gmail({ version: "v1", auth: oauth2 });
-    const { data: profile } = await gmail.users.getProfile({ userId: "me" });
-    if (report.oauth) {
-      report.oauth.email = profile.emailAddress || "(unknown)";
-    }
-
-    // 3) Build the transporter with XOAUTH2 (no password!)
+    // 2) Build the transporter with XOAUTH2 (no password!)
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -77,7 +64,7 @@ export async function GET() {
       },
     });
 
-    // 4) Verify SMTP auth with Gmail
+    // 3) Verify SMTP auth with Gmail - this is the real test!
     await transporter.verify();
     report.smtp = { verified: true };
     return NextResponse.json(report);
