@@ -13,9 +13,18 @@ interface DiagnosticReport {
   oauth?: {
     mintedAccessToken: boolean;
     tokenValid: boolean;
+    accessTokenLength?: number;
+    refreshTokenLength?: number;
   };
   smtp?: {
     verified: boolean;
+  };
+  debug?: {
+    clientId: string;
+    clientSecret: string;
+    redirectUri: string;
+    refreshToken: string;
+    user: string;
   };
   error?: {
     message?: string;
@@ -32,7 +41,7 @@ export async function GET() {
       hasClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
       hasRedirectUri: !!process.env.GOOGLE_REDIRECT_URI,
       hasRefreshToken: !!process.env.GMAIL_REFRESH_TOKEN,
-      gmailUser: process.env.GMAIL_USER || "(missing)",
+      gmailUser: process.env.GMAIL_USER || "loveserenespaces@gmail.com",
     },
   };
 
@@ -48,15 +57,26 @@ export async function GET() {
     const { token } = await oauth2.getAccessToken();
     report.oauth = { 
       mintedAccessToken: !!token,
-      tokenValid: !!token
+      tokenValid: !!token,
+      accessTokenLength: token?.length || 0,
+      refreshTokenLength: process.env.GMAIL_REFRESH_TOKEN?.length || 0
     };
 
-    // 2) Build the transporter with XOAUTH2 (no password!)
+    // Add debug info (be careful with sensitive data in production)
+    report.debug = {
+      clientId: process.env.GOOGLE_CLIENT_ID?.substring(0, 20) + "..." || "missing",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET?.substring(0, 20) + "..." || "missing",
+      redirectUri: process.env.GOOGLE_REDIRECT_URI || "missing",
+      refreshToken: process.env.GMAIL_REFRESH_TOKEN?.substring(0, 20) + "..." || "missing",
+      user: process.env.GMAIL_USER || "loveserenespaces@gmail.com"
+    };
+
+    // 2) Build the transporter with XOAUTH2 - EXACTLY like createGmailTransporter
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
         type: "OAuth2",
-        user: process.env.GMAIL_USER!,
+        user: process.env.GMAIL_USER || "loveserenespaces@gmail.com",
         clientId: process.env.GOOGLE_CLIENT_ID!,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
         refreshToken: process.env.GMAIL_REFRESH_TOKEN!,
