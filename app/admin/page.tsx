@@ -151,10 +151,12 @@ export default function AdminDashboard() {
   };
 
   const formatCurrency = (amount: number) => {
+    // Convert from cents to dollars
+    const dollars = amount / 100;
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
-    }).format(amount);
+    }).format(dollars);
   };
 
   const getStatusColor = (status: string) => {
@@ -200,8 +202,8 @@ export default function AdminDashboard() {
   const exportInvoiceList = () => {
     const csvContent = [
       ["Invoice #", "Customer", "Issue Date", "Due Date", "Total", "Status"],
-      ...invoices.map((invoice) => [
-        invoice.invoiceNumber,
+      ...invoices.map((invoice, index) => [
+        `Invoice #${index + 1}`,
         invoice.customerName,
         invoice.issueDate,
         invoice.dueDate,
@@ -681,7 +683,7 @@ export default function AdminDashboard() {
                         color: "#6b7280",
                       }}
                     >
-                      {invoice.invoiceNumber}
+                      Invoice #{index + 1}
                     </div>
                   </div>
                   <div

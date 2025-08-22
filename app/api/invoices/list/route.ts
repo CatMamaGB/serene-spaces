@@ -50,17 +50,17 @@ export async function GET() {
     return NextResponse.json(formattedInvoices);
   } catch (error) {
     console.error("Error fetching invoices:", error);
-    
+
     // Log more details about the error
     if (error instanceof Error) {
       console.error("Error message:", error.message);
       console.error("Error stack:", error.stack);
     }
-    
+
     return NextResponse.json(
-      { 
+      {
         error: "Failed to fetch invoices",
-        details: error instanceof Error ? error.message : "Unknown error"
+        details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 },
     );
