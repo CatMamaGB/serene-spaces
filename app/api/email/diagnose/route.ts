@@ -49,6 +49,12 @@ export async function GET() {
     report.oauth = { mintedAccessToken: !!token, email: "" };
 
     // 2) Which Google account does this token belong to?
+    // Set the access token in credentials before making the API call
+    oauth2.setCredentials({ 
+      refresh_token: process.env.GMAIL_REFRESH_TOKEN!,
+      access_token: token 
+    });
+    
     const who = google.oauth2({ version: "v2", auth: oauth2 });
     const { data: me } = await who.userinfo.get();
     if (report.oauth) {
