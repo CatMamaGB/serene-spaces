@@ -2,8 +2,31 @@ import { NextResponse } from "next/server";
 import { google } from "googleapis";
 import nodemailer from "nodemailer";
 
+interface DiagnosticReport {
+  env: {
+    hasClientId: boolean;
+    hasClientSecret: boolean;
+    hasRedirectUri: boolean;
+    hasRefreshToken: boolean;
+    gmailUser: string;
+  };
+  oauth?: {
+    mintedAccessToken: boolean;
+    email: string;
+  };
+  smtp?: {
+    verified: boolean;
+  };
+  error?: {
+    message?: string;
+    code?: string;
+    response?: unknown;
+    command?: string;
+  };
+}
+
 export async function GET() {
-  const report: any = {
+  const report: DiagnosticReport = {
     env: {
       hasClientId: !!process.env.GOOGLE_CLIENT_ID,
       hasClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
@@ -23,12 +46,14 @@ export async function GET() {
     oauth2.setCredentials({ refresh_token: process.env.GMAIL_REFRESH_TOKEN! });
 
     const { token } = await oauth2.getAccessToken();
-    report.oauth = { mintedAccessToken: !!token };
+    report.oauth = { mintedAccessToken: !!token, email: "" };
 
     // 2) Which Google account does this token belong to?
     const who = google.oauth2({ version: "v2", auth: oauth2 });
     const { data: me } = await who.userinfo.get();
-    report.oauth.email = me.email || "(unknown)";
+    if (report.oauth) {
+      report.oauth.email = me.email || "(unknown)";
+    }
 
     // 3) Build the transporter with XOAUTH2 (no password!)
     const transporter = nodemailer.createTransport({
@@ -47,12 +72,18 @@ export async function GET() {
     await transporter.verify();
     report.smtp = { verified: true };
     return NextResponse.json(report);
-  } catch (e: any) {
+  } catch (e: unknown) {
+    const error = e as Error & {
+      code?: string;
+      response?: unknown;
+      command?: string;
+    };
+    
     report.error = {
-      message: e?.message,
-      code: e?.code,
-      response: e?.response,
-      command: e?.command,
+      message: error?.message,
+      code: error?.code,
+      response: error?.response,
+      command: error?.command,
     };
     return NextResponse.json(report, { status: 500 });
   }
