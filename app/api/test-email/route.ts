@@ -45,12 +45,17 @@ export async function GET() {
 
     // Try to send a simple test email
     const transporter = await createGmailTransporter();
+    const fromAddr = process.env.GMAIL_USER || "loveserenespaces@gmail.com";
+
+    const testHtml =
+      "<p>This is a test email to verify Gmail OAuth2 is working.</p>";
 
     const mailOptions = {
-      from: "Serene Spaces <loveserenespaces@gmail.com>",
+      from: `Serene Spaces <${fromAddr}>`,
       to: "test@example.com",
       subject: "Test Email from Serene Spaces",
-      html: "<p>This is a test email to verify Gmail OAuth2 is working.</p>",
+      html: testHtml,
+      text: stripHtml(testHtml),
     };
 
     const info = await transporter.sendMail(mailOptions);
@@ -69,4 +74,15 @@ export async function GET() {
       status: "exception",
     });
   }
+}
+
+// Utility function to strip HTML and create plain text fallback
+function stripHtml(html: string) {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<\/(p|div|h[1-6]|li|br)>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }

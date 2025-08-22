@@ -83,14 +83,16 @@ export async function POST(req: Request) {
       });
 
       const transporter = await createGmailTransporter();
+      const fromAddr = process.env.GMAIL_USER || "loveserenespaces@gmail.com";
 
       // Send confirmation email to customer
       await transporter.sendMail({
-        from: "Serene Spaces <loveserenespaces@gmail.com>",
+        from: `Serene Spaces <${fromAddr}>`,
         to: email,
         subject: "Service Request Confirmation - Serene Spaces",
         html: confirmationHtml,
-        replyTo: "loveserenespaces@gmail.com",
+        text: stripHtml(confirmationHtml),
+        replyTo: fromAddr,
       });
 
       // Send notification email to Serene Spaces
@@ -109,10 +111,11 @@ export async function POST(req: Request) {
       });
 
       await transporter.sendMail({
-        from: "Serene Spaces <loveserenespaces@gmail.com>",
-        to: "loveserenespaces@gmail.com",
+        from: `Serene Spaces <${fromAddr}>`,
+        to: fromAddr,
         subject: `New Service Request: ${fullName} - ${services.join(", ")}`,
         html: notificationHtml,
+        text: stripHtml(notificationHtml),
         replyTo: email, // So you can reply directly to the customer
       });
     } catch (emailError) {
@@ -558,4 +561,15 @@ function generateNotificationEmail(data: {
       </div>
     </body>
   `;
+}
+
+// Utility function to strip HTML and create plain text fallback
+function stripHtml(html: string) {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<\/(p|div|h[1-6]|li|br)>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }

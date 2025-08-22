@@ -2,68 +2,55 @@ import { google } from "googleapis";
 import nodemailer from "nodemailer";
 
 // Gmail OAuth2 configuration
-const SCOPES = [
-  "https://www.googleapis.com/auth/gmail.send",
-  "https://www.googleapis.com/auth/gmail.compose",
-];
+const SCOPES = ["https://www.googleapis.com/auth/gmail.send"];
 
 // Create OAuth2 client
 const createOAuth2Client = () => {
-  return new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
+  const redirectUri =
     process.env.GOOGLE_REDIRECT_URI ||
-      "http://localhost:3000/api/auth/callback/google",
+    (process.env.NODE_ENV === "production"
+      ? "https://www.loveserenespaces.com/api/auth/callback/google"
+      : "http://localhost:3000/api/auth/callback/google");
+
+  return new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID!,
+    process.env.GOOGLE_CLIENT_SECRET!,
+    redirectUri,
   );
 };
 
 // Create Gmail transporter using OAuth2
 export const createGmailTransporter = async () => {
-  try {
-    // Check if we have OAuth2 credentials
-    if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
-      throw new Error("Google OAuth2 credentials not configured");
-    }
-
-    // Check if we have a refresh token
-    if (!process.env.GMAIL_REFRESH_TOKEN) {
-      throw new Error(
-        "Gmail refresh token not configured. Please complete OAuth2 setup first.",
-      );
-    }
-
-    const oauth2Client = createOAuth2Client();
-
-    // Set credentials using refresh token
-    oauth2Client.setCredentials({
-      refresh_token: process.env.GMAIL_REFRESH_TOKEN,
-    });
-
-    // Get access token
-    const { token: accessToken } = await oauth2Client.getAccessToken();
-
-    if (!accessToken) {
-      throw new Error("Failed to get access token");
-    }
-
-    // Create transporter with OAuth2
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        type: "OAuth2",
-        user: process.env.GMAIL_USER || "loveserenespaces@gmail.com",
-        clientId: process.env.GOOGLE_CLIENT_ID,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        refreshToken: process.env.GMAIL_REFRESH_TOKEN,
-        accessToken: accessToken,
-      },
-    });
-
-    return transporter;
-  } catch (error) {
-    console.error("Error creating Gmail transporter:", error);
-    throw error;
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    throw new Error("Google OAuth2 credentials not configured");
   }
+
+  // Prefer loading refresh token from DB/secret store in prod
+  const refreshToken = process.env.GMAIL_REFRESH_TOKEN;
+  if (!refreshToken) {
+    throw new Error(
+      "Gmail refresh token not configured. Complete OAuth2 setup first.",
+    );
+  }
+
+  const oauth2Client = createOAuth2Client();
+  oauth2Client.setCredentials({ refresh_token: refreshToken });
+
+  // Get a short-lived access token from Google (Nodemailer will not refresh by itself)
+  const { token: accessToken } = await oauth2Client.getAccessToken();
+  if (!accessToken) throw new Error("Failed to get access token");
+
+  return nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      type: "OAuth2",
+      user: process.env.GMAIL_USER || "loveserenespaces@gmail.com",
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      refreshToken,
+      accessToken, // include so first send succeeds immediately
+    },
+  });
 };
 
 // Generate OAuth2 authorization URL

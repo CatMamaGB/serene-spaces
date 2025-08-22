@@ -89,18 +89,25 @@ export async function POST(req: NextRequest) {
 
     // Send email via Gmail OAuth2
     console.log("Attempting to send email via Gmail OAuth2...");
-    console.log("From:", "Serene Spaces <loveserenespaces@gmail.com>");
+
+    const transporter = await createGmailTransporter();
+    const fromAddr = process.env.GMAIL_USER || "loveserenespaces@gmail.com";
+
+    console.log("From:", `Serene Spaces <${fromAddr}>`);
     console.log("To:", customerEmail);
     console.log("Subject:", `Invoice from Serene Spaces - ${invoiceDate}`);
 
-    const transporter = await createGmailTransporter();
-
     const mailOptions = {
-      from: "Serene Spaces <loveserenespaces@gmail.com>",
+      from: `Serene Spaces <${fromAddr}>`, // must match the authorized Gmail
       to: customerEmail,
+      cc: fromAddr, // CC yourself
       subject: `Invoice from Serene Spaces - ${invoiceDate}`,
       html: invoiceHtml,
-      replyTo: "loveserenespaces@gmail.com",
+      text: stripHtml(invoiceHtml), // plain-text fallback helps deliverability
+      replyTo: fromAddr, // optional but useful
+      // attachments: [
+      //   { filename: `Invoice-${invoiceNumber}.pdf`, content: pdfBuffer, contentType: "application/pdf" }
+      // ],
     };
 
     const info = await transporter.sendMail(mailOptions);
@@ -159,24 +166,29 @@ export async function GET(req: NextRequest) {
 
     // Send test email via Gmail OAuth2
     const transporter = await createGmailTransporter();
+    const fromAddr = process.env.GMAIL_USER || "loveserenespaces@gmail.com";
+
+    const testHtml = `
+      <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #7a6990;">🧪 Test Email</h1>
+        <p>This is a test email to verify your Gmail OAuth2 setup is working correctly.</p>
+        <p><strong>Sent at:</strong> ${new Date().toLocaleString()}</p>
+        <p><strong>From:</strong> Serene Spaces</p>
+        <p><strong>To:</strong> ${testEmail}</p>
+        <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;">
+        <p style="color: #6b7280; font-size: 14px;">
+          If you received this email, your Gmail OAuth2 configuration is working! 🎉
+        </p>
+      </div>
+    `;
 
     const mailOptions = {
-      from: "Serene Spaces <loveserenespaces@gmail.com>",
+      from: `Serene Spaces <${fromAddr}>`,
       to: testEmail,
+      cc: fromAddr,
       subject: "Test Email from Serene Spaces",
-      html: `
-        <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #7a6990;">🧪 Test Email</h1>
-          <p>This is a test email to verify your Gmail OAuth2 setup is working correctly.</p>
-          <p><strong>Sent at:</strong> ${new Date().toLocaleString()}</p>
-          <p><strong>From:</strong> Serene Spaces</p>
-          <p><strong>To:</strong> ${testEmail}</p>
-          <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;">
-          <p style="color: #6b7280; font-size: 14px;">
-            If you received this email, your Gmail OAuth2 configuration is working! 🎉
-          </p>
-        </div>
-      `,
+      html: testHtml,
+      text: stripHtml(testHtml),
     };
 
     const info = await transporter.sendMail(mailOptions);
@@ -440,4 +452,15 @@ function generateInvoiceHtml(invoiceData: any) {
     </body>
     </html>
   `;
+}
+
+// Utility function to strip HTML and create plain text fallback
+function stripHtml(html: string) {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<\/(p|div|h[1-6]|li|br)>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
