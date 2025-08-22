@@ -2,7 +2,7 @@ import { google } from "googleapis";
 import nodemailer from "nodemailer";
 
 // Gmail OAuth2 configuration
-const SCOPES = ["https://www.googleapis.com/auth/gmail.send"];
+const SCOPES = ["https://mail.google.com/"]; // Changed from gmail.send to enable SMTP
 
 // Create OAuth2 client
 const createOAuth2Client = () => {
@@ -59,7 +59,7 @@ export const getAuthUrl = () => {
 
   return oauth2Client.generateAuthUrl({
     access_type: "offline",
-    scope: SCOPES,
+    scope: SCOPES, // https://mail.google.com/ - enables both Gmail API and SMTP
     prompt: "consent", // Force consent to get refresh token
   });
 };
