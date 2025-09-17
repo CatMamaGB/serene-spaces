@@ -47,6 +47,20 @@ const nextConfig: NextConfig = {
         net: false,
         tls: false,
       };
+
+      // Copy Prisma engine files to the build output
+      const CopyPlugin = require('copy-webpack-plugin');
+      config.plugins = config.plugins || [];
+      config.plugins.push(
+        new CopyPlugin({
+          patterns: [
+            {
+              from: 'node_modules/.prisma/client/libquery_engine-rhel-openssl-3.0.x.so.node',
+              to: 'libquery_engine-rhel-openssl-3.0.x.so.node',
+            },
+          ],
+        })
+      );
     }
     return config;
   },
