@@ -4,10 +4,10 @@ import nodemailer from "nodemailer";
 // Create OAuth2 client
 const createOAuth2Client = () => {
   const redirectUri =
-    process.env.GOOGLE_REDIRECT_URI ||
+    process.env.GMAIL_REDIRECT_URI ||
     (process.env.NODE_ENV === "production"
-      ? "https://www.loveserenespaces.com/api/auth/callback/google"
-      : "http://localhost:3000/api/auth/callback/google");
+      ? "https://www.loveserenespaces.com/api/gmail/callback/google"
+      : "http://localhost:3000/api/gmail/callback/google");
 
   return new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID!,

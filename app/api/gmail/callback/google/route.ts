@@ -20,12 +20,12 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Missing code" }, { status: 400 });
     }
 
-    // Create OAuth2 client
+    // Create OAuth2 client with Gmail-specific redirect URI
     const redirectUri =
-      process.env.GOOGLE_REDIRECT_URI ||
+      process.env.GMAIL_REDIRECT_URI ||
       (process.env.NODE_ENV === "production"
-        ? "https://www.loveserenespaces.com/api/auth/callback/google"
-        : "http://localhost:3000/api/auth/callback/google");
+        ? "https://www.loveserenespaces.com/api/gmail/callback/google"
+        : "http://localhost:3000/api/gmail/callback/google");
 
     const oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID!,
@@ -61,11 +61,11 @@ export async function GET(req: NextRequest) {
     const redirectUrl = new URL("/admin?gmail-connected=1", base);
     return NextResponse.redirect(redirectUrl, { status: 303 }); // 303 = "see other"
   } catch (e: unknown) {
-    console.error("OAuth callback error", e);
+    console.error("Gmail OAuth callback error", e);
     const errorMessage = e instanceof Error ? e.message : "Unknown error";
     return NextResponse.json(
       {
-        error: "OAuth callback failed",
+        error: "Gmail OAuth callback failed",
         detail: errorMessage,
       },
       { status: 500 },
