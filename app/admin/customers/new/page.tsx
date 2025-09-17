@@ -59,6 +59,8 @@ export default function NewCustomerPage() {
         body: JSON.stringify(formData),
       });
 
+      const result = await response.json();
+
       if (response.ok) {
         setSaved(true);
         // Redirect to customers list after 1 second
@@ -66,11 +68,15 @@ export default function NewCustomerPage() {
           window.location.href = "/admin/customers";
         }, 1000);
       } else {
-        alert("Error saving customer");
+        // Show detailed error message
+        const errorMessage = result.error || "Unknown error";
+        const errorDetails = result.details ? `\n\nDetails: ${result.details}` : "";
+        alert(`Error saving customer: ${errorMessage}${errorDetails}`);
+        console.error("Customer creation failed:", result);
       }
     } catch (error) {
       console.error("Error:", error);
-      alert("Error saving customer");
+      alert("Network error: Unable to connect to server. Please check your internet connection and try again.");
     } finally {
       setSaving(false);
     }

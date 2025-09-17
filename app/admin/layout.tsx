@@ -22,18 +22,6 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname();
   const { data: session, status } = useSession();
-
-  // Create mock session for admin access when not authenticated
-  const effectiveSession =
-    status === "unauthenticated"
-      ? {
-          user: {
-            id: "admin-bypass",
-            name: "Admin (Bypass Mode)",
-            email: "admin@loveserenespaces.com",
-          },
-        }
-      : session;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
@@ -92,7 +80,7 @@ export default function AdminLayout({
     setIsMobileMenuOpen(false);
   };
 
-  // Show loading state while checking authentication (but allow bypass)
+  // Show loading state while checking authentication
   if (status === "loading") {
     return (
       <div
@@ -115,21 +103,70 @@ export default function AdminLayout({
             Loading...
           </div>
           <div style={{ fontSize: "1rem", color: "#6b7280" }}>
-            If this takes too long, refresh the page
+            Checking authentication...
           </div>
         </div>
       </div>
     );
   }
 
-  // TEMPORARILY BYPASS AUTHENTICATION FOR ADMIN ACCESS
-  // TODO: Re-enable authentication once Google OAuth is fixed
+  // REQUIRE AUTHENTICATION - NO BYPASS ALLOWED
   if (status === "unauthenticated") {
-    // Create a mock session for admin access
-    console.log(
-      "⚠️ AUTHENTICATION BYPASSED - Admin access granted without Google OAuth",
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "#f9fafb",
+        }}
+      >
+        <div
+          style={{
+            backgroundColor: "white",
+            padding: "2rem",
+            borderRadius: "12px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+            textAlign: "center",
+            maxWidth: "400px",
+            width: "90%",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "1.5rem",
+              color: "#dc2626",
+              marginBottom: "1rem",
+            }}
+          >
+            🔒 Authentication Required
+          </div>
+          <div style={{ fontSize: "1rem", color: "#6b7280", marginBottom: "1.5rem" }}>
+            You must be signed in with Google to access the admin panel.
+          </div>
+          <a
+            href="/auth/signin"
+            style={{
+              display: "inline-block",
+              padding: "12px 24px",
+              backgroundColor: "#7a6990",
+              color: "white",
+              textDecoration: "none",
+              borderRadius: "8px",
+              fontSize: "1rem",
+              fontWeight: "600",
+            }}
+          >
+            Sign In with Google
+          </a>
+        </div>
+      </div>
     );
   }
+
+  // User is authenticated, show admin interface
+  const user = session?.user;
 
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#f9fafb" }}>
@@ -330,7 +367,7 @@ export default function AdminLayout({
             }}
           >
             {/* User Info */}
-            {effectiveSession?.user && (
+            {user && (
               <div
                 style={{
                   display: "flex",
@@ -340,7 +377,7 @@ export default function AdminLayout({
                   color: "#6b7280",
                 }}
               >
-                <span>Welcome, {effectiveSession.user.name}</span>
+                <span>Welcome, {user.name}</span>
                 {status === "authenticated" ? (
                   <button
                     onClick={() => signOut()}

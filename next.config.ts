@@ -29,6 +29,13 @@ const nextConfig: NextConfig = {
   // Static optimization
   trailingSlash: false,
   poweredByHeader: false,
+  // Prisma optimization for Vercel
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals.push('@prisma/client');
+    }
+    return config;
+  },
 };
 
 export default withBundleAnalyzer(nextConfig);

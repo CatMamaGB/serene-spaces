@@ -48,6 +48,11 @@ if (missingVars.length > 0) {
   );
   console.error("Environment check - NODE_ENV:", process.env.NODE_ENV);
   console.error("All environment keys:", Object.keys(process.env));
+  
+  // In production, throw an error to prevent startup with missing auth
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(`Missing required environment variables: ${missingVars.join(", ")}`);
+  }
 }
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
