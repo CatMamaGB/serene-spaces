@@ -32,27 +32,21 @@ const nextConfig: NextConfig = {
   // Prisma optimization for Vercel
   webpack: (config, { isServer }) => {
     if (isServer) {
-      // Ensure Prisma client is properly bundled
+      // Don't externalize Prisma client
       config.externals = config.externals.filter(
         (external: any) => external !== '@prisma/client'
       );
       
-      // Add Prisma engine files to the bundle
+      // Add fallbacks for Node.js modules
       config.resolve = config.resolve || {};
       config.resolve.fallback = {
         ...config.resolve.fallback,
         fs: false,
         path: false,
         os: false,
+        net: false,
+        tls: false,
       };
-
-      // Ensure Prisma engine files are included in the bundle
-      config.module = config.module || {};
-      config.module.rules = config.module.rules || [];
-      config.module.rules.push({
-        test: /\.node$/,
-        use: 'raw-loader',
-      });
     }
     return config;
   },
