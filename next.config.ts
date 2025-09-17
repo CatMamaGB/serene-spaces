@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 // Load environment variables
-require("dotenv").config({ path: ".env.local" });
+require("dotenv").config();
 
 const withBundleAnalyzer = require("@next/bundle-analyzer")({
   enabled: process.env.ANALYZE === "true",
@@ -32,7 +32,10 @@ const nextConfig: NextConfig = {
   // Prisma optimization for Vercel
   webpack: (config, { isServer }) => {
     if (isServer) {
-      config.externals.push('@prisma/client');
+      // Don't externalize Prisma client to ensure proper engine loading
+      config.externals = config.externals.filter(
+        (external: any) => external !== '@prisma/client'
+      );
     }
     return config;
   },

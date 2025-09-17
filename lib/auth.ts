@@ -24,6 +24,16 @@ const requiredEnvVars = {
   DATABASE_URL: process.env.DATABASE_URL,
 };
 
+// For local development, override NEXTAUTH_URL if it's pointing to production
+const isLocalDevelopment = process.env.NODE_ENV === "development" && 
+  process.env.NEXTAUTH_URL?.includes("loveserenespaces.com");
+
+if (isLocalDevelopment) {
+  console.warn("⚠️  NEXTAUTH_URL is set to production URL in development mode");
+  console.warn("   This will cause OAuth configuration errors");
+  console.warn("   Please set NEXTAUTH_URL=http://localhost:3000 for local development");
+}
+
 const missingVars = Object.entries(requiredEnvVars)
   .filter(([, value]) => !value)
   .map(([key]) => key);
@@ -55,6 +65,14 @@ if (missingVars.length > 0) {
     throw new Error(`Missing required environment variables: ${missingVars.join(", ")}`);
   }
 }
+
+// Determine the correct base URL for the current environment
+const getBaseUrl = () => {
+  if (process.env.NODE_ENV === "development") {
+    return "http://localhost:3000";
+  }
+  return process.env.NEXTAUTH_URL || "https://www.loveserenespaces.com";
+};
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -167,11 +185,12 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       return session;
     },
           async redirect({ url, baseUrl }) {
-            console.log("Redirect callback:", { url, baseUrl });
+            const correctBaseUrl = getBaseUrl();
+            console.log("Redirect callback:", { url, baseUrl, correctBaseUrl });
             
             // Allows relative callback URLs
             if (url.startsWith("/")) {
-              const redirectUrl = `${baseUrl}${url}`;
+              const redirectUrl = `${correctBaseUrl}${url}`;
               console.log("Redirecting to:", redirectUrl);
               return redirectUrl;
             }
@@ -179,7 +198,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             // Allows callback URLs on the same origin
             try {
               const urlObj = new URL(url);
-              if (urlObj.origin === baseUrl) {
+              if (urlObj.origin === correctBaseUrl) {
                 console.log("Redirecting to same origin:", url);
                 return url;
               }
@@ -187,8 +206,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
               console.error("Invalid URL in redirect:", error);
             }
             
-            console.log("Default redirect to baseUrl:", baseUrl);
-            return baseUrl;
+            console.log("Default redirect to correctBaseUrl:", correctBaseUrl);
+            return correctBaseUrl;
           },
   },
   // Add error handling

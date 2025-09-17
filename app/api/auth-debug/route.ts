@@ -2,7 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   try {
-    const baseUrl = process.env.NEXTAUTH_URL || request.nextUrl.origin;
+    // Determine the correct base URL for the current environment
+    const getBaseUrl = () => {
+      if (process.env.NODE_ENV === "development") {
+        return "http://localhost:3000";
+      }
+      return process.env.NEXTAUTH_URL || request.nextUrl.origin;
+    };
+    
+    const baseUrl = getBaseUrl();
     
     return NextResponse.json({
       environment: {
@@ -23,6 +31,7 @@ export async function GET(request: NextRequest) {
         redirectUri: `Add this exact URI: ${baseUrl}/api/auth/callback/google`,
         authorizedDomains: "Add your domain to Authorized domains if needed",
         testEmail: "Try email/password login with loveserenespaces@gmail.com / Spaces123",
+        localDevelopment: process.env.NODE_ENV === "development" ? "Using localhost:3000 for OAuth callbacks" : "Using production URL for OAuth callbacks",
       }
     });
   } catch (error) {
