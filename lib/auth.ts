@@ -92,7 +92,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             try {
               // Admin account for loveserenespaces@gmail.com
               const adminEmail = "loveserenespaces@gmail.com";
-              const adminPassword = "admin123"; // In production, use environment variable
+              const adminPassword = "Spaces123"; // Updated password
               
               if (credentials.email === adminEmail) {
                 // For demo purposes, we'll accept the password directly
