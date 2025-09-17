@@ -188,7 +188,13 @@ export default function AdminDashboard() {
     fetchData();
 
     return () => window.removeEventListener("resize", checkMobile);
-  }, [mockCustomers, mockInvoices]);
+  }, [
+    mockCustomers,
+    mockInvoices,
+    customers.length,
+    invoices.length,
+    serviceRequests.length,
+  ]);
 
   const stats = {
     totalCustomers: customers.length,

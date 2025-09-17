@@ -11,10 +11,10 @@ model User {
   id            String    @id @default(cuid())
   name          String?
   email         String?   @unique
-  emailVerified DateTime? // Add this line
   image         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  emailVerified DateTime?
   accounts      Account[]
   sessions      Session[]
 }
@@ -54,87 +54,87 @@ model VerificationToken {
 }
 
 model Customer {
-  id           String   @id @default(cuid())
-  name         String
-  email        String?
-  phone        String?
-  address      String?  // Full address for intake forms
-  addressLine1 String?
-  addressLine2 String?
-  city         String?
-  state        String?
-  postalCode   String?
-  country      String? @default("US")
-  stripeId     String? @unique
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  jobs         Job[]
-  invoices     InvoiceMirror[]
+  id              String           @id @default(cuid())
+  name            String
+  email           String?
+  phone           String?
+  address         String?
+  addressLine1    String?
+  addressLine2    String?
+  city            String?
+  state           String?
+  postalCode      String?
+  country         String?          @default("US")
+  stripeId        String?          @unique
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  invoices        InvoiceMirror[]
+  jobs            Job[]
   serviceRequests ServiceRequest[]
 }
 
 model Job {
-  id          String   @id @default(cuid())
-  customerId  String
-  notes       String?
-  status      String   @default("new")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  id         String   @id @default(cuid())
+  customerId String
+  notes      String?
+  status     String   @default("new")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 }
 
 model ServiceRequest {
-  id                  String   @id @default(cuid())
+  id                  String    @id @default(cuid())
   customerId          String
-  customer            Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  services            String[] // Array of requested services
+  services            String[]
   address             String
   pickupDate          DateTime?
   repairNotes         String?
   waterproofingNotes  String?
   allergies           String?
-  status              String   @default("pending") // pending, scheduled, completed, cancelled
+  status              String    @default("pending")
   estimatedCost       Float?
   actualCost          Float?
   scheduledPickupDate DateTime?
   completedDate       DateTime?
   notes               String?
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  customer            Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
 }
 
 model InvoiceMirror {
-  id             String   @id @default(cuid())
-  customerId     String
-  stripeInvoiceId String  @unique
-  status         String
-  currency       String   @default("usd")
-  subtotal       Int      @default(0)   // cents
-  tax            Int      @default(0)   // cents
-  total          Int      @default(0)   // cents
-  hostedUrl      String?
-  pdfUrl         String?
-  invoiceNumber  String?
-  issueDate      DateTime?
-  dueDate        DateTime?
-  notes          String?
-
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  items          InvoiceItemMirror[]
-  customer       Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  id              String              @id @default(cuid())
+  customerId      String
+  stripeInvoiceId String              @unique
+  status          String
+  currency        String              @default("usd")
+  subtotal        Int                 @default(0)
+  tax             Int                 @default(0)
+  total           Int                 @default(0)
+  hostedUrl       String?
+  pdfUrl          String?
+  invoiceNumber   String?
+  issueDate       DateTime?
+  dueDate         DateTime?
+  notes           String?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  terms           String?
+  items           InvoiceItemMirror[]
+  customer        Customer            @relation(fields: [customerId], references: [id], onDelete: Cascade)
 }
 
 model InvoiceItemMirror {
-  id            String   @id @default(cuid())
-  invoiceId     String
-  description   String
-  quantity      Int      @default(1)
-  unitAmount    Int      @default(0)  // cents
-  taxable       Boolean  @default(true)
-  notes         String?
-  createdAt     DateTime @default(now())
-  invoice       InvoiceMirror @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  id          String        @id @default(cuid())
+  invoiceId   String
+  description String
+  quantity    Int           @default(1)
+  unitAmount  Int           @default(0)
+  taxable     Boolean       @default(true)
+  notes       String?
+  createdAt   DateTime      @default(now())
+  invoice     InvoiceMirror @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 }
 
 model EventLog {
