@@ -79,7 +79,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn() {
       // Allow sign in for any Google account
       // You can restrict this to specific emails if needed
       return true;
