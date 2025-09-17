@@ -29,13 +29,11 @@ const nextConfig: NextConfig = {
   // Static optimization
   trailingSlash: false,
   poweredByHeader: false,
-  // Prisma optimization for Vercel
+  // Prisma optimization for Vercel serverless
   webpack: (config, { isServer }) => {
     if (isServer) {
-      // Don't externalize Prisma client
-      config.externals = config.externals.filter(
-        (external: any) => external !== '@prisma/client'
-      );
+      // Externalize Prisma client for serverless
+      config.externals.push('@prisma/client');
       
       // Add fallbacks for Node.js modules
       config.resolve = config.resolve || {};
@@ -47,20 +45,6 @@ const nextConfig: NextConfig = {
         net: false,
         tls: false,
       };
-
-      // Copy Prisma engine files to the build output
-      const CopyPlugin = require('copy-webpack-plugin');
-      config.plugins = config.plugins || [];
-      config.plugins.push(
-        new CopyPlugin({
-          patterns: [
-            {
-              from: 'node_modules/.prisma/client/libquery_engine-rhel-openssl-3.0.x.so.node',
-              to: 'libquery_engine-rhel-openssl-3.0.x.so.node',
-            },
-          ],
-        })
-      );
     }
     return config;
   },

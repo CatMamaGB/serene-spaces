@@ -7,8 +7,5 @@
   "buildCommand": "npx prisma generate && npm run build",
   "installCommand": "npm install && npx prisma generate",
   "outputDirectory": ".next",
-  "framework": "nextjs",
-  "env": {
-    "PRISMA_GENERATE_DATAPROXY": "false"
-  }
+  "framework": "nextjs"
 }
