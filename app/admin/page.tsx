@@ -126,14 +126,6 @@ export default function AdminDashboard() {
   );
 
   useEffect(() => {
-    // Check if mobile
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-
     // Fetch real data from APIs
     const fetchData = async () => {
       try {
@@ -185,8 +177,6 @@ export default function AdminDashboard() {
     };
 
     fetchData();
-
-    return () => window.removeEventListener("resize", checkMobile);
   }, [
     mockCustomers,
     mockInvoices,
