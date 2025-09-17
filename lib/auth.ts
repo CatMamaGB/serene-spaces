@@ -67,17 +67,18 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     },
   },
   providers: [
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      authorization: {
-        params: {
-          prompt: "consent",
-          access_type: "offline",
-          response_type: "code",
-        },
-      },
-    }),
+          Google({
+            clientId: process.env.GOOGLE_CLIENT_ID!,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+            authorization: {
+              params: {
+                prompt: "consent",
+                access_type: "offline",
+                response_type: "code",
+                scope: "openid email profile",
+              },
+            },
+          }),
     Credentials({
       name: "credentials",
       credentials: {
@@ -120,16 +121,29 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             console.log("SignIn callback triggered:", { 
               userEmail: user?.email, 
               provider: account?.provider,
-              userId: user?.id 
+              userId: user?.id,
+              accountType: account?.type,
+              accountProvider: account?.provider
             });
             
             // Only allow sign in for loveserenespaces@gmail.com
             if (account?.provider === "google") {
+              if (!user?.email) {
+                console.error("No email found in Google OAuth user object");
+                return false;
+              }
+              
               const isAuthorized = user.email === "loveserenespaces@gmail.com";
               console.log("Google OAuth authorization:", { 
                 email: user.email, 
-                authorized: isAuthorized 
+                authorized: isAuthorized,
+                userObject: user
               });
+              
+              if (!isAuthorized) {
+                console.log("Access denied for email:", user.email);
+              }
+              
               return isAuthorized;
             }
             
