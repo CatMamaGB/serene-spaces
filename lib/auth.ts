@@ -89,24 +89,23 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           return null;
         }
 
-        try {
-          // For now, we'll use a simple hardcoded admin account
-          // In production, you'd want to store this in the database
-          const adminEmail = "admin@serenespaces.com";
-          const adminPassword = "admin123"; // In production, use environment variable
-          
-          if (credentials.email === adminEmail) {
-            // For demo purposes, we'll accept the password directly
-            // In production, you'd hash the password and compare
-            if (credentials.password === adminPassword) {
-              return {
-                id: "admin",
-                email: adminEmail,
-                name: "Admin User",
-                image: null,
-              };
-            }
-          }
+            try {
+              // Admin account for loveserenespaces@gmail.com
+              const adminEmail = "loveserenespaces@gmail.com";
+              const adminPassword = "admin123"; // In production, use environment variable
+              
+              if (credentials.email === adminEmail) {
+                // For demo purposes, we'll accept the password directly
+                // In production, you'd hash the password and compare
+                if (credentials.password === adminPassword) {
+                  return {
+                    id: "admin",
+                    email: adminEmail,
+                    name: "Serene Spaces Admin",
+                    image: null,
+                  };
+                }
+              }
           
           return null;
         } catch (error) {
@@ -116,12 +115,36 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       }
     }),
   ],
-  callbacks: {
-    async signIn() {
-      // Allow sign in for any Google account
-      // You can restrict this to specific emails if needed
-      return true;
-    },
+        callbacks: {
+          async signIn({ user, account, profile }) {
+            console.log("SignIn callback triggered:", { 
+              userEmail: user?.email, 
+              provider: account?.provider,
+              userId: user?.id 
+            });
+            
+            // Only allow sign in for loveserenespaces@gmail.com
+            if (account?.provider === "google") {
+              const isAuthorized = user.email === "loveserenespaces@gmail.com";
+              console.log("Google OAuth authorization:", { 
+                email: user.email, 
+                authorized: isAuthorized 
+              });
+              return isAuthorized;
+            }
+            
+            // Allow credentials provider (email/password) for admin
+            if (account?.provider === "credentials") {
+              console.log("Credentials provider authorization:", { 
+                email: user?.email, 
+                authorized: true 
+              });
+              return true;
+            }
+            
+            console.log("Sign in denied for provider:", account?.provider);
+            return false;
+          },
     async session({ session, user }) {
       // Ensure session has user ID
       if (session.user) {
@@ -129,13 +152,30 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       }
       return session;
     },
-    async redirect({ url, baseUrl }) {
-      // Allows relative callback URLs
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
-      // Allows callback URLs on the same origin
-      else if (new URL(url).origin === baseUrl) return url;
-      return baseUrl;
-    },
+          async redirect({ url, baseUrl }) {
+            console.log("Redirect callback:", { url, baseUrl });
+            
+            // Allows relative callback URLs
+            if (url.startsWith("/")) {
+              const redirectUrl = `${baseUrl}${url}`;
+              console.log("Redirecting to:", redirectUrl);
+              return redirectUrl;
+            }
+            
+            // Allows callback URLs on the same origin
+            try {
+              const urlObj = new URL(url);
+              if (urlObj.origin === baseUrl) {
+                console.log("Redirecting to same origin:", url);
+                return url;
+              }
+            } catch (error) {
+              console.error("Invalid URL in redirect:", error);
+            }
+            
+            console.log("Default redirect to baseUrl:", baseUrl);
+            return baseUrl;
+          },
   },
   // Add error handling
   debug: process.env.NODE_ENV === "development",
