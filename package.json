@@ -43,6 +43,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.4.6",
     "prettier": "^3.6.2",
+    "raw-loader": "^4.0.2",
     "tsx": "^4.20.4",
     "typescript": "^5.9.2"
   }
