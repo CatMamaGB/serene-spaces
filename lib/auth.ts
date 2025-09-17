@@ -135,7 +135,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     }),
   ],
         callbacks: {
-          async signIn({ user, account, profile }) {
+          async signIn({ user, account }) {
             console.log("SignIn callback triggered:", { 
               userEmail: user?.email, 
               provider: account?.provider,

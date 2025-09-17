@@ -12,7 +12,8 @@
     "format:check": "prettier --check .",
     "start": "next start",
     "lint": "next lint",
-    "vercel-build": "npx prisma generate && next build"
+    "vercel-build": "npx prisma generate && next build",
+    "postbuild": "npx prisma generate"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
