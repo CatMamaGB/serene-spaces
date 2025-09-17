@@ -79,8 +79,9 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async signIn() {
-      // restrict to your emails if desired
+    async signIn({ user, account, profile }) {
+      // Allow sign in for any Google account
+      // You can restrict this to specific emails if needed
       return true;
     },
     async session({ session, user }) {
@@ -89,6 +90,13 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         session.user.id = user.id;
       }
       return session;
+    },
+    async redirect({ url, baseUrl }) {
+      // Allows relative callback URLs
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      // Allows callback URLs on the same origin
+      else if (new URL(url).origin === baseUrl) return url;
+      return baseUrl;
     },
   },
   // Add error handling
