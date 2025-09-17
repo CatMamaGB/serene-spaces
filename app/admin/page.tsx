@@ -299,16 +299,11 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div
-        style={{
-          padding: "24px",
-          backgroundColor: "#f5f5f5",
-          minHeight: "100vh",
-        }}
-      >
-        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
-          <div style={{ textAlign: "center", padding: "60px" }}>
-            <div style={{ fontSize: "1.2rem", color: "#666" }}>
+      <div className="p-6 bg-gray-50 min-h-screen">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center py-16">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+            <div className="text-lg text-gray-600 font-medium">
               Loading dashboard...
             </div>
           </div>
@@ -318,113 +313,28 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div
-      style={{
-        padding: isMobile ? "12px" : "24px",
-        backgroundColor: "#f5f5f5",
-        minHeight: "100vh",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: "1400px",
-          margin: "0 auto",
-          padding: "0",
-        }}
-      >
+    <div className="space-y-8">
         {/* Welcome Header */}
-        <div
-          style={{
-            marginBottom: "2rem",
-            padding: isMobile ? "1.5rem" : "2rem",
-            backgroundColor: "white",
-            borderRadius: "12px",
-            boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-            border: "1px solid #f3f4f6",
-          }}
-        >
-          <h1
-            style={{
-              fontSize: isMobile ? "1.75rem" : "2.25rem",
-              marginBottom: "0.75rem",
-              color: "#1f2937",
-              fontWeight: "700",
-              letterSpacing: "-0.025em",
-            }}
-          >
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 lg:p-8">
+          <h1 className="text-2xl lg:text-4xl font-bold text-gray-900 mb-3 tracking-tight">
             Welcome back, Admin
           </h1>
-          <p
-            style={{
-              color: "#6b7280",
-              fontSize: isMobile ? "1rem" : "1.125rem",
-              margin: 0,
-              lineHeight: "1.6",
-            }}
-          >
+          <p className="text-base lg:text-lg text-gray-600 leading-relaxed">
             Here&apos;s what&apos;s happening with your business today
           </p>
         </div>
 
         {/* Quick Stats */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: isMobile
-              ? "1fr"
-              : "repeat(auto-fit, minmax(250px, 1fr))",
-            gap: isMobile ? "1rem" : "1.5rem",
-            marginBottom: "2rem",
-          }}
-        >
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
           <Link
             href="/admin/customers"
-            style={{
-              textDecoration: "none",
-              display: "block",
-            }}
+            className="block no-underline"
           >
-            <div
-              style={{
-                padding: isMobile ? "1rem" : "1.5rem",
-                backgroundColor: "white",
-                borderRadius: "12px",
-                boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-                border: "1px solid #f3f4f6",
-                textAlign: "center",
-                cursor: "pointer",
-                transition: "all 0.2s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.boxShadow =
-                  "0 4px 12px rgba(0, 0, 0, 0.15)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow =
-                  "0 1px 3px rgba(0, 0, 0, 0.1)";
-              }}
-            >
-              <div
-                style={{
-                  fontSize: isMobile ? "2rem" : "2.5rem",
-                  fontWeight: "700",
-                  color: "#7a6990",
-                  marginBottom: "0.5rem",
-                }}
-              >
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6 text-center cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
+              <div className="text-3xl lg:text-4xl font-bold text-indigo-600 mb-2">
                 {stats.totalCustomers}
               </div>
-              <div
-                style={{
-                  color: "#6b7280",
-                  fontSize: isMobile ? "0.75rem" : "0.875rem",
-                  fontWeight: "500",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                }}
-              >
+              <div className="text-gray-600 text-sm lg:text-base font-medium uppercase tracking-wide">
                 Total Customers
               </div>
             </div>
@@ -432,52 +342,13 @@ export default function AdminDashboard() {
 
           <Link
             href="/admin/invoices"
-            style={{
-              textDecoration: "none",
-              display: "block",
-            }}
+            className="block no-underline"
           >
-            <div
-              style={{
-                padding: isMobile ? "1rem" : "1.5rem",
-                backgroundColor: "white",
-                borderRadius: "12px",
-                boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-                border: "1px solid #f3f4f6",
-                textAlign: "center",
-                cursor: "pointer",
-                transition: "all 0.2s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.boxShadow =
-                  "0 4px 12px rgba(0, 0, 0, 0.15)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow =
-                  "0 1px 3px rgba(0, 0, 0, 0.1)";
-              }}
-            >
-              <div
-                style={{
-                  fontSize: isMobile ? "2rem" : "2.5rem",
-                  fontWeight: "700",
-                  color: "#7a6990",
-                  marginBottom: "0.5rem",
-                }}
-              >
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6 text-center cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
+              <div className="text-3xl lg:text-4xl font-bold text-indigo-600 mb-2">
                 {stats.pendingInvoices}
               </div>
-              <div
-                style={{
-                  color: "#6b7280",
-                  fontSize: isMobile ? "0.75rem" : "0.875rem",
-                  fontWeight: "500",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                }}
-              >
+              <div className="text-gray-600 text-sm lg:text-base font-medium uppercase tracking-wide">
                 Pending Invoices
               </div>
             </div>
@@ -485,177 +356,46 @@ export default function AdminDashboard() {
 
           <Link
             href="/admin/service-requests"
-            style={{
-              textDecoration: "none",
-              display: "block",
-            }}
+            className="block no-underline"
           >
-            <div
-              style={{
-                padding: isMobile ? "1rem" : "1.5rem",
-                backgroundColor: "white",
-                borderRadius: "12px",
-                boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-                border: "1px solid #f3f4f6",
-                textAlign: "center",
-                cursor: "pointer",
-                transition: "all 0.2s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.boxShadow =
-                  "0 4px 12px rgba(0, 0, 0, 0.15)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow =
-                  "0 1px 3px rgba(0, 0, 0, 0.1)";
-              }}
-            >
-              <div
-                style={{
-                  fontSize: isMobile ? "2rem" : "2.5rem",
-                  fontWeight: "700",
-                  color: "#7a6990",
-                  marginBottom: "0.5rem",
-                }}
-              >
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6 text-center cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
+              <div className="text-3xl lg:text-4xl font-bold text-indigo-600 mb-2">
                 {stats.pendingServiceRequests}
               </div>
-              <div
-                style={{
-                  color: "#6b7280",
-                  fontSize: isMobile ? "0.75rem" : "0.875rem",
-                  fontWeight: "500",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                }}
-              >
+              <div className="text-gray-600 text-sm lg:text-base font-medium uppercase tracking-wide">
                 Pending Requests
               </div>
             </div>
           </Link>
 
-          <div
-            style={{
-              padding: isMobile ? "1rem" : "1.5rem",
-              backgroundColor: "white",
-              borderRadius: "12px",
-              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-              border: "1px solid #f3f4f6",
-              textAlign: "center",
-            }}
-          >
-            <div
-              style={{
-                fontSize: isMobile ? "2rem" : "2.5rem",
-                fontWeight: "700",
-                color: "#7a6990",
-                marginBottom: "0.5rem",
-              }}
-            >
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6 text-center">
+            <div className="text-3xl lg:text-4xl font-bold text-indigo-600 mb-2">
               {formatCurrency(stats.monthlyRevenue)}
             </div>
-            <div
-              style={{
-                color: "#6b7280",
-                fontSize: isMobile ? "0.75rem" : "0.875rem",
-                fontWeight: "500",
-                textTransform: "uppercase",
-                letterSpacing: "0.05em",
-              }}
-            >
+            <div className="text-gray-600 text-sm lg:text-base font-medium uppercase tracking-wide">
               Monthly Revenue
             </div>
           </div>
         </div>
 
         {/* Export Section */}
-        <div
-          style={{
-            backgroundColor: "white",
-            borderRadius: "12px",
-            boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-            border: "1px solid #f3f4f6",
-            padding: isMobile ? "1.5rem" : "2rem",
-            marginBottom: "2rem",
-          }}
-        >
-          <h2
-            style={{
-              fontSize: isMobile ? "1.125rem" : "1.25rem",
-              color: "#1f2937",
-              fontWeight: "600",
-              margin: "0 0 1rem 0",
-            }}
-          >
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 lg:p-8">
+          <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mb-4">
             Export Data
           </h2>
-          <p
-            style={{
-              color: "#6b7280",
-              margin: "0 0 1.5rem 0",
-              fontSize: isMobile ? "0.8rem" : "0.875rem",
-            }}
-          >
-            Download your customer and invoice data for record keeping or
-            analysis
+          <p className="text-gray-600 mb-6 text-sm lg:text-base">
+            Download your customer and invoice data for record keeping or analysis
           </p>
-          <div
-            style={{
-              display: "flex",
-              gap: isMobile ? "0.75rem" : "1rem",
-              flexWrap: "wrap",
-              flexDirection: isMobile ? "column" : "row",
-            }}
-          >
+          <div className="flex flex-col sm:flex-row gap-3 lg:gap-4">
             <button
               onClick={exportCustomerList}
-              style={{
-                padding: isMobile ? "1rem 1.5rem" : "0.75rem 1.5rem",
-                backgroundColor: "#7a6990",
-                color: "white",
-                border: "none",
-                borderRadius: "8px",
-                fontSize: isMobile ? "1rem" : "0.875rem",
-                fontWeight: "500",
-                cursor: "pointer",
-                transition: "all 0.2s ease",
-                width: isMobile ? "100%" : "auto",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "#6b5b7a";
-                e.currentTarget.style.transform = "translateY(-1px)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "#7a6990";
-                e.currentTarget.style.transform = "translateY(0)";
-              }}
+              className="px-4 lg:px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white border-none rounded-lg text-sm lg:text-base font-medium cursor-pointer transition-all duration-200 hover:-translate-y-0.5 w-full sm:w-auto"
             >
               📊 Export Customer List (CSV)
             </button>
             <button
               onClick={exportInvoiceList}
-              style={{
-                padding: isMobile ? "1rem 1.5rem" : "0.75rem 1.5rem",
-                backgroundColor: "#7a6990",
-                color: "white",
-                border: "none",
-                borderRadius: "8px",
-                fontSize: isMobile ? "1rem" : "0.875rem",
-                fontWeight: "500",
-                cursor: "pointer",
-                transition: "all 0.2s ease",
-                width: isMobile ? "100%" : "auto",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "#6b5b7a";
-                e.currentTarget.style.transform = "translateY(-1px)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "#7a6990";
-                e.currentTarget.style.transform = "translateY(0)";
-              }}
+              className="px-4 lg:px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white border-none rounded-lg text-sm lg:text-base font-medium cursor-pointer transition-all duration-200 hover:-translate-y-0.5 w-full sm:w-auto"
             >
               📄 Export Invoice List (CSV)
             </button>
@@ -663,124 +403,44 @@ export default function AdminDashboard() {
         </div>
 
         {/* Recent Activity */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr",
-            gap: isMobile ? "1.5rem" : "2rem",
-          }}
-        >
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
           {/* Recent Invoices */}
-          <div
-            style={{
-              backgroundColor: "white",
-              borderRadius: "12px",
-              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-              border: "1px solid #f3f4f6",
-              overflow: "hidden",
-            }}
-          >
-            <div
-              style={{
-                padding: isMobile ? "1rem" : "1.5rem",
-                borderBottom: "1px solid #f3f4f6",
-                backgroundColor: "#f9fafb",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  flexDirection: isMobile ? "column" : "row",
-                  gap: isMobile ? "0.5rem" : "0",
-                }}
-              >
-                <h2
-                  style={{
-                    fontSize: isMobile ? "1.125rem" : "1.25rem",
-                    color: "#1f2937",
-                    fontWeight: "600",
-                    margin: 0,
-                  }}
-                >
+          <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="p-4 lg:p-6 border-b border-gray-200 bg-gray-50">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <h2 className="text-lg lg:text-xl font-semibold text-gray-900">
                   Recent Invoices
                 </h2>
                 <Link
                   href="/admin/invoices"
-                  style={{
-                    color: "#7a6990",
-                    textDecoration: "none",
-                    fontSize: isMobile ? "0.8rem" : "0.875rem",
-                    fontWeight: "500",
-                  }}
+                  className="text-indigo-600 hover:text-indigo-700 text-sm lg:text-base font-medium transition-colors"
                 >
                   View All →
                 </Link>
               </div>
             </div>
 
-            <div style={{ padding: "0" }}>
+            <div className="divide-y divide-gray-200">
               {invoices.slice(0, 4).map((invoice, index) => (
                 <div
                   key={invoice.id}
-                  style={{
-                    padding: isMobile ? "0.75rem 1rem" : "1rem 1.5rem",
-                    borderBottom:
-                      index < Math.min(4, invoices.length - 1)
-                        ? "1px solid #f3f4f6"
-                        : "none",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    flexDirection: isMobile ? "column" : "row",
-                    gap: isMobile ? "0.5rem" : "0",
-                    textAlign: isMobile ? "center" : "left",
-                  }}
+                  className="p-4 lg:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3"
                 >
-                  <div style={{ width: isMobile ? "100%" : "auto" }}>
-                    <div
-                      style={{
-                        fontSize: isMobile ? "0.8rem" : "0.875rem",
-                        fontWeight: "500",
-                        color: "#1f2937",
-                        marginBottom: "0.25rem",
-                      }}
-                    >
+                  <div className="flex-1">
+                    <div className="text-sm lg:text-base font-medium text-gray-900 mb-1">
                       {invoice.customerName}
                     </div>
-                    <div
-                      style={{
-                        fontSize: isMobile ? "0.7rem" : "0.75rem",
-                        color: "#6b7280",
-                      }}
-                    >
+                    <div className="text-xs lg:text-sm text-gray-500">
                       Invoice #{index + 1}
                     </div>
                   </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: isMobile ? "0.5rem" : "1rem",
-                      flexDirection: isMobile ? "column" : "row",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: isMobile ? "0.8rem" : "0.875rem",
-                        fontWeight: "600",
-                        color: "#1f2937",
-                      }}
-                    >
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="text-sm lg:text-base font-semibold text-gray-900">
                       {formatCurrency(invoice.total)}
                     </div>
                     <span
+                      className="px-2 py-1 rounded-full text-xs font-medium"
                       style={{
-                        padding: "0.25rem 0.75rem",
-                        borderRadius: "9999px",
-                        fontSize: isMobile ? "0.65rem" : "0.75rem",
-                        fontWeight: "500",
                         backgroundColor: getStatusColor(invoice.status).bg,
                         color: getStatusColor(invoice.status).text,
                         border: `1px solid ${getStatusColor(invoice.status).border}`,
@@ -795,82 +455,22 @@ export default function AdminDashboard() {
           </div>
 
           {/* Quick Actions */}
-          <div
-            style={{
-              backgroundColor: "white",
-              borderRadius: "12px",
-              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-              border: "1px solid #f3f4f6",
-              padding: isMobile ? "1rem" : "1.5rem",
-            }}
-          >
-            <h3
-              style={{
-                fontSize: isMobile ? "1rem" : "1.125rem",
-                color: "#1f2937",
-                fontWeight: "600",
-                margin: "0 0 1rem 0",
-                textAlign: isMobile ? "center" : "left",
-              }}
-            >
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6">
+            <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-4 text-center lg:text-left">
               Quick Actions
             </h3>
 
-            <div
-              style={{
-                display: "grid",
-                gap: isMobile ? "1rem" : "0.75rem",
-              }}
-            >
+            <div className="space-y-3 lg:space-y-4">
               <Link
                 href="/admin/invoices/new"
-                style={{
-                  display: "block",
-                  padding: isMobile ? "1rem" : "0.75rem 1rem",
-                  backgroundColor: "#7a6990",
-                  color: "white",
-                  textDecoration: "none",
-                  borderRadius: "8px",
-                  fontSize: isMobile ? "1rem" : "0.875rem",
-                  fontWeight: "500",
-                  textAlign: "center",
-                  transition: "all 0.2s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#6b5b7a";
-                  e.currentTarget.style.transform = "translateY(-1px)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#7a6990";
-                  e.currentTarget.style.transform = "translateY(0)";
-                }}
+                className="block p-3 lg:p-4 bg-indigo-600 hover:bg-indigo-700 text-white text-center rounded-lg text-sm lg:text-base font-medium transition-all duration-200 hover:-translate-y-0.5"
               >
                 Create Invoice
               </Link>
 
               <Link
                 href="/admin/customers/new"
-                style={{
-                  display: "block",
-                  padding: isMobile ? "1rem" : "0.75rem 1rem",
-                  backgroundColor: "transparent",
-                  color: "#7a6990",
-                  textDecoration: "none",
-                  borderRadius: "8px",
-                  fontSize: isMobile ? "1rem" : "0.875rem",
-                  fontWeight: "500",
-                  textAlign: "center",
-                  border: "1px solid #7a6990",
-                  transition: "all 0.2s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#7a6990";
-                  e.currentTarget.style.color = "white";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "transparent";
-                  e.currentTarget.style.color = "#7a6990";
-                }}
+                className="block p-3 lg:p-4 bg-transparent hover:bg-indigo-600 text-indigo-600 hover:text-white text-center rounded-lg text-sm lg:text-base font-medium border border-indigo-600 transition-all duration-200 hover:-translate-y-0.5"
               >
                 Add Customer
               </Link>
@@ -878,6 +478,5 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
-    </div>
-  );
-}
+    );
+  }

@@ -1,7 +1,9 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
+import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "./prisma";
+import bcrypt from "bcryptjs";
 
 // Test database connection
 async function testDatabaseConnection() {
@@ -76,6 +78,43 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           response_type: "code",
         },
       },
+    }),
+    Credentials({
+      name: "credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" }
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          return null;
+        }
+
+        try {
+          // For now, we'll use a simple hardcoded admin account
+          // In production, you'd want to store this in the database
+          const adminEmail = "admin@serenespaces.com";
+          const adminPassword = "admin123"; // In production, use environment variable
+          
+          if (credentials.email === adminEmail) {
+            // For demo purposes, we'll accept the password directly
+            // In production, you'd hash the password and compare
+            if (credentials.password === adminPassword) {
+              return {
+                id: "admin",
+                email: adminEmail,
+                name: "Admin User",
+                image: null,
+              };
+            }
+          }
+          
+          return null;
+        } catch (error) {
+          console.error("Authorization error:", error);
+          return null;
+        }
+      }
     }),
   ],
   callbacks: {

@@ -19,6 +19,7 @@
     "@stripe/stripe-js": "^7.8.0",
     "@types/nodemailer": "^7.0.1",
     "@vercel/postgres": "^0.10.0",
+    "bcryptjs": "^3.0.2",
     "googleapis": "^156.0.0",
     "next": "15.4.6",
     "next-auth": "^5.0.0-beta.29",
@@ -33,6 +34,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@next/bundle-analyzer": "^15.5.3",
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.19.11",
     "@types/react": "^19",
     "@types/react-dom": "^19",
