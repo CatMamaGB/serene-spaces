@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
-    "postinstall": "prisma generate",
-    "build:full": "prisma generate && next build",
+    "build": "npx prisma generate && next build",
+    "postinstall": "npx prisma generate",
+    "build:full": "npx prisma generate && next build",
     "build:analyze": "ANALYZE=true npm run build",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
