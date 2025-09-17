@@ -150,7 +150,7 @@ export default function AdminLayout({
             </a>
 
             <div className="text-center">
-              <a
+              <Link
                 href="/"
                 className="inline-flex items-center font-medium text-indigo-600 hover:text-indigo-500 transition-colors"
               >
@@ -168,7 +168,7 @@ export default function AdminLayout({
                   />
                 </svg>
                 Back to Home
-              </a>
+              </Link>
             </div>
           </div>
         </div>

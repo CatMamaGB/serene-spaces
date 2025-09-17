@@ -68,7 +68,6 @@ export default function AdminDashboard() {
   const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
 
   // Mock data - in a real app, this would come from APIs
   const mockCustomers: Customer[] = useMemo(

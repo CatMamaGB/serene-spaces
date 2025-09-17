@@ -1,15 +1,10 @@
 "use client";
 
-import { signIn, getProviders } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import Link from "next/link";
 
 function SignInContent() {
-  const [providers, setProviders] = useState<Record<
-    string,
-    { id: string; name: string }
-  > | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [email, setEmail] = useState("");
@@ -20,11 +15,6 @@ function SignInContent() {
   const callbackUrl = searchParams.get("callbackUrl") || "/admin";
 
   useEffect(() => {
-    const loadProviders = async () => {
-      const providers = await getProviders();
-      setProviders(providers);
-    };
-    loadProviders();
 
     // Hide navigation and override body styles
     const nav = document.querySelector('nav') as HTMLElement;
@@ -75,7 +65,7 @@ function SignInContent() {
       } else if (result?.ok) {
         window.location.href = callbackUrl;
       }
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
@@ -88,7 +78,7 @@ function SignInContent() {
 
     try {
       await signIn("google", { callbackUrl });
-    } catch (err) {
+    } catch {
       setError("Google sign in failed. Please try again.");
       setIsLoading(false);
     }
@@ -567,7 +557,7 @@ function SignInContent() {
                     <li style={{ marginBottom: '4px' }}>• Use your admin email and password to sign in</li>
                     <li style={{ marginBottom: '4px' }}>• Or sign in with your Google account</li>
                     <li style={{ marginBottom: '4px' }}>• Make sure you have admin access permissions</li>
-                    <li style={{ marginBottom: '4px' }}>• If you're having trouble, try clearing your browser cache</li>
+                    <li style={{ marginBottom: '4px' }}>• If you&apos;re having trouble, try clearing your browser cache</li>
                     <li>• Contact support if issues persist</li>
                   </ul>
                 </div>
