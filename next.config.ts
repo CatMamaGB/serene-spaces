@@ -29,7 +29,7 @@ const nextConfig: NextConfig = {
   // Static optimization
   trailingSlash: false,
   poweredByHeader: false,
-  // Optimize bundle size for Edge Functions
+  // Prisma optimization for Vercel serverless
   webpack: (config, { isServer }) => {
     if (isServer) {
       // Externalize Prisma client for serverless
@@ -46,26 +46,6 @@ const nextConfig: NextConfig = {
         tls: false,
       };
     }
-    
-    // Optimize bundle size
-    config.optimization = config.optimization || {};
-    config.optimization.splitChunks = {
-      chunks: 'all',
-      cacheGroups: {
-        default: {
-          minChunks: 2,
-          priority: -20,
-          reuseExistingChunk: true,
-        },
-        vendor: {
-          test: /[\\/]node_modules[\\/]/,
-          name: 'vendors',
-          priority: -10,
-          chunks: 'all',
-        },
-      },
-    };
-    
     return config;
   },
 };
