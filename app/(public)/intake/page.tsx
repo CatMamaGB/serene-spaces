@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Footer from "../../components/Footer";
+import Footer from "../../../components/Footer";
+import { useToast } from "@/components/ToastProvider";
 
 export default function IntakePage() {
   const [formData, setFormData] = useState({
@@ -42,6 +43,7 @@ export default function IntakePage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const toast = useToast();
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -87,7 +89,10 @@ export default function IntakePage() {
       setSubmitSuccess(true);
     } catch (error) {
       console.error("Error submitting form:", error);
-      alert("Failed to submit form. Please try again.");
+      toast.error(
+        "Submission Failed",
+        "Failed to submit form. Please try again.",
+      );
     } finally {
       setIsSubmitting(false);
     }

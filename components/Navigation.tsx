@@ -5,17 +5,6 @@ import Link from "next/link";
 
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -25,375 +14,136 @@ export default function Navigation() {
     setIsMenuOpen(false);
   };
 
-  return (
-    <nav
-      style={{
-        backgroundColor: "white",
-        padding: "16px 24px",
-        borderBottom: "1px solid #e5e7eb",
-        marginBottom: "0",
-        boxShadow:
-          "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-        position: "sticky",
-        top: 0,
-        zIndex: 1000,
-      }}
-    >
-      <div
-        style={{
-          maxWidth: "1200px",
-          margin: "0 auto",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        {/* Brand Logo */}
-        <Link
-          href="/"
-          style={{
-            color: "#7a6990",
-            textDecoration: "none",
-            fontSize: "1.75rem",
-            fontWeight: "800",
-            letterSpacing: "-0.025em",
-          }}
-          onClick={closeMenu}
-        >
-          Serene Spaces
-        </Link>
+  // Close menu when clicking outside
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
 
-        {/* Desktop Navigation */}
-        {!isMobile && (
-          <div
-            style={{
-              display: "flex",
-              gap: "8px",
-              alignItems: "center",
-            }}
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isMenuOpen]);
+
+  return (
+    <nav className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
+      <div className="container-responsive">
+        <div className="flex justify-between items-center h-16">
+          {/* Brand Logo */}
+          <Link
+            href="/"
+            className="text-primary text-xl sm:text-2xl font-bold tracking-tight hover:text-primary-dark transition-colors"
+            onClick={closeMenu}
           >
+            Serene Spaces
+          </Link>
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-1">
             <Link
               href="/"
-              style={{
-                color: "#374151",
-                textDecoration: "none",
-                padding: "12px 16px",
-                borderRadius: "8px",
-                fontWeight: "500",
-                transition: "all 0.2s ease",
-                border: "1px solid transparent",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "#f3f4f6";
-                e.currentTarget.style.color = "#7a6990";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "transparent";
-                e.currentTarget.style.color = "#374151";
-              }}
+              className="px-4 py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded-lg font-medium transition-all duration-200"
             >
               Home
             </Link>
-
             <Link
               href="/about"
-              style={{
-                color: "#374151",
-                textDecoration: "none",
-                padding: "12px 16px",
-                borderRadius: "8px",
-                fontWeight: "500",
-                transition: "all 0.2s ease",
-                border: "1px solid transparent",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "#f3f4f6";
-                e.currentTarget.style.color = "#7a6990";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "transparent";
-                e.currentTarget.style.color = "#374151";
-              }}
+              className="px-4 py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded-lg font-medium transition-all duration-200"
             >
               About Us
             </Link>
             <Link
               href="/pricing"
-              style={{
-                color: "#374151",
-                textDecoration: "none",
-                padding: "12px 16px",
-                borderRadius: "8px",
-                fontWeight: "500",
-                transition: "all 0.2s ease",
-                border: "1px solid transparent",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "#f3f4f6";
-                e.currentTarget.style.color = "#7a6990";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "transparent";
-                e.currentTarget.style.color = "#374151";
-              }}
+              className="px-4 py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded-lg font-medium transition-all duration-200"
             >
               Pricing
             </Link>
             <Link
               href="/intake"
-              style={{
-                color: "#374151",
-                textDecoration: "none",
-                padding: "12px 16px",
-                borderRadius: "8px",
-                fontWeight: "500",
-                transition: "all 0.2s ease",
-                border: "1px solid transparent",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "#f3f4f6";
-                e.currentTarget.style.color = "#7a6990";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "transparent";
-                e.currentTarget.style.color = "#374151";
-              }}
+              className="px-4 py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded-lg font-medium transition-all duration-200"
             >
               Book a Pickup
             </Link>
             <Link
               href="/contact"
-              style={{
-                color: "#374151",
-                textDecoration: "none",
-                padding: "12px 16px",
-                borderRadius: "8px",
-                fontWeight: "500",
-                transition: "all 0.2s ease",
-                border: "1px solid transparent",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "#f3f4f6";
-                e.currentTarget.style.color = "#7a6990";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "transparent";
-                e.currentTarget.style.color = "#374151";
-              }}
+              className="px-4 py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded-lg font-medium transition-all duration-200"
             >
               Contact
             </Link>
           </div>
-        )}
 
-        {/* Mobile Menu Button */}
-        {isMobile && (
+          {/* Mobile Menu Button */}
           <button
             onClick={toggleMenu}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-around",
-              width: "30px",
-              height: "30px",
-              background: "transparent",
-              border: "none",
-              cursor: "pointer",
-              padding: "0",
-              zIndex: 1001,
-            }}
+            className="md:hidden flex flex-col justify-center items-center w-8 h-8 space-y-1 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
             aria-label="Toggle menu"
+            aria-expanded={isMenuOpen}
           >
             <span
-              style={{
-                width: "30px",
-                height: "3px",
-                backgroundColor: isMenuOpen ? "#7a6990" : "#374151",
-                borderRadius: "2px",
-                transition: "all 0.3s ease",
-                transform: isMenuOpen
-                  ? "rotate(45deg) translate(5px, 5px)"
-                  : "none",
-              }}
+              className={`w-6 h-0.5 bg-gray-700 transition-all duration-300 ${
+                isMenuOpen ? "rotate-45 translate-y-1.5" : ""
+              }`}
             />
             <span
-              style={{
-                width: "30px",
-                height: "3px",
-                backgroundColor: isMenuOpen ? "transparent" : "#374151",
-                borderRadius: "2px",
-                transition: "all 0.3s ease",
-                opacity: isMenuOpen ? 0 : 1,
-              }}
+              className={`w-6 h-0.5 bg-gray-700 transition-all duration-300 ${
+                isMenuOpen ? "opacity-0" : ""
+              }`}
             />
             <span
-              style={{
-                width: "30px",
-                height: "3px",
-                backgroundColor: isMenuOpen ? "#7a6990" : "#374151",
-                borderRadius: "2px",
-                transition: "all 0.3s ease",
-                transform: isMenuOpen
-                  ? "rotate(-45deg) translate(7px, -6px)"
-                  : "none",
-              }}
+              className={`w-6 h-0.5 bg-gray-700 transition-all duration-300 ${
+                isMenuOpen ? "-rotate-45 -translate-y-1.5" : ""
+              }`}
             />
           </button>
-        )}
+        </div>
       </div>
 
       {/* Mobile Navigation Menu */}
-      {isMenuOpen && isMobile && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            zIndex: 999,
-          }}
-          onClick={closeMenu}
-        >
+      {isMenuOpen && (
+        <div className="md:hidden">
+          {/* Backdrop */}
           <div
-            style={{
-              position: "absolute",
-              top: "80px",
-              left: "0",
-              right: "0",
-              backgroundColor: "white",
-              padding: "24px",
-              boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
-              borderTop: "1px solid #e5e7eb",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "16px",
-              }}
-            >
+            className="fixed inset-0 bg-black bg-opacity-50 z-40"
+            onClick={closeMenu}
+          />
+
+          {/* Menu Panel */}
+          <div className="fixed top-16 left-0 right-0 bg-white border-b border-gray-200 shadow-lg z-50">
+            <div className="px-4 py-6 space-y-2">
               <Link
                 href="/"
-                style={{
-                  color: "#374151",
-                  textDecoration: "none",
-                  padding: "16px",
-                  borderRadius: "8px",
-                  fontWeight: "500",
-                  fontSize: "1.1rem",
-                  border: "1px solid #e5e7eb",
-                  transition: "all 0.2s ease",
-                }}
+                className="block px-4 py-3 text-gray-700 hover:text-primary hover:bg-gray-50 rounded-lg font-medium transition-all duration-200"
                 onClick={closeMenu}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#f3f4f6";
-                  e.currentTarget.style.borderColor = "#7a6990";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "transparent";
-                  e.currentTarget.style.borderColor = "#e5e7eb";
-                }}
               >
                 Home
               </Link>
-
               <Link
                 href="/about"
-                style={{
-                  color: "#374151",
-                  textDecoration: "none",
-                  padding: "16px",
-                  borderRadius: "8px",
-                  fontWeight: "500",
-                  fontSize: "1.1rem",
-                  border: "1px solid #e5e7eb",
-                  transition: "all 0.2s ease",
-                }}
+                className="block px-4 py-3 text-gray-700 hover:text-primary hover:bg-gray-50 rounded-lg font-medium transition-all duration-200"
                 onClick={closeMenu}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#f3f4f6";
-                  e.currentTarget.style.borderColor = "#7a6990";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "transparent";
-                  e.currentTarget.style.borderColor = "#e5e7eb";
-                }}
               >
                 About Us
               </Link>
               <Link
                 href="/pricing"
-                style={{
-                  color: "#374151",
-                  textDecoration: "none",
-                  padding: "16px",
-                  borderRadius: "8px",
-                  fontWeight: "500",
-                  fontSize: "1.1rem",
-                  border: "1px solid #e5e7eb",
-                  transition: "all 0.2s ease",
-                }}
+                className="block px-4 py-3 text-gray-700 hover:text-primary hover:bg-gray-50 rounded-lg font-medium transition-all duration-200"
                 onClick={closeMenu}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#f3f4f6";
-                  e.currentTarget.style.borderColor = "#7a6990";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "transparent";
-                  e.currentTarget.style.borderColor = "#e5e7eb";
-                }}
               >
                 Pricing
               </Link>
               <Link
                 href="/intake"
-                style={{
-                  color: "#374151",
-                  textDecoration: "none",
-                  padding: "16px",
-                  borderRadius: "8px",
-                  fontWeight: "500",
-                  fontSize: "1.1rem",
-                  border: "1px solid #e5e7eb",
-                  transition: "all 0.2s ease",
-                }}
+                className="block px-4 py-3 text-gray-700 hover:text-primary hover:bg-gray-50 rounded-lg font-medium transition-all duration-200"
                 onClick={closeMenu}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#f3f4f6";
-                  e.currentTarget.style.borderColor = "#7a6990";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "transparent";
-                  e.currentTarget.style.borderColor = "#e5e7eb";
-                }}
               >
                 Book a Pickup
               </Link>
               <Link
                 href="/contact"
-                style={{
-                  color: "#374151",
-                  textDecoration: "none",
-                  padding: "16px",
-                  borderRadius: "8px",
-                  fontWeight: "500",
-                  fontSize: "1.1rem",
-                  border: "1px solid #e5e7eb",
-                  transition: "all 0.2s ease",
-                }}
+                className="block px-4 py-3 text-gray-700 hover:text-primary hover:bg-gray-50 rounded-lg font-medium transition-all duration-200"
                 onClick={closeMenu}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#f3f4f6";
-                  e.currentTarget.style.borderColor = "#7a6990";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "transparent";
-                  e.currentTarget.style.borderColor = "#e5e7eb";
-                }}
               >
                 Contact
               </Link>

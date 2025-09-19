@@ -3,29 +3,30 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-
-interface Customer {
-  id: string;
-  name: string;
-  email: string | null;
-  phone: string | null;
-  address: string | null;
-  addressLine1: string | null;
-  addressLine2: string | null;
-  city: string | null;
-  state: string | null;
-  postalCode: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+import { useIsMobile, useCustomer } from "@/lib/hooks";
+import {
+  InputField,
+  LoadingButton,
+  LoadingState,
+  ErrorState,
+} from "@/components/shared";
+import {
+  cleanFormData,
+  isValidEmail,
+  isValidZipCode,
+  toNull,
+  safeJson,
+} from "@/lib/utils";
+import { useToast } from "@/components/ToastProvider";
 
 export default function EditCustomer() {
   const params = useParams();
   const router = useRouter();
-  const [customer, setCustomer] = useState<Customer | null>(null);
-  const [loading, setLoading] = useState(true);
+  const isMobile = useIsMobile();
+  const { customer, loading, error } = useCustomer(params.id as string);
+  const toast = useToast();
+
   const [saving, setSaving] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -38,49 +39,22 @@ export default function EditCustomer() {
     postalCode: "",
   });
 
+  // Update form data when customer is loaded
   useEffect(() => {
-    // Check if mobile
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-
-    // Fetch customer data
-    const fetchCustomer = async () => {
-      try {
-        const response = await fetch(`/api/customers/${params.id}`);
-        if (response.ok) {
-          const customerData = await response.json();
-          setCustomer(customerData);
-          setFormData({
-            name: customerData.name || "",
-            email: customerData.email || "",
-            phone: customerData.phone || "",
-            address: customerData.address || "",
-            addressLine1: customerData.addressLine1 || "",
-            addressLine2: customerData.addressLine2 || "",
-            city: customerData.city || "",
-            state: customerData.state || "",
-            postalCode: customerData.postalCode || "",
-          });
-        } else {
-          console.error("Failed to fetch customer:", response.status);
-          alert("Failed to load customer data");
-        }
-      } catch (error) {
-        console.error("Error fetching customer:", error);
-        alert("Error loading customer data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCustomer();
-
-    return () => window.removeEventListener("resize", checkMobile);
-  }, [params.id]);
+    if (customer) {
+      setFormData({
+        name: customer.name || "",
+        email: customer.email || "",
+        phone: customer.phone || "",
+        address: customer.address || "",
+        addressLine1: customer.addressLine1 || "",
+        addressLine2: customer.addressLine2 || "",
+        city: customer.city || "",
+        state: customer.state || "",
+        postalCode: customer.postalCode || "",
+      });
+    }
+  }, [customer]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -95,162 +69,118 @@ export default function EditCustomer() {
 
     if (!customer) return;
 
-    if (!formData.name.trim()) {
-      alert("Customer name is required");
-      return;
-    }
-
     setSaving(true);
 
     try {
+      // Clean and validate form data
+      const cleaned = cleanFormData(formData);
+
+      // Basic validation
+      if (!cleaned.name.trim()) {
+        toast.error("Validation Error", "Customer name is required");
+        setSaving(false);
+        return;
+      }
+
+      if (cleaned.email && !isValidEmail(cleaned.email)) {
+        toast.error("Validation Error", "Please enter a valid email address");
+        setSaving(false);
+        return;
+      }
+
+      if (cleaned.postalCode && !isValidZipCode(cleaned.postalCode)) {
+        toast.error(
+          "Validation Error",
+          "Please enter a valid ZIP code (e.g., 60014 or 60014-1234)",
+        );
+        setSaving(false);
+        return;
+      }
+
+      // Prepare payload with null conversion for optional fields
+      const payload = {
+        ...cleaned,
+        email: toNull(cleaned.email),
+        phone: toNull(cleaned.phone),
+        address: toNull(cleaned.address),
+        addressLine2: toNull(cleaned.addressLine2),
+        city: toNull(cleaned.city),
+        state: toNull(cleaned.state),
+        postalCode: toNull(cleaned.postalCode),
+      };
+
       const response = await fetch(`/api/customers/${customer.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
+      const result = await safeJson(response);
+
       if (response.ok) {
-        alert("Customer updated successfully!");
+        toast.success(
+          "Customer Updated",
+          "Customer information has been updated successfully!",
+        );
         router.push(`/admin/customers/${customer.id}`);
       } else {
-        const error = await response.json();
-        alert(`Failed to update customer: ${error.error || "Unknown error"}`);
+        toast.error(
+          "Update Failed",
+          result.error || "Unknown error occurred while updating customer",
+        );
       }
     } catch (error) {
       console.error("Error updating customer:", error);
-      alert("Failed to update customer. Please try again.");
+      toast.error(
+        "Update Failed",
+        "Failed to update customer. Please try again.",
+      );
     } finally {
       setSaving(false);
     }
   };
 
   if (loading) {
-    return (
-      <div
-        style={{
-          padding: isMobile ? "16px" : "24px",
-          backgroundColor: "#f5f5f5",
-          minHeight: "100vh",
-        }}
-      >
-        <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-          <div
-            style={{ textAlign: "center", padding: isMobile ? "40px" : "60px" }}
-          >
-            <div
-              style={{ fontSize: isMobile ? "1rem" : "1.2rem", color: "#666" }}
-            >
-              Loading customer...
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingState message="Loading customer..." isMobile={isMobile} />;
+  }
+
+  if (error) {
+    return <ErrorState message={error} isMobile={isMobile} />;
   }
 
   if (!customer) {
     return (
-      <div
-        style={{
-          padding: isMobile ? "16px" : "24px",
-          backgroundColor: "#f5f5f5",
-          minHeight: "100vh",
-        }}
-      >
-        <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-          <div
-            style={{ textAlign: "center", padding: isMobile ? "40px" : "60px" }}
-          >
-            <div
-              style={{ fontSize: isMobile ? "1rem" : "1.2rem", color: "#666" }}
-            >
-              Customer not found
-            </div>
-            <Link
-              href="/admin/customers"
-              style={{
-                display: "inline-block",
-                marginTop: "20px",
-                padding: "12px 24px",
-                backgroundColor: "#7a6990",
-                color: "white",
-                textDecoration: "none",
-                borderRadius: "8px",
-                fontSize: "1rem",
-                fontWeight: "600",
-              }}
-            >
-              Back to Customers
-            </Link>
-          </div>
-        </div>
-      </div>
+      <ErrorState
+        message="Customer not found"
+        isMobile={isMobile}
+        onRetry={() => window.location.reload()}
+      />
     );
   }
 
   return (
-    <div
-      style={{
-        padding: isMobile ? "16px" : "24px",
-        backgroundColor: "#f5f5f5",
-        minHeight: "100vh",
-      }}
-    >
-      <div style={{ maxWidth: "800px", margin: "0 auto" }}>
+    <div className={`${isMobile ? "p-4" : "p-6"} bg-gray-50 min-h-screen`}>
+      <div className="max-w-4xl mx-auto">
         {/* Page Header */}
         <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "32px",
-            flexDirection: isMobile ? "column" : "row",
-            gap: isMobile ? "1rem" : "0",
-          }}
+          className={`flex justify-between items-center mb-8 ${isMobile ? "flex-col gap-4" : "flex-row"}`}
         >
-          <div style={{ textAlign: isMobile ? "center" : "left" }}>
+          <div className={isMobile ? "text-center" : "text-left"}>
             <h1
-              style={{
-                fontSize: isMobile ? "1.5rem" : "2rem",
-                margin: "0",
-                color: "#1a1a1a",
-              }}
+              className={`${isMobile ? "text-2xl" : "text-3xl"} font-bold text-gray-900`}
             >
               Edit Customer
             </h1>
-            <p
-              style={{
-                color: "#666",
-                margin: "8px 0 0 0",
-                fontSize: isMobile ? "0.9rem" : "1rem",
-              }}
-            >
+            <p className="text-gray-600 mt-2 text-sm lg:text-base">
               {customer.name}
             </p>
           </div>
-          <div
-            style={{
-              display: "flex",
-              gap: "12px",
-              flexDirection: isMobile ? "column" : "row",
-            }}
-          >
+          <div className={`flex gap-3 ${isMobile ? "flex-col" : "flex-row"}`}>
             <Link
               href={`/admin/customers/${customer.id}`}
-              style={{
-                padding: isMobile ? "12px 20px" : "10px 20px",
-                backgroundColor: "transparent",
-                color: "#666",
-                textDecoration: "none",
-                borderRadius: "8px",
-                fontSize: isMobile ? "0.9rem" : "0.875rem",
-                fontWeight: "600",
-                border: "2px solid #666",
-                textAlign: "center",
-                width: isMobile ? "100%" : "auto",
-              }}
+              className={`px-5 py-3 bg-transparent text-gray-600 border-2 border-gray-600 rounded-lg font-semibold hover:bg-gray-50 transition-colors ${isMobile ? "w-full text-center" : "w-auto"}`}
             >
               Cancel
             </Link>
@@ -259,402 +189,128 @@ export default function EditCustomer() {
 
         {/* Edit Form */}
         <form onSubmit={handleSubmit}>
-          <div
-            style={{
-              backgroundColor: "white",
-              borderRadius: "16px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-              border: "1px solid #e9ecef",
-              overflow: "hidden",
-              marginBottom: "24px",
-            }}
-          >
+          {/* Contact Information Section */}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden mb-6">
             <div
-              style={{
-                padding: isMobile ? "16px" : "24px",
-                borderBottom: "1px solid #e9ecef",
-                backgroundColor: "#f8f9fa",
-              }}
+              className={`${isMobile ? "p-4" : "p-6"} border-b border-gray-200 bg-gray-50`}
             >
               <h2
-                style={{
-                  fontSize: isMobile ? "1.25rem" : "1.5rem",
-                  margin: "0",
-                  color: "#1a1a1a",
-                }}
+                className={`${isMobile ? "text-xl" : "text-2xl"} font-semibold text-gray-900`}
               >
                 Contact Information
               </h2>
             </div>
 
-            <div style={{ padding: isMobile ? "16px" : "24px" }}>
+            <div className={`${isMobile ? "p-4" : "p-6"}`}>
               <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-                  gap: "24px",
-                }}
+                className={`grid ${isMobile ? "grid-cols-1" : "grid-cols-2"} gap-6`}
               >
-                <div>
-                  <label
-                    htmlFor="name"
-                    style={{
-                      display: "block",
-                      marginBottom: "8px",
-                      fontWeight: "600",
-                      color: "#333",
-                      fontSize: "0.875rem",
-                    }}
-                  >
-                    Full Name *
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    required
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      border: "1px solid #d1d5db",
-                      borderRadius: "8px",
-                      fontSize: "1rem",
-                      color: "#1a1a1a",
-                      backgroundColor: "white",
-                    }}
-                    placeholder="Enter customer name"
-                  />
-                </div>
+                <InputField
+                  label="Full Name *"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder="Enter customer name"
+                  required
+                />
 
-                <div>
-                  <label
-                    htmlFor="email"
-                    style={{
-                      display: "block",
-                      marginBottom: "8px",
-                      fontWeight: "600",
-                      color: "#333",
-                      fontSize: "0.875rem",
-                    }}
-                  >
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      border: "1px solid #d1d5db",
-                      borderRadius: "8px",
-                      fontSize: "1rem",
-                      color: "#1a1a1a",
-                      backgroundColor: "white",
-                    }}
-                    placeholder="Enter email address"
-                  />
-                </div>
+                <InputField
+                  label="Email Address"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  placeholder="Enter email address"
+                />
 
-                <div>
-                  <label
-                    htmlFor="phone"
-                    style={{
-                      display: "block",
-                      marginBottom: "8px",
-                      fontWeight: "600",
-                      color: "#333",
-                      fontSize: "0.875rem",
-                    }}
-                  >
-                    Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      border: "1px solid #d1d5db",
-                      borderRadius: "8px",
-                      fontSize: "1rem",
-                      color: "#1a1a1a",
-                      backgroundColor: "white",
-                    }}
-                    placeholder="Enter phone number"
-                  />
-                </div>
+                <InputField
+                  label="Phone Number"
+                  name="phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  placeholder="Enter phone number"
+                />
 
-                <div>
-                  <label
-                    htmlFor="address"
-                    style={{
-                      display: "block",
-                      marginBottom: "8px",
-                      fontWeight: "600",
-                      color: "#333",
-                      fontSize: "0.875rem",
-                    }}
-                  >
-                    Address (Legacy)
-                  </label>
-                  <input
-                    type="text"
-                    id="address"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      border: "1px solid #d1d5db",
-                      borderRadius: "8px",
-                      fontSize: "1rem",
-                      color: "#1a1a1a",
-                      backgroundColor: "white",
-                    }}
-                    placeholder="Enter full address"
-                  />
-                </div>
+                <InputField
+                  label="Address (Legacy)"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleInputChange}
+                  placeholder="Enter full address"
+                />
               </div>
             </div>
           </div>
 
-          {/* Address Details */}
-          <div
-            style={{
-              backgroundColor: "white",
-              borderRadius: "16px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-              border: "1px solid #e9ecef",
-              overflow: "hidden",
-              marginBottom: "24px",
-            }}
-          >
+          {/* Address Details Section */}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden mb-6">
             <div
-              style={{
-                padding: isMobile ? "16px" : "24px",
-                borderBottom: "1px solid #e9ecef",
-                backgroundColor: "#f8f9fa",
-              }}
+              className={`${isMobile ? "p-4" : "p-6"} border-b border-gray-200 bg-gray-50`}
             >
               <h2
-                style={{
-                  fontSize: isMobile ? "1.25rem" : "1.5rem",
-                  margin: "0",
-                  color: "#1a1a1a",
-                }}
+                className={`${isMobile ? "text-xl" : "text-2xl"} font-semibold text-gray-900`}
               >
                 Address Details
               </h2>
             </div>
 
-            <div style={{ padding: isMobile ? "16px" : "24px" }}>
+            <div className={`${isMobile ? "p-4" : "p-6"}`}>
               <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-                  gap: "24px",
-                }}
+                className={`grid ${isMobile ? "grid-cols-1" : "grid-cols-2"} gap-6`}
               >
-                <div>
-                  <label
-                    htmlFor="addressLine1"
-                    style={{
-                      display: "block",
-                      marginBottom: "8px",
-                      fontWeight: "600",
-                      color: "#333",
-                      fontSize: "0.875rem",
-                    }}
-                  >
-                    Address Line 1
-                  </label>
-                  <input
-                    type="text"
-                    id="addressLine1"
-                    name="addressLine1"
-                    value={formData.addressLine1}
-                    onChange={handleInputChange}
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      border: "1px solid #d1d5db",
-                      borderRadius: "8px",
-                      fontSize: "1rem",
-                      color: "#1a1a1a",
-                      backgroundColor: "white",
-                    }}
-                    placeholder="Street address, P.O. box, etc."
-                  />
-                </div>
+                <InputField
+                  label="Address Line 1"
+                  name="addressLine1"
+                  value={formData.addressLine1}
+                  onChange={handleInputChange}
+                  placeholder="Street address, P.O. box, etc."
+                />
 
-                <div>
-                  <label
-                    htmlFor="addressLine2"
-                    style={{
-                      display: "block",
-                      marginBottom: "8px",
-                      fontWeight: "600",
-                      color: "#333",
-                      fontSize: "0.875rem",
-                    }}
-                  >
-                    Address Line 2
-                  </label>
-                  <input
-                    type="text"
-                    id="addressLine2"
-                    name="addressLine2"
-                    value={formData.addressLine2}
-                    onChange={handleInputChange}
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      border: "1px solid #d1d5db",
-                      borderRadius: "8px",
-                      fontSize: "1rem",
-                      color: "#1a1a1a",
-                      backgroundColor: "white",
-                    }}
-                    placeholder="Apartment, suite, unit, etc."
-                  />
-                </div>
+                <InputField
+                  label="Address Line 2"
+                  name="addressLine2"
+                  value={formData.addressLine2}
+                  onChange={handleInputChange}
+                  placeholder="Apartment, suite, unit, etc."
+                />
 
-                <div>
-                  <label
-                    htmlFor="city"
-                    style={{
-                      display: "block",
-                      marginBottom: "8px",
-                      fontWeight: "600",
-                      color: "#333",
-                      fontSize: "0.875rem",
-                    }}
-                  >
-                    City
-                  </label>
-                  <input
-                    type="text"
-                    id="city"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleInputChange}
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      border: "1px solid #d1d5db",
-                      borderRadius: "8px",
-                      fontSize: "1rem",
-                      color: "#1a1a1a",
-                      backgroundColor: "white",
-                    }}
-                    placeholder="Enter city"
-                  />
-                </div>
+                <InputField
+                  label="City"
+                  name="city"
+                  value={formData.city}
+                  onChange={handleInputChange}
+                  placeholder="Enter city"
+                />
 
-                <div>
-                  <label
-                    htmlFor="state"
-                    style={{
-                      display: "block",
-                      marginBottom: "8px",
-                      fontWeight: "600",
-                      color: "#333",
-                      fontSize: "0.875rem",
-                    }}
-                  >
-                    State/Province
-                  </label>
-                  <input
-                    type="text"
-                    id="state"
-                    name="state"
-                    value={formData.state}
-                    onChange={handleInputChange}
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      border: "1px solid #d1d5db",
-                      borderRadius: "8px",
-                      fontSize: "1rem",
-                      color: "#1a1a1a",
-                      backgroundColor: "white",
-                    }}
-                    placeholder="Enter state or province"
-                  />
-                </div>
+                <InputField
+                  label="State/Province"
+                  name="state"
+                  value={formData.state}
+                  onChange={handleInputChange}
+                  placeholder="Enter state or province"
+                />
 
-                <div>
-                  <label
-                    htmlFor="postalCode"
-                    style={{
-                      display: "block",
-                      marginBottom: "8px",
-                      fontWeight: "600",
-                      color: "#333",
-                      fontSize: "0.875rem",
-                    }}
-                  >
-                    Postal Code
-                  </label>
-                  <input
-                    type="text"
-                    id="postalCode"
-                    name="postalCode"
-                    value={formData.postalCode}
-                    onChange={handleInputChange}
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      border: "1px solid #d1d5db",
-                      borderRadius: "8px",
-                      fontSize: "1rem",
-                      color: "#1a1a1a",
-                      backgroundColor: "white",
-                    }}
-                    placeholder="Enter postal code"
-                  />
-                </div>
+                <InputField
+                  label="Postal Code"
+                  name="postalCode"
+                  value={formData.postalCode}
+                  onChange={handleInputChange}
+                  placeholder="Enter postal code"
+                />
               </div>
             </div>
           </div>
 
           {/* Submit Button */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              gap: "16px",
-              marginTop: "32px",
-            }}
-          >
-            <button
+          <div className="flex justify-center gap-4 mt-8">
+            <LoadingButton
               type="submit"
-              disabled={saving}
-              style={{
-                padding: isMobile ? "16px 32px" : "14px 28px",
-                backgroundColor: "#7a6990",
-                color: "white",
-                border: "none",
-                borderRadius: "8px",
-                fontSize: isMobile ? "1rem" : "0.875rem",
-                fontWeight: "600",
-                cursor: saving ? "not-allowed" : "pointer",
-                opacity: saving ? 0.6 : 1,
-                transition: "all 0.2s ease",
-                minWidth: isMobile ? "200px" : "150px",
-              }}
+              isLoading={saving}
+              className={`px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white border-none rounded-lg font-semibold transition-colors ${isMobile ? "w-full min-w-[200px]" : "w-auto min-w-[150px]"}`}
             >
-              {saving ? "Saving..." : "Save Changes"}
-            </button>
+              Save Changes
+            </LoadingButton>
           </div>
         </form>
       </div>

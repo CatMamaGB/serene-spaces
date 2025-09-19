@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+export const runtime = "nodejs";
+
 export async function GET() {
   try {
     const diagnostics = {
@@ -29,7 +31,8 @@ export async function GET() {
       diagnostics.database.connection = "✅ CONNECTED";
     } catch (dbError) {
       diagnostics.database.connection = "❌ FAILED";
-      diagnostics.database.error = dbError instanceof Error ? dbError.message : "Unknown error";
+      diagnostics.database.error =
+        dbError instanceof Error ? dbError.message : "Unknown error";
     }
 
     // Test Stripe configuration
@@ -41,7 +44,8 @@ export async function GET() {
         }
       }
     } catch (stripeError) {
-      diagnostics.stripe.error = stripeError instanceof Error ? stripeError.message : "Unknown error";
+      diagnostics.stripe.error =
+        stripeError instanceof Error ? stripeError.message : "Unknown error";
     }
 
     return NextResponse.json(diagnostics, { status: 200 });
@@ -52,7 +56,7 @@ export async function GET() {
         details: error instanceof Error ? error.message : "Unknown error",
         timestamp: new Date().toISOString(),
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

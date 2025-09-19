@@ -13,11 +13,13 @@ model User {
   name          String?
   email         String?   @unique
   image         String?
+  role          String    @default("staff") // admin, staff, readonly
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   emailVerified DateTime?
   accounts      Account[]
   sessions      Session[]
+  auditLogs     AuditLog[]
 }
 
 model Account {
@@ -70,6 +72,7 @@ model Customer {
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   invoices        InvoiceMirror[]
+  newInvoices     Invoice[]
   jobs            Job[]
   serviceRequests ServiceRequest[]
 }
@@ -87,21 +90,24 @@ model Job {
 model ServiceRequest {
   id                  String    @id @default(cuid())
   customerId          String
-  services            String[]
-  address             String
+  status              String    @default("draft") // draft, scheduled, picked_up, in_cleaning, needs_review, ready_to_invoice, completed, canceled
   pickupDate          DateTime?
-  repairNotes         String?
-  waterproofingNotes  String?
-  allergies           String?
-  status              String    @default("pending")
-  estimatedCost       Float?
-  actualCost          Float?
   scheduledPickupDate DateTime?
-  completedDate       DateTime?
-  notes               String?
+  pickupNotes         String?
+  staffAssigned       String?
+  internalNotes       String?
+  needsReview         Boolean   @default(false)
+  readyToInvoice      Boolean   @default(false)
+  subtotal            Float     @default(0)
+  tax                 Float     @default(0)
+  total               Float     @default(0)
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
   customer            Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  serviceItems        ServiceItem[]
+  repairItems         RepairItem[]
+  invoices            Invoice[]
+  attachments         ServiceRequestAttachment[]
 }
 
 model InvoiceMirror {
@@ -143,4 +149,139 @@ model EventLog {
   type      String
   payload   Json
   createdAt DateTime @default(now())
+}
+
+// New models for enhanced admin backend
+
+model ServiceItem {
+  id          String         @id @default(cuid())
+  requestId   String
+  priceItemId String?
+  name        String
+  quantity    Int            @default(1)
+  unitPrice   Float
+  taxable     Boolean        @default(true)
+  lineTotal   Float
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  request     ServiceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  priceItem   PriceItem?     @relation(fields: [priceItemId], references: [id])
+}
+
+model RepairItem {
+  id          String         @id @default(cuid())
+  requestId   String
+  description String
+  amount      Float
+  taxable     Boolean        @default(true)
+  lineTotal   Float
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  request     ServiceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+}
+
+model Invoice {
+  id              String        @id @default(cuid())
+  customerId      String
+  requestId       String?
+  number          String        @unique
+  status          String        @default("draft") // draft, sent, partial_paid, paid, void
+  issueDate       DateTime      @default(now())
+  dueDate         DateTime?
+  subtotal        Decimal       @default(0) @db.Decimal(10,2)
+  tax             Decimal       @default(0) @db.Decimal(10,2)
+  discount        Decimal       @default(0) @db.Decimal(10,2)
+  total           Decimal       @default(0) @db.Decimal(10,2)
+  balance         Decimal       @default(0) @db.Decimal(10,2)
+  applyTax        Boolean       @default(true)
+  taxRate         Decimal       @default(6.25) @db.Decimal(5,2)
+  pdfUrl          String?
+  notes           String?
+  internalMemo    String?
+  voidReason      String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  customer        Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  request         ServiceRequest? @relation(fields: [requestId], references: [id])
+  items           InvoiceItem[]
+  payments        Payment[]
+}
+
+model InvoiceItem {
+  id          String     @id @default(cuid())
+  invoiceId   String
+  priceItemId String?    // Reference to the original price item
+  description String
+  quantity    Int        @default(1)
+  unitPrice   Decimal    @db.Decimal(10,2)
+  taxable     Boolean    @default(true)
+  lineTotal   Decimal    @db.Decimal(10,2)
+  createdAt   DateTime   @default(now())
+  invoice     Invoice    @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  priceItem   PriceItem? @relation(fields: [priceItemId], references: [id])
+}
+
+model Payment {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  method      String   // cash, check, zelle, stripe, other
+  amount      Float
+  receivedAt  DateTime @default(now())
+  externalId  String?  // Stripe payment intent ID
+  createdAt   DateTime @default(now())
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+model PriceList {
+  id          String      @id @default(cuid())
+  name        String
+  status      String      @default("DRAFT") // DRAFT, PUBLISHED, ARCHIVED
+  effectiveAt DateTime?
+  createdAt   DateTime    @default(now())
+  publishedAt DateTime?
+  items       PriceItem[]
+}
+
+model PriceItem {
+  id          String     @id @default(cuid())
+  priceListId String
+  name        String
+  category    String     // WASHING, ADD_ON, REPAIR
+  unitPrice   Decimal    @db.Decimal(10,2)
+  taxable     Boolean    @default(true)
+  scope       String     @default("ITEM") // ITEM, ORDER
+  active      Boolean    @default(true)
+  sortOrder   Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  priceList   PriceList  @relation(fields: [priceListId], references: [id], onDelete: Cascade)
+  serviceItems ServiceItem[]
+  invoiceItems InvoiceItem[]
+}
+
+model ServiceRequestAttachment {
+  id          String         @id @default(cuid())
+  requestId   String
+  filename    String
+  url         String
+  type        String         // photo, document
+  createdAt   DateTime       @default(now())
+  request     ServiceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  action     String
+  entityType String
+  entityId   String
+  payload    Json
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model InvoiceSequence {
+  year      Int      @id
+  value     Int      @default(0)
+  updatedAt DateTime @updatedAt
 }

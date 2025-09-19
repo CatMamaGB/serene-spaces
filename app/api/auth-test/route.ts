@@ -7,13 +7,15 @@ export async function GET(req: NextRequest) {
       NEXTAUTH_URL: process.env.NEXTAUTH_URL ? "✅ Set" : "❌ Missing",
       NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET ? "✅ Set" : "❌ Missing",
       GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ? "✅ Set" : "❌ Missing",
-      GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ? "✅ Set" : "❌ Missing",
+      GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET
+        ? "✅ Set"
+        : "❌ Missing",
       DATABASE_URL: process.env.DATABASE_URL ? "✅ Set" : "❌ Missing",
     };
 
     // Check if we're in development or production
     const environment = process.env.NODE_ENV || "development";
-    
+
     // Expected redirect URIs
     const expectedRedirectUris = {
       development: "http://localhost:3000/api/auth/callback/google",
@@ -36,7 +38,7 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to check auth configuration", details: error },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

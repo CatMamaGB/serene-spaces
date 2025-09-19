@@ -1,150 +1,59 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-
-interface Customer {
-  id: string;
-  name: string;
-  email: string | null;
-  phone: string | null;
-  address: string | null;
-  addressLine1: string | null;
-  addressLine2: string | null;
-  city: string | null;
-  state: string | null;
-  postalCode: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+import { useIsMobile, useCustomer } from "@/lib/hooks";
+import { LoadingState, ErrorState, DeleteModal } from "@/components/shared";
+import { safeJson } from "@/lib/utils";
+import { useToast } from "@/components/ToastProvider";
 
 export default function ViewCustomer() {
   const params = useParams();
-  const [customer, setCustomer] = useState<Customer | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
+  const router = useRouter();
+  const isMobile = useIsMobile();
+  const { customer, loading, error } = useCustomer(params.id as string);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-
-  useEffect(() => {
-    // Check if mobile
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-
-    // Fetch customer data
-    const fetchCustomer = async () => {
-      try {
-        const response = await fetch(`/api/customers/${params.id}`);
-        if (response.ok) {
-          const customerData = await response.json();
-          setCustomer(customerData);
-        } else {
-          console.error("Failed to fetch customer:", response.status);
-          alert("Failed to load customer data");
-        }
-      } catch (error) {
-        console.error("Error fetching customer:", error);
-        alert("Error loading customer data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCustomer();
-
-    return () => window.removeEventListener("resize", checkMobile);
-  }, [params.id]);
+  const [deleting, setDeleting] = useState(false);
+  const toast = useToast();
 
   const handleDelete = async () => {
     if (!customer) return;
 
+    setDeleting(true);
     try {
       const response = await fetch(`/api/customers/${customer.id}`, {
         method: "DELETE",
       });
+      const result = await safeJson(response);
 
       if (response.ok) {
-        alert("Customer deleted successfully");
-        window.location.href = "/admin/customers";
+        toast.success(
+          "Customer Deleted",
+          "Customer has been deleted successfully!",
+        );
+        router.push("/admin/customers");
       } else {
-        const error = await response.json();
-        alert(`Failed to delete customer: ${error.error || "Unknown error"}`);
+        toast.error(
+          "Delete Failed",
+          `Failed to delete customer: ${result.error || "Unknown error"}`,
+        );
       }
     } catch (error) {
       console.error("Error deleting customer:", error);
-      alert("Failed to delete customer. Please try again.");
+      toast.error(
+        "Delete Failed",
+        "Failed to delete customer. Please try again.",
+      );
+    } finally {
+      setDeleting(false);
+      setShowDeleteModal(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div
-        style={{
-          padding: isMobile ? "16px" : "24px",
-          backgroundColor: "#f5f5f5",
-          minHeight: "100vh",
-        }}
-      >
-        <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-          <div
-            style={{ textAlign: "center", padding: isMobile ? "40px" : "60px" }}
-          >
-            <div
-              style={{ fontSize: isMobile ? "1rem" : "1.2rem", color: "#666" }}
-            >
-              Loading customer...
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!customer) {
-    return (
-      <div
-        style={{
-          padding: isMobile ? "16px" : "24px",
-          backgroundColor: "#f5f5f5",
-          minHeight: "100vh",
-        }}
-      >
-        <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-          <div
-            style={{ textAlign: "center", padding: isMobile ? "40px" : "60px" }}
-          >
-            <div
-              style={{ fontSize: isMobile ? "1rem" : "1.2rem", color: "#666" }}
-            >
-              Customer not found
-            </div>
-            <Link
-              href="/admin/customers"
-              style={{
-                display: "inline-block",
-                marginTop: "20px",
-                padding: "12px 24px",
-                backgroundColor: "#7a6990",
-                color: "white",
-                textDecoration: "none",
-                borderRadius: "8px",
-                fontSize: "1rem",
-                fontWeight: "600",
-              }}
-            >
-              Back to Customers
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   const formatAddress = () => {
+    if (!customer) return "No address provided";
+
     const parts = [
       customer.addressLine1,
       customer.addressLine2,
@@ -166,100 +75,57 @@ export default function ViewCustomer() {
     });
   };
 
+  if (loading) {
+    return <LoadingState message="Loading customer..." isMobile={isMobile} />;
+  }
+
+  if (error) {
+    return <ErrorState message={error} isMobile={isMobile} />;
+  }
+
+  if (!customer) {
+    return (
+      <ErrorState
+        message="Customer not found"
+        isMobile={isMobile}
+        onRetry={() => window.location.reload()}
+      />
+    );
+  }
+
   return (
-    <div
-      style={{
-        padding: isMobile ? "16px" : "24px",
-        backgroundColor: "#f5f5f5",
-        minHeight: "100vh",
-      }}
-    >
-      <div style={{ maxWidth: "800px", margin: "0 auto" }}>
+    <div className={`${isMobile ? "p-4" : "p-6"} bg-gray-50 min-h-screen`}>
+      <div className="max-w-4xl mx-auto">
         {/* Page Header */}
         <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "32px",
-            flexDirection: isMobile ? "column" : "row",
-            gap: isMobile ? "1rem" : "0",
-          }}
+          className={`flex justify-between items-center mb-8 ${isMobile ? "flex-col gap-4" : "flex-row"}`}
         >
-          <div style={{ textAlign: isMobile ? "center" : "left" }}>
+          <div className={isMobile ? "text-center" : "text-left"}>
             <h1
-              style={{
-                fontSize: isMobile ? "1.5rem" : "2rem",
-                margin: "0",
-                color: "#1a1a1a",
-              }}
+              className={`${isMobile ? "text-2xl" : "text-3xl"} font-bold text-gray-900`}
             >
               Customer Details
             </h1>
-            <p
-              style={{
-                color: "#666",
-                margin: "8px 0 0 0",
-                fontSize: isMobile ? "0.9rem" : "1rem",
-              }}
-            >
+            <p className="text-gray-600 mt-2 text-sm lg:text-base">
               {customer.name}
             </p>
           </div>
-          <div
-            style={{
-              display: "flex",
-              gap: "12px",
-              flexDirection: isMobile ? "column" : "row",
-            }}
-          >
+          <div className={`flex gap-3 ${isMobile ? "flex-col" : "flex-row"}`}>
             <Link
               href={`/admin/customers/${customer.id}/edit`}
-              style={{
-                padding: isMobile ? "12px 20px" : "10px 20px",
-                backgroundColor: "#7a6990",
-                color: "white",
-                textDecoration: "none",
-                borderRadius: "8px",
-                fontSize: isMobile ? "0.9rem" : "0.875rem",
-                fontWeight: "600",
-                textAlign: "center",
-                width: isMobile ? "100%" : "auto",
-              }}
+              className={`px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition-colors ${isMobile ? "w-full text-center" : "w-auto"}`}
             >
               Edit Customer
             </Link>
             <Link
               href="/admin/customers"
-              style={{
-                padding: isMobile ? "12px 20px" : "10px 20px",
-                backgroundColor: "transparent",
-                color: "#666",
-                textDecoration: "none",
-                borderRadius: "8px",
-                fontSize: isMobile ? "0.9rem" : "0.875rem",
-                fontWeight: "600",
-                border: "2px solid #666",
-                textAlign: "center",
-                width: isMobile ? "100%" : "auto",
-              }}
+              className={`px-5 py-3 bg-transparent text-gray-600 border-2 border-gray-600 rounded-lg font-semibold hover:bg-gray-50 transition-colors ${isMobile ? "w-full text-center" : "w-auto"}`}
             >
               Back to Customers
             </Link>
             <button
               onClick={() => setShowDeleteModal(true)}
-              style={{
-                padding: isMobile ? "12px 20px" : "10px 20px",
-                backgroundColor: "#dc2626",
-                color: "white",
-                border: "none",
-                borderRadius: "8px",
-                fontSize: isMobile ? "0.9rem" : "0.875rem",
-                fontWeight: "600",
-                cursor: "pointer",
-                textAlign: "center",
-                width: isMobile ? "100%" : "auto",
-              }}
+              className={`px-5 py-3 bg-red-600 hover:bg-red-700 text-white border-none rounded-lg font-semibold cursor-pointer transition-colors ${isMobile ? "w-full text-center" : "w-auto"}`}
             >
               🗑️ Delete
             </button>
@@ -267,145 +133,53 @@ export default function ViewCustomer() {
         </div>
 
         {/* Customer Information */}
-        <div
-          style={{
-            backgroundColor: "white",
-            borderRadius: "16px",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-            border: "1px solid #e9ecef",
-            overflow: "hidden",
-            marginBottom: "24px",
-          }}
-        >
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden mb-6">
           <div
-            style={{
-              padding: isMobile ? "16px" : "24px",
-              borderBottom: "1px solid #e9ecef",
-              backgroundColor: "#f8f9fa",
-            }}
+            className={`${isMobile ? "p-4" : "p-6"} border-b border-gray-200 bg-gray-50`}
           >
             <h2
-              style={{
-                fontSize: isMobile ? "1.25rem" : "1.5rem",
-                margin: "0",
-                color: "#1a1a1a",
-              }}
+              className={`${isMobile ? "text-xl" : "text-2xl"} font-semibold text-gray-900`}
             >
               Contact Information
             </h2>
           </div>
 
-          <div style={{ padding: isMobile ? "16px" : "24px" }}>
+          <div className={`${isMobile ? "p-4" : "p-6"}`}>
             <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-                gap: "24px",
-              }}
+              className={`grid ${isMobile ? "grid-cols-1" : "grid-cols-2"} gap-6`}
             >
               <div>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "8px",
-                    fontWeight: "600",
-                    color: "#333",
-                    fontSize: "0.875rem",
-                  }}
-                >
+                <label className="block mb-2 font-semibold text-gray-700 text-sm">
                   Full Name
                 </label>
-                <div
-                  style={{
-                    padding: "12px",
-                    backgroundColor: "#f8f9fa",
-                    borderRadius: "8px",
-                    border: "1px solid #e9ecef",
-                    fontSize: "1rem",
-                    color: "#1a1a1a",
-                  }}
-                >
+                <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 text-base text-gray-900">
                   {customer.name}
                 </div>
               </div>
 
               <div>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "8px",
-                    fontWeight: "600",
-                    color: "#333",
-                    fontSize: "0.875rem",
-                  }}
-                >
+                <label className="block mb-2 font-semibold text-gray-700 text-sm">
                   Email Address
                 </label>
-                <div
-                  style={{
-                    padding: "12px",
-                    backgroundColor: "#f8f9fa",
-                    borderRadius: "8px",
-                    border: "1px solid #e9ecef",
-                    fontSize: "1rem",
-                    color: "#1a1a1a",
-                  }}
-                >
+                <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 text-base text-gray-900">
                   {customer.email || "No email provided"}
                 </div>
               </div>
 
               <div>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "8px",
-                    fontWeight: "600",
-                    color: "#333",
-                    fontSize: "0.875rem",
-                  }}
-                >
+                <label className="block mb-2 font-semibold text-gray-700 text-sm">
                   Phone Number
                 </label>
-                <div
-                  style={{
-                    padding: "12px",
-                    backgroundColor: "#f8f9fa",
-                    borderRadius: "8px",
-                    border: "1px solid #e9ecef",
-                    fontSize: "1rem",
-                    color: "#1a1a1a",
-                  }}
-                >
+                <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 text-base text-gray-900">
                   {customer.phone || "No phone provided"}
                 </div>
               </div>
 
               <div>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "8px",
-                    fontWeight: "600",
-                    color: "#333",
-                    fontSize: "0.875rem",
-                  }}
-                >
+                <label className="block mb-2 font-semibold text-gray-700 text-sm">
                   Address
                 </label>
-                <div
-                  style={{
-                    padding: "12px",
-                    backgroundColor: "#f8f9fa",
-                    borderRadius: "8px",
-                    border: "1px solid #e9ecef",
-                    fontSize: "1rem",
-                    color: "#1a1a1a",
-                    minHeight: "48px",
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                >
+                <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 text-base text-gray-900 min-h-[48px] flex items-center">
                   {formatAddress()}
                 </div>
               </div>
@@ -414,117 +188,44 @@ export default function ViewCustomer() {
         </div>
 
         {/* System Information */}
-        <div
-          style={{
-            backgroundColor: "white",
-            borderRadius: "16px",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-            border: "1px solid #e9ecef",
-            overflow: "hidden",
-            marginBottom: "24px",
-          }}
-        >
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden mb-6">
           <div
-            style={{
-              padding: isMobile ? "16px" : "24px",
-              borderBottom: "1px solid #e9ecef",
-              backgroundColor: "#f8f9fa",
-            }}
+            className={`${isMobile ? "p-4" : "p-6"} border-b border-gray-200 bg-gray-50`}
           >
             <h2
-              style={{
-                fontSize: isMobile ? "1.25rem" : "1.5rem",
-                margin: "0",
-                color: "#1a1a1a",
-              }}
+              className={`${isMobile ? "text-xl" : "text-2xl"} font-semibold text-gray-900`}
             >
               System Information
             </h2>
           </div>
 
-          <div style={{ padding: isMobile ? "16px" : "24px" }}>
+          <div className={`${isMobile ? "p-4" : "p-6"}`}>
             <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-                gap: "24px",
-              }}
+              className={`grid ${isMobile ? "grid-cols-1" : "grid-cols-2"} gap-6`}
             >
               <div>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "8px",
-                    fontWeight: "600",
-                    color: "#333",
-                    fontSize: "0.875rem",
-                  }}
-                >
+                <label className="block mb-2 font-semibold text-gray-700 text-sm">
                   Customer ID
                 </label>
-                <div
-                  style={{
-                    padding: "12px",
-                    backgroundColor: "#f8f9fa",
-                    borderRadius: "8px",
-                    border: "1px solid #e9ecef",
-                    fontSize: "0.875rem",
-                    color: "#666",
-                    fontFamily: "monospace",
-                  }}
-                >
+                <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 text-sm text-gray-600 font-mono">
                   {customer.id}
                 </div>
               </div>
 
               <div>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "8px",
-                    fontWeight: "600",
-                    color: "#333",
-                    fontSize: "0.875rem",
-                  }}
-                >
+                <label className="block mb-2 font-semibold text-gray-700 text-sm">
                   Created Date
                 </label>
-                <div
-                  style={{
-                    padding: "12px",
-                    backgroundColor: "#f8f9fa",
-                    borderRadius: "8px",
-                    border: "1px solid #e9ecef",
-                    fontSize: "1rem",
-                    color: "#1a1a1a",
-                  }}
-                >
+                <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 text-base text-gray-900">
                   {formatDate(customer.createdAt)}
                 </div>
               </div>
 
               <div>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "8px",
-                    fontWeight: "600",
-                    color: "#333",
-                    fontSize: "0.875rem",
-                  }}
-                >
+                <label className="block mb-2 font-semibold text-gray-700 text-sm">
                   Last Updated
                 </label>
-                <div
-                  style={{
-                    padding: "12px",
-                    backgroundColor: "#f8f9fa",
-                    borderRadius: "8px",
-                    border: "1px solid #e9ecef",
-                    fontSize: "1rem",
-                    color: "#1a1a1a",
-                  }}
-                >
+                <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 text-base text-gray-900">
                   {formatDate(customer.updatedAt)}
                 </div>
               </div>
@@ -534,132 +235,13 @@ export default function ViewCustomer() {
       </div>
 
       {/* Delete Confirmation Modal */}
-      {showDeleteModal && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: "white",
-              borderRadius: "12px",
-              padding: "24px",
-              maxWidth: "400px",
-              width: "90%",
-              boxShadow:
-                "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                marginBottom: "20px",
-              }}
-            >
-              <div
-                style={{
-                  width: "48px",
-                  height: "48px",
-                  borderRadius: "50%",
-                  backgroundColor: "#fef2f2",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginRight: "16px",
-                }}
-              >
-                <span style={{ fontSize: "24px", color: "#dc2626" }}>⚠️</span>
-              </div>
-              <div>
-                <h3
-                  style={{
-                    margin: "0",
-                    fontSize: "1.25rem",
-                    fontWeight: "600",
-                    color: "#1f2937",
-                  }}
-                >
-                  Delete Customer
-                </h3>
-                <p
-                  style={{
-                    margin: "4px 0 0 0",
-                    color: "#6b7280",
-                    fontSize: "0.875rem",
-                  }}
-                >
-                  This action cannot be undone
-                </p>
-              </div>
-            </div>
-
-            <p
-              style={{
-                margin: "0 0 24px 0",
-                color: "#374151",
-                fontSize: "1rem",
-                lineHeight: "1.5",
-              }}
-            >
-              Are you sure you want to delete <strong>{customer.name}</strong>?
-              This will also delete all associated invoices and service
-              requests.
-            </p>
-
-            <div
-              style={{
-                display: "flex",
-                gap: "12px",
-                justifyContent: "flex-end",
-              }}
-            >
-              <button
-                onClick={() => setShowDeleteModal(false)}
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "transparent",
-                  color: "#6b7280",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "8px",
-                  fontSize: "0.875rem",
-                  fontWeight: "500",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease",
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDelete}
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "#dc2626",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "8px",
-                  fontSize: "0.875rem",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease",
-                }}
-              >
-                Delete Customer
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onDelete={handleDelete}
+        customerName={customer.name}
+        isDeleting={deleting}
+      />
     </div>
   );
 }

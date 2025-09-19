@@ -1,34 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-
-interface InvoiceItem {
-  description: string;
-  quantity: number;
-  rate: number;
-  amount: number;
-}
-
-interface Invoice {
-  id: string;
-  customerName: string;
-  customerEmail: string;
-  customerPhone: string;
-  customerAddress: string;
-  invoiceDate: string;
-  status: string;
-  items: InvoiceItem[];
-  notes: string;
-  terms: string;
-  subtotal: number;
-  tax: number;
-  total: number;
-}
+import { useIsMobile } from "@/lib/hooks";
+import { safeJson } from "@/lib/utils";
+import { Invoice, recomputeTotals, formatCurrency } from "@/lib/invoice-types";
+import { useToast } from "@/components/ToastProvider";
 
 export default function ViewInvoice() {
-  const params = useParams();
+  const params = useParams() as { id: string };
+  const router = useRouter();
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
@@ -36,30 +18,33 @@ export default function ViewInvoice() {
   const [emailMessage, setEmailMessage] = useState("");
   const [sendToEmail, setSendToEmail] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [statusSaving, setStatusSaving] = useState(false);
+  const isMobile = useIsMobile();
+  const toast = useToast();
 
   useEffect(() => {
-    // Check if mobile
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
+    const controller = new AbortController();
 
     const fetchInvoice = async () => {
       try {
-        const response = await fetch(`/api/invoices/${params.id}`);
+        const response = await fetch(`/api/invoices/${params.id}`, {
+          signal: controller.signal,
+        });
 
-        if (response.ok) {
-          const invoiceData = await response.json();
-          setInvoice(invoiceData);
-          setSendToEmail(invoiceData.customerEmail);
-        } else {
-          console.error("Failed to fetch invoice:", response.status);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const invoiceData = await response.json();
+        setInvoice(recomputeTotals(invoiceData));
+        setSendToEmail(invoiceData.customerEmail);
+      } catch (error) {
+        if ((error as Error).name !== "AbortError") {
+          console.error("Error fetching invoice:", error);
           // Fallback to mock data if API fails
           const mockInvoice: Invoice = {
-            id: params.id as string,
+            id: params.id,
             customerName: "Sarah Johnson",
             customerEmail: "sarah.johnson@email.com",
             customerPhone: "(555) 123-4567",
@@ -68,52 +53,39 @@ export default function ViewInvoice() {
             status: "open",
             items: [
               {
+                id: "item-1",
                 description: "Blanket (with fill)",
                 quantity: 2,
                 rate: 25,
                 amount: 50,
               },
-              { description: "Wraps", quantity: 1, rate: 5, amount: 5 },
-              { description: "Boots", quantity: 1, rate: 5, amount: 5 },
+              {
+                id: "item-2",
+                description: "Wraps",
+                quantity: 1,
+                rate: 5,
+                amount: 5,
+              },
+              {
+                id: "item-3",
+                description: "Boots",
+                quantity: 1,
+                rate: 5,
+                amount: 5,
+              },
             ],
             notes: "Thank you for your business!",
             terms: "Payment due before delivery",
             subtotal: 60,
             tax: 4.8,
             total: 64.8,
+            invoiceNumber: "INV-001",
+            applyTax: true,
+            taxRate: 6.25,
           };
           setInvoice(mockInvoice);
           setSendToEmail(mockInvoice.customerEmail);
         }
-      } catch (error) {
-        console.error("Error fetching invoice:", error);
-        // Fallback to mock data if API fails
-        const mockInvoice: Invoice = {
-          id: params.id as string,
-          customerName: "Sarah Johnson",
-          customerEmail: "sarah.johnson@email.com",
-          customerPhone: "(555) 123-4567",
-          customerAddress: "123 Main Street, Portland, OR 97201",
-          invoiceDate: "2024-01-15",
-          status: "open",
-          items: [
-            {
-              description: "Blanket (with fill)",
-              quantity: 2,
-              rate: 25,
-              amount: 50,
-            },
-            { description: "Wraps", quantity: 1, rate: 5, amount: 5 },
-            { description: "Boots", quantity: 1, rate: 5, amount: 5 },
-          ],
-          notes: "Thank you for your business!",
-          terms: "Payment due before delivery",
-          subtotal: 60,
-          tax: 4.8,
-          total: 64.8,
-        };
-        setInvoice(mockInvoice);
-        setSendToEmail(mockInvoice.customerEmail);
       } finally {
         setIsLoading(false);
       }
@@ -121,26 +93,21 @@ export default function ViewInvoice() {
 
     fetchInvoice();
 
-    return () => window.removeEventListener("resize", checkMobile);
+    return () => controller.abort();
   }, [params.id]);
 
   const handleSendInvoice = async () => {
     if (!invoice || !sendToEmail) return;
 
-    console.log("Sending invoice:", invoice);
-    console.log("Send to email:", sendToEmail);
-    console.log("Email message:", emailMessage);
-
     setIsSending(true);
 
     try {
       const requestBody = {
+        invoiceId: invoice.id,
         ...invoice,
         customerEmail: sendToEmail,
         emailMessage: emailMessage,
       };
-
-      console.log("Request body:", requestBody);
 
       const response = await fetch("/api/invoices/send", {
         method: "POST",
@@ -150,20 +117,21 @@ export default function ViewInvoice() {
         body: JSON.stringify(requestBody),
       });
 
-      console.log("Response status:", response.status);
-      const result = await response.json();
-      console.log("Response result:", result);
+      const result = await safeJson(response);
 
       if (response.ok) {
-        alert(`Invoice sent successfully to ${sendToEmail}!`);
+        toast.success(
+          "Invoice Sent",
+          `Invoice sent successfully to ${sendToEmail}!`,
+        );
         setShowSendModal(false);
         setEmailMessage("");
       } else {
-        alert(`Failed to send invoice: ${result.error}`);
+        toast.error("Send Failed", `Failed to send invoice: ${result.error}`);
       }
     } catch (error) {
       console.error("Error sending invoice:", error);
-      alert("Failed to send invoice. Please try again.");
+      toast.error("Send Failed", "Failed to send invoice. Please try again.");
     } finally {
       setIsSending(false);
     }
@@ -176,21 +144,68 @@ export default function ViewInvoice() {
   const confirmDelete = async () => {
     if (!invoice) return;
 
+    setDeleting(true);
     try {
       const response = await fetch(`/api/invoices/${invoice.id}`, {
         method: "DELETE",
       });
+      const result = await safeJson(response);
 
       if (response.ok) {
-        alert("Invoice deleted successfully");
-        window.location.href = "/admin/invoices";
+        setShowDeleteModal(false);
+        toast.success(
+          "Invoice Deleted",
+          "Invoice has been deleted successfully!",
+        );
+        router.push("/admin/invoices");
       } else {
-        const error = await response.json();
-        alert(`Failed to delete invoice: ${error.error || "Unknown error"}`);
+        toast.error(
+          "Delete Failed",
+          `Failed to delete invoice: ${result.error || "Unknown error"}`,
+        );
       }
     } catch (error) {
       console.error("Error deleting invoice:", error);
-      alert("Failed to delete invoice. Please try again.");
+      toast.error(
+        "Delete Failed",
+        "Failed to delete invoice. Please try again.",
+      );
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleMarkAsPaid = async () => {
+    if (!invoice) return;
+
+    try {
+      const response = await fetch(`/api/invoices/${invoice.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: "paid" }),
+      });
+
+      const result = await safeJson(response);
+
+      if (response.ok) {
+        toast.success("Invoice Updated", "Invoice has been marked as paid!");
+        // Refresh the invoice data
+        const updatedInvoice = { ...invoice, status: "paid" };
+        setInvoice(updatedInvoice);
+      } else {
+        toast.error(
+          "Update Failed",
+          `Failed to update invoice: ${result.error || "Unknown error"}`,
+        );
+      }
+    } catch (error) {
+      console.error("Error updating invoice:", error);
+      toast.error(
+        "Update Failed",
+        "Failed to update invoice. Please try again.",
+      );
     }
   };
 
@@ -254,196 +269,116 @@ export default function ViewInvoice() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "#f8fafc",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
-      }}
-    >
+    <div className="min-h-screen bg-slate-50 font-sans">
       {/* Header */}
-      <header
-        style={{
-          backgroundColor: "white",
-          borderBottom: "1px solid #e2e8f0",
-          padding: isMobile ? "1rem" : "1rem 2rem",
-        }}
-      >
-        <div
-          style={{
-            maxWidth: "1200px",
-            margin: "0 auto",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: isMobile ? "flex-start" : "center",
-            flexDirection: isMobile ? "column" : "row",
-            gap: isMobile ? "1rem" : "0",
-          }}
-        >
+      <header className="bg-white border-b border-slate-200 p-4 lg:px-8">
+        <div className="max-w-6xl mx-auto flex justify-between items-center flex-col lg:flex-row gap-4 lg:gap-0">
           <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: isMobile ? "0.5rem" : "1rem",
-              flexDirection: isMobile ? "column" : "row",
-              textAlign: isMobile ? "center" : "left",
-              width: isMobile ? "100%" : "auto",
-            }}
+            className={`flex items-center gap-2 lg:gap-4 ${isMobile ? "flex-col text-center w-full" : "flex-row text-left"}`}
           >
             <Link
               href="/admin/invoices"
-              style={{
-                color: "#7a6990",
-                textDecoration: "none",
-                fontSize: isMobile ? "0.8rem" : "0.875rem",
-                fontWeight: "500",
-              }}
+              className="text-indigo-600 no-underline text-sm font-medium hover:text-indigo-700"
             >
               ← Back to Invoices
             </Link>
-            <h1
-              style={{
-                color: "#1e293b",
-                fontSize: isMobile ? "1.5rem" : "1.875rem",
-                fontWeight: "700",
-                margin: 0,
-              }}
-            >
-              Invoice #{invoice.id.slice(-6)}
+            <h1 className="text-slate-800 text-2xl lg:text-3xl font-bold m-0">
+              Invoice #{invoice.invoiceNumber}
             </h1>
           </div>
 
           <div
-            style={{
-              display: "flex",
-              gap: isMobile ? "0.75rem" : "1rem",
-              alignItems: "center",
-              flexDirection: isMobile ? "column" : "row",
-              width: isMobile ? "100%" : "auto",
-            }}
+            className={`flex ${isMobile ? "gap-3 flex-col w-full" : "gap-4 flex-row"} ${isMobile ? "items-center" : "items-center"}`}
           >
             <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.5rem",
-                width: isMobile ? "100%" : "auto",
-                justifyContent: isMobile ? "center" : "flex-start",
-              }}
+              className={`flex items-center gap-2 ${isMobile ? "w-full justify-center" : "w-auto justify-start"}`}
             >
               <label
-                style={{
-                  fontSize: isMobile ? "0.8rem" : "0.875rem",
-                  fontWeight: "500",
-                  color: "#374151",
-                }}
+                className={`${isMobile ? "text-sm" : "text-sm"} font-medium text-gray-700`}
               >
                 Status:
               </label>
               <select
+                disabled={statusSaving}
                 value={invoice.status || "draft"}
                 onChange={async (e) => {
+                  const next = e.target.value;
+                  setStatusSaving(true);
+                  const prevStatus = invoice.status;
+                  setInvoice((prev) =>
+                    prev ? { ...prev, status: next } : null,
+                  );
+
                   try {
                     const response = await fetch(
                       `/api/invoices/${invoice.id}`,
                       {
                         method: "PATCH",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ status: e.target.value }),
+                        body: JSON.stringify({ status: next }),
                       },
                     );
 
-                    if (response.ok) {
-                      setInvoice((prev) =>
-                        prev ? { ...prev, status: e.target.value } : null,
-                      );
-                      alert("Status updated successfully!");
-                    } else {
-                      alert("Failed to update status");
+                    if (!response.ok) {
+                      throw new Error("Failed to update status");
                     }
+
+                    toast.success(
+                      "Status Updated",
+                      "Invoice status updated successfully!",
+                    );
                   } catch (error) {
                     console.error("Error updating status:", error);
-                    alert("Failed to update status");
+                    setInvoice((prev) =>
+                      prev ? { ...prev, status: prevStatus } : null,
+                    );
+                    toast.error(
+                      "Status Update Failed",
+                      "Failed to update invoice status. Please try again.",
+                    );
+                  } finally {
+                    setStatusSaving(false);
                   }
                 }}
-                style={{
-                  padding: isMobile ? "0.6rem" : "0.5rem",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "0.375rem",
-                  fontSize: isMobile ? "0.8rem" : "0.875rem",
-                  backgroundColor: "white",
-                  color: "#374151",
-                  width: isMobile ? "120px" : "auto",
-                }}
+                className={`${isMobile ? "px-3 py-2.5 text-sm w-32" : "px-2 py-1.5 text-sm w-auto"} border border-gray-300 rounded-md bg-white text-gray-700`}
               >
-                <option value="draft">Draft</option>
-                <option value="open">Open</option>
-                <option value="pending">Pending</option>
-                <option value="paid">Paid</option>
-                <option value="void">Void</option>
+                <option value="draft">📝 Draft</option>
+                <option value="open">🔵 Open</option>
+                <option value="sent">📧 Sent (Pending Payment)</option>
+                <option value="paid">✅ Paid</option>
+                <option value="void">❌ Void</option>
               </select>
             </div>
 
             <div
-              style={{
-                display: "flex",
-                gap: isMobile ? "0.5rem" : "1rem",
-                flexDirection: isMobile ? "column" : "row",
-                width: isMobile ? "100%" : "auto",
-              }}
+              className={`flex ${isMobile ? "gap-2 flex-col w-full" : "gap-4 flex-row"} ${isMobile ? "w-full" : "w-auto"}`}
             >
               <button
                 onClick={() => setShowSendModal(true)}
-                style={{
-                  backgroundColor: "#10b981",
-                  color: "white",
-                  border: "none",
-                  padding: isMobile ? "0.75rem" : "0.75rem 1.5rem",
-                  borderRadius: "0.5rem",
-                  fontSize: isMobile ? "0.8rem" : "0.875rem",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease",
-                  width: isMobile ? "100%" : "auto",
-                }}
+                className={`bg-green-600 hover:bg-green-700 text-white border-none ${isMobile ? "px-3 py-3 text-sm w-full" : "px-6 py-3 text-sm w-auto"} rounded-lg font-semibold cursor-pointer transition-all`}
               >
                 📧 Send Invoice
               </button>
 
               <Link
                 href={`/admin/invoices/${invoice.id}/edit`}
-                style={{
-                  backgroundColor: "#7a6990",
-                  color: "white",
-                  border: "none",
-                  padding: isMobile ? "0.75rem" : "0.75rem 1.5rem",
-                  borderRadius: "0.5rem",
-                  fontSize: isMobile ? "0.8rem" : "0.875rem",
-                  fontWeight: "600",
-                  textDecoration: "none",
-                  display: "inline-block",
-                  transition: "all 0.2s ease",
-                  width: isMobile ? "100%" : "auto",
-                  textAlign: "center",
-                }}
+                className={`bg-indigo-600 hover:bg-indigo-700 text-white border-none ${isMobile ? "px-3 py-3 text-sm w-full" : "px-6 py-3 text-sm w-auto"} rounded-lg font-semibold no-underline transition-all text-center`}
               >
                 ✏️ Edit Invoice
               </Link>
 
+              {invoice?.status !== "paid" && (
+                <button
+                  onClick={handleMarkAsPaid}
+                  className={`bg-green-600 hover:bg-green-700 text-white border-none ${isMobile ? "px-3 py-3 text-sm w-full" : "px-6 py-3 text-sm w-auto"} rounded-lg font-semibold cursor-pointer transition-all`}
+                >
+                  ✅ Mark as Paid
+                </button>
+              )}
+
               <button
                 onClick={handleDeleteClick}
-                style={{
-                  backgroundColor: "#dc2626",
-                  color: "white",
-                  border: "none",
-                  padding: isMobile ? "0.75rem" : "0.75rem 1.5rem",
-                  borderRadius: "0.5rem",
-                  fontSize: isMobile ? "0.8rem" : "0.875rem",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease",
-                  width: isMobile ? "100%" : "auto",
-                }}
+                className={`bg-red-600 hover:bg-red-700 text-white border-none ${isMobile ? "px-3 py-3 text-sm w-full" : "px-6 py-3 text-sm w-auto"} rounded-lg font-semibold cursor-pointer transition-all`}
               >
                 🗑️ Delete Invoice
               </button>
@@ -452,13 +387,7 @@ export default function ViewInvoice() {
         </div>
       </header>
 
-      <div
-        style={{
-          maxWidth: "800px",
-          margin: "0 auto",
-          padding: isMobile ? "1rem" : "2rem",
-        }}
-      >
+      <div className={`max-w-4xl mx-auto ${isMobile ? "p-4" : "p-8"}`}>
         {/* Invoice Display */}
         <div
           style={{
@@ -592,7 +521,7 @@ export default function ViewInvoice() {
                   fontSize: isMobile ? "0.9rem" : "1rem",
                 }}
               >
-                <strong>Invoice #:</strong> {invoice.id.slice(-6)}
+                <strong>Invoice #:</strong> {invoice.invoiceNumber}
               </p>
             </div>
           </div>
@@ -686,7 +615,7 @@ export default function ViewInvoice() {
                         color: "#1f2937",
                       }}
                     >
-                      ${item.rate.toFixed(2)}
+                      {formatCurrency(item.rate)}
                     </td>
                     <td
                       style={{
@@ -695,7 +624,7 @@ export default function ViewInvoice() {
                         color: "#1f2937",
                       }}
                     >
-                      ${item.amount.toFixed(2)}
+                      {formatCurrency(item.amount)}
                     </td>
                   </tr>
                 ))}
@@ -721,7 +650,7 @@ export default function ViewInvoice() {
             >
               <span>Subtotal:</span>
               <span style={{ marginLeft: "2rem" }}>
-                ${invoice.subtotal.toFixed(2)}
+                {formatCurrency(invoice.subtotal)}
               </span>
             </div>
             <div
@@ -735,7 +664,7 @@ export default function ViewInvoice() {
             >
               <span>Tax:</span>
               <span style={{ marginLeft: "2rem" }}>
-                ${invoice.tax.toFixed(2)}
+                {formatCurrency(invoice.tax)}
               </span>
             </div>
             <div
@@ -751,7 +680,7 @@ export default function ViewInvoice() {
             >
               <span>Total:</span>
               <span style={{ marginLeft: "2rem" }}>
-                ${invoice.total.toFixed(2)}
+                {formatCurrency(invoice.total)}
               </span>
             </div>
           </div>
@@ -1198,19 +1127,20 @@ export default function ViewInvoice() {
               </button>
               <button
                 onClick={confirmDelete}
+                disabled={deleting}
                 style={{
                   padding: "10px 20px",
-                  backgroundColor: "#dc2626",
+                  backgroundColor: deleting ? "#9ca3af" : "#dc2626",
                   color: "white",
                   border: "none",
                   borderRadius: "8px",
                   fontSize: "0.875rem",
                   fontWeight: "600",
-                  cursor: "pointer",
+                  cursor: deleting ? "not-allowed" : "pointer",
                   transition: "all 0.2s ease",
                 }}
               >
-                Delete Invoice
+                {deleting ? "Deleting..." : "Delete Invoice"}
               </button>
             </div>
           </div>

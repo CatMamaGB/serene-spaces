@@ -2,100 +2,80 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-
-type Invoice = {
-  id: string;
-  customerName: string;
-  customerEmail: string;
-  customerPhone: string;
-  customerAddress: string;
-  invoiceDate: string;
-  status: string;
-  notes: string;
-  terms: string;
-  subtotal: number;
-  tax: number;
-  total: number;
-  invoiceNumber: string;
-  items: InvoiceItem[];
-};
-
-type InvoiceItem = {
-  id?: string;
-  description: string;
-  quantity: number;
-  rate: number;
-  amount: number;
-};
+import { useIsMobile } from "@/lib/hooks";
+import { safeJson } from "@/lib/utils";
+import {
+  Invoice,
+  InvoiceItem,
+  recomputeTotals,
+  formatCurrency,
+  generateItemId,
+} from "@/lib/invoice-types";
+import { useToast } from "@/components/ToastProvider";
+import { setInvoiceApplyTax, setInvoiceTaxRate } from "../actions";
 
 export default function EditInvoicePage() {
-  const params = useParams();
+  const params = useParams() as { id: string };
   const router = useRouter();
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const isMobile = useIsMobile();
+  const toast = useToast();
 
   useEffect(() => {
-    // Check if mobile
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
+    const controller = new AbortController();
 
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-
-    // Fetch the actual invoice data from the API
     const fetchInvoice = async () => {
       try {
-        const response = await fetch(`/api/invoices/${params.id}`);
-        if (response.ok) {
-          const invoiceData = await response.json();
-          setInvoice(invoiceData);
-        } else {
-          console.error("Failed to fetch invoice:", response.status);
+        const response = await fetch(`/api/invoices/${params.id}`, {
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const invoiceData = await response.json();
+
+        // Ensure all items have unique IDs
+        const invoiceWithIds = {
+          ...invoiceData,
+          items:
+            invoiceData.items?.map((item: any, index: number) => ({
+              ...item,
+              id: item.id || `item-${index}-${Date.now()}`,
+            })) || [],
+        };
+
+        setInvoice(recomputeTotals(invoiceWithIds));
+      } catch (error) {
+        if ((error as Error).name !== "AbortError") {
+          console.error("Error fetching invoice:", error);
           // Fallback to mock data if API fails
           const mockInvoice: Invoice = {
-            id: params.id as string,
+            id: params.id,
             customerName: "Error loading invoice",
             customerEmail: "",
             customerPhone: "",
             customerAddress: "",
             invoiceNumber: "INV-ERROR",
             invoiceDate: new Date().toISOString().split("T")[0],
-
             status: "error",
             notes: "Failed to load invoice data",
             terms: "",
             subtotal: 0,
             tax: 0,
             total: 0,
+            applyTax: true,
+            taxRate: 6.25,
             items: [],
           };
           setInvoice(mockInvoice);
         }
-      } catch (error) {
-        console.error("Error fetching invoice:", error);
-        // Fallback to mock data if API fails
-        const mockInvoice: Invoice = {
-          id: params.id as string,
-          customerName: "Error loading invoice",
-          customerEmail: "",
-          customerPhone: "",
-          customerAddress: "",
-          invoiceNumber: "INV-ERROR",
-          invoiceDate: new Date().toISOString().split("T")[0],
-          status: "error",
-          notes: "Failed to load invoice data",
-          terms: "",
-          subtotal: 0,
-          tax: 0,
-          total: 0,
-          items: [],
-        };
-        setInvoice(mockInvoice);
       } finally {
         setLoading(false);
       }
@@ -103,7 +83,7 @@ export default function EditInvoicePage() {
 
     fetchInvoice();
 
-    return () => window.removeEventListener("resize", checkMobile);
+    return () => controller.abort();
   }, [params.id]);
 
   const handleInputChange = (field: keyof Invoice, value: string | number) => {
@@ -113,89 +93,42 @@ export default function EditInvoicePage() {
   };
 
   const handleItemChange = (
-    itemDescription: string,
+    itemId: string,
     field: keyof InvoiceItem,
     value: string | number,
   ) => {
-    if (invoice && invoice.items) {
-      const updatedItems = invoice.items.map((item) =>
-        item.description === itemDescription
-          ? { ...item, [field]: value }
-          : item,
+    setInvoice((prev) => {
+      if (!prev) return prev;
+      const items = prev.items.map((item) =>
+        item.id === itemId ? { ...item, [field]: value } : item,
       );
-
-      // Recalculate totals
-      const recalculatedItems = updatedItems.map((item) => ({
-        ...item,
-        amount: item.quantity * item.rate,
-      }));
-
-      const newSubtotal = recalculatedItems.reduce(
-        (sum, item) => sum + item.amount,
-        0,
-      );
-      const newTax = newSubtotal * 0.0625; // 6.25% tax
-      const newTotal = newSubtotal + newTax;
-
-      setInvoice((prev) =>
-        prev
-          ? {
-              ...prev,
-              items: recalculatedItems,
-              subtotal: newSubtotal,
-              tax: newTax,
-              total: newTotal,
-            }
-          : null,
-      );
-    }
+      return recomputeTotals({ ...prev, items });
+    });
   };
 
   const addItem = () => {
-    if (invoice) {
+    setInvoice((prev) => {
+      if (!prev) return prev;
       const newItem: InvoiceItem = {
-        id: `new-${Date.now()}`,
+        id: generateItemId(),
         description: "",
         quantity: 1,
         rate: 0,
         amount: 0,
       };
-
-      setInvoice((prev) =>
-        prev
-          ? {
-              ...prev,
-              items: [...(prev.items || []), newItem],
-            }
-          : null,
-      );
-    }
+      return recomputeTotals({
+        ...prev,
+        items: [...prev.items, newItem],
+      });
+    });
   };
 
-  const removeItem = (itemDescription: string) => {
-    if (invoice && invoice.items) {
-      const updatedItems = invoice.items.filter(
-        (item) => item.description !== itemDescription,
-      );
-      const newSubtotal = updatedItems.reduce(
-        (sum, item) => sum + item.amount,
-        0,
-      );
-      const newTax = newSubtotal * 0.0625; // 6.25% tax
-      const newTotal = newSubtotal + newTax;
-
-      setInvoice((prev) =>
-        prev
-          ? {
-              ...prev,
-              items: updatedItems,
-              subtotal: newSubtotal,
-              tax: newTax,
-              total: newTotal,
-            }
-          : null,
-      );
-    }
+  const removeItem = (itemId: string) => {
+    setInvoice((prev) => {
+      if (!prev) return prev;
+      const items = prev.items.filter((item) => item.id !== itemId);
+      return recomputeTotals({ ...prev, items });
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -203,7 +136,7 @@ export default function EditInvoicePage() {
     setSaving(true);
 
     if (!invoice) {
-      alert("No invoice data to save");
+      toast.error("No Data", "No invoice data to save");
       setSaving(false);
       return;
     }
@@ -217,6 +150,7 @@ export default function EditInvoicePage() {
         customerAddress: invoice.customerAddress,
         invoiceDate: invoice.invoiceDate,
         items: invoice.items.map((item) => ({
+          id: item.id,
           description: item.description,
           quantity: item.quantity,
           rate: item.rate,
@@ -239,28 +173,30 @@ export default function EditInvoicePage() {
         body: JSON.stringify(invoicePayload),
       });
 
+      const result = await safeJson(response);
+
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to update invoice");
+        throw new Error(result.error || "Failed to update invoice");
       }
 
       setSaved(true);
+      toast.success(
+        "Invoice Updated",
+        "Invoice has been updated successfully!",
+      );
       setTimeout(() => {
         setSaved(false);
         router.push("/admin/invoices");
       }, 2000);
     } catch (error) {
       console.error("Error saving invoice:", error);
-      alert(
+      toast.error(
+        "Save Failed",
         `Error saving invoice: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     } finally {
       setSaving(false);
     }
-  };
-
-  const formatCurrency = (dollars: number) => {
-    return `$${dollars.toFixed(2)}`;
   };
 
   const handleDeleteClick = () => {
@@ -270,21 +206,34 @@ export default function EditInvoicePage() {
   const confirmDelete = async () => {
     if (!invoice) return;
 
+    setDeleting(true);
     try {
       const response = await fetch(`/api/invoices/${invoice.id}`, {
         method: "DELETE",
       });
+      const result = await safeJson(response);
 
       if (response.ok) {
-        alert("Invoice deleted successfully");
-        window.location.href = "/admin/invoices";
+        setShowDeleteModal(false);
+        toast.success(
+          "Invoice Deleted",
+          "Invoice has been deleted successfully!",
+        );
+        router.push("/admin/invoices");
       } else {
-        const error = await response.json();
-        alert(`Failed to delete invoice: ${error.error || "Unknown error"}`);
+        toast.error(
+          "Delete Failed",
+          `Failed to delete invoice: ${result.error || "Unknown error"}`,
+        );
       }
     } catch (error) {
       console.error("Error deleting invoice:", error);
-      alert("Failed to delete invoice. Please try again.");
+      toast.error(
+        "Delete Failed",
+        "Failed to delete invoice. Please try again.",
+      );
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -836,7 +785,7 @@ export default function EditInvoicePage() {
               {invoice.items &&
                 invoice.items.map((item, index) => (
                   <div
-                    key={`${item.description}-${index}`}
+                    key={item.id || `item-${index}`}
                     style={{
                       border: "1px solid #e9ecef",
                       borderRadius: "8px",
@@ -866,7 +815,7 @@ export default function EditInvoicePage() {
                       </h4>
                       <button
                         type="button"
-                        onClick={() => removeItem(item.description)}
+                        onClick={() => removeItem(item.id)}
                         style={{
                           padding: "6px 12px",
                           backgroundColor: "#dc3545",
@@ -907,7 +856,7 @@ export default function EditInvoicePage() {
                           value={item.description}
                           onChange={(e) =>
                             handleItemChange(
-                              item.description,
+                              item.id,
                               "description",
                               e.target.value,
                             )
@@ -940,12 +889,13 @@ export default function EditInvoicePage() {
                           type="number"
                           required
                           min="1"
-                          value={item.quantity}
+                          inputMode="numeric"
+                          value={String(item.quantity)}
                           onChange={(e) =>
                             handleItemChange(
-                              item.description,
+                              item.id,
                               "quantity",
-                              parseInt(e.target.value) || 1,
+                              Math.max(1, Number(e.target.value || 1)),
                             )
                           }
                           style={{
@@ -977,14 +927,23 @@ export default function EditInvoicePage() {
                           required
                           min="0"
                           step="0.01"
-                          value={item.rate.toFixed(2)}
+                          inputMode="decimal"
+                          value={String(item.rate)}
                           onChange={(e) =>
                             handleItemChange(
-                              item.description,
+                              item.id,
                               "rate",
-                              parseFloat(e.target.value) || 0,
+                              Number(e.target.value || 0),
                             )
                           }
+                          onBlur={(e) => {
+                            const n = Number(e.target.value || 0);
+                            handleItemChange(
+                              item.id,
+                              "rate",
+                              Number(n.toFixed(2)),
+                            );
+                          }}
                           style={{
                             width: "100%",
                             padding: "8px 12px",
@@ -1019,6 +978,192 @@ export default function EditInvoicePage() {
                     </div>
                   </div>
                 ))}
+            </div>
+          </div>
+
+          {/* Tax Controls */}
+          <div
+            style={{
+              backgroundColor: "white",
+              borderRadius: "16px",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+              border: "1px solid #e9ecef",
+              padding: isMobile ? "20px" : "24px",
+              marginBottom: "24px",
+            }}
+          >
+            <h3
+              style={{
+                fontSize: "1.25rem",
+                margin: "0 0 16px 0",
+                color: "#1a1a1a",
+                fontWeight: "600",
+              }}
+            >
+              Tax Settings
+            </h3>
+
+            <div
+              style={{
+                display: "flex",
+                flexDirection: isMobile ? "column" : "row",
+                gap: "16px",
+                alignItems: isMobile ? "stretch" : "center",
+              }}
+            >
+              {/* Apply Tax Toggle */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  flex: 1,
+                }}
+              >
+                <input
+                  type="checkbox"
+                  id="applyTax"
+                  checked={invoice.applyTax}
+                  onChange={async (e) => {
+                    try {
+                      await setInvoiceApplyTax(invoice.id, e.target.checked);
+                      setInvoice((prev) =>
+                        prev ? { ...prev, applyTax: e.target.checked } : null,
+                      );
+                      toast.success("Tax settings updated");
+                    } catch {
+                      toast.error("Failed to update tax settings");
+                    }
+                  }}
+                  style={{
+                    width: "18px",
+                    height: "18px",
+                    cursor: "pointer",
+                  }}
+                />
+                <label
+                  htmlFor="applyTax"
+                  style={{
+                    fontSize: "1rem",
+                    color: "#333",
+                    cursor: "pointer",
+                    fontWeight: "500",
+                  }}
+                >
+                  Apply Tax
+                </label>
+              </div>
+
+              {/* Tax Rate Input */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  flex: 1,
+                }}
+              >
+                <label
+                  htmlFor="taxRate"
+                  style={{
+                    fontSize: "1rem",
+                    color: "#333",
+                    fontWeight: "500",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Tax Rate:
+                </label>
+                <input
+                  type="number"
+                  id="taxRate"
+                  value={invoice.taxRate}
+                  onChange={async (e) => {
+                    const rate = parseFloat(e.target.value) || 0;
+                    try {
+                      await setInvoiceTaxRate(invoice.id, rate);
+                      setInvoice((prev) =>
+                        prev ? { ...prev, taxRate: rate } : null,
+                      );
+                      toast.success("Tax rate updated");
+                    } catch {
+                      toast.error("Failed to update tax rate");
+                    }
+                  }}
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  disabled={!invoice.applyTax}
+                  style={{
+                    width: "80px",
+                    padding: "8px 12px",
+                    border: "1px solid #ddd",
+                    borderRadius: "8px",
+                    fontSize: "1rem",
+                    backgroundColor: invoice.applyTax ? "white" : "#f5f5f5",
+                    color: invoice.applyTax ? "#333" : "#999",
+                  }}
+                />
+                <span
+                  style={{
+                    fontSize: "1rem",
+                    color: "#666",
+                    fontWeight: "500",
+                  }}
+                >
+                  %
+                </span>
+              </div>
+            </div>
+
+            {/* Tax Summary */}
+            <div
+              style={{
+                marginTop: "16px",
+                padding: "12px",
+                backgroundColor: "#f8f9fa",
+                borderRadius: "8px",
+                border: "1px solid #e9ecef",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  fontSize: "0.9rem",
+                  color: "#666",
+                  marginBottom: "4px",
+                }}
+              >
+                <span>Subtotal:</span>
+                <span>{formatCurrency(invoice.subtotal)}</span>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  fontSize: "0.9rem",
+                  color: "#666",
+                  marginBottom: "4px",
+                }}
+              >
+                <span>Tax ({invoice.taxRate}%):</span>
+                <span>{formatCurrency(invoice.tax)}</span>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  fontSize: "1rem",
+                  fontWeight: "600",
+                  color: "#1a1a1a",
+                  paddingTop: "8px",
+                  borderTop: "1px solid #e9ecef",
+                }}
+              >
+                <span>Total:</span>
+                <span>{formatCurrency(invoice.total)}</span>
+              </div>
             </div>
           </div>
 
@@ -1434,19 +1579,20 @@ export default function EditInvoicePage() {
               </button>
               <button
                 onClick={confirmDelete}
+                disabled={deleting}
                 style={{
                   padding: "10px 20px",
-                  backgroundColor: "#dc2626",
+                  backgroundColor: deleting ? "#9ca3af" : "#dc2626",
                   color: "white",
                   border: "none",
                   borderRadius: "8px",
                   fontSize: "0.875rem",
                   fontWeight: "600",
-                  cursor: "pointer",
+                  cursor: deleting ? "not-allowed" : "pointer",
                   transition: "all 0.2s ease",
                 }}
               >
-                Delete Invoice
+                {deleting ? "Deleting..." : "Delete Invoice"}
               </button>
             </div>
           </div>

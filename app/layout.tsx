@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Navigation from "../components/Navigation";
 import { NextAuthProvider } from "../components/NextAuthProvider";
+import { ToastProvider } from "../components/ToastProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,12 +19,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body
+        className={`${inter.className} bg-gray-50 text-gray-900 antialiased`}
+      >
         <NextAuthProvider>
-          <div style={{ minHeight: "100vh", backgroundColor: "#f5f5f5" }}>
-            <Navigation />
-            {children}
-          </div>
+          <ToastProvider>{children}</ToastProvider>
         </NextAuthProvider>
       </body>
     </html>

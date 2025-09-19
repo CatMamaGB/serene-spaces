@@ -1,8 +1,18 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET() {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     // Check if DATABASE_URL is set
     if (!process.env.DATABASE_URL) {
       return NextResponse.json([]);
@@ -32,15 +42,13 @@ export async function GET() {
 
 export async function PUT(req: Request) {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await req.json();
-    const {
-      id,
-      status,
-      estimatedCost,
-      actualCost,
-      scheduledPickupDate,
-      notes,
-    } = body;
+    const { id, status, scheduledPickupDate, notes } = body;
 
     if (!id) {
       return NextResponse.json(
@@ -53,12 +61,10 @@ export async function PUT(req: Request) {
       where: { id },
       data: {
         status: status || undefined,
-        estimatedCost: estimatedCost || undefined,
-        actualCost: actualCost || undefined,
         scheduledPickupDate: scheduledPickupDate
           ? new Date(scheduledPickupDate)
           : undefined,
-        notes: notes || undefined,
+        internalNotes: notes || undefined,
         updatedAt: new Date(),
       },
     });

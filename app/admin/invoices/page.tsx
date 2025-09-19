@@ -1,6 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { safeJson } from "@/lib/utils";
+import { formatCurrency } from "@/lib/invoice-types";
+import { useToast } from "@/components/ToastProvider";
 
 type Invoice = {
   id: string;
@@ -17,10 +20,13 @@ type Invoice = {
   pdfUrl?: string;
   createdAt?: string;
   updatedAt?: string;
+  _saving?: boolean;
+  statusBefore?: string;
 };
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [filteredInvoices, setFilteredInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -31,6 +37,102 @@ export default function InvoicesPage() {
   const [deletingInvoiceId, setDeletingInvoiceId] = useState<string | null>(
     null,
   );
+
+  // Filter states
+  const [statusFilter, setStatusFilter] = useState<string>("active"); // Default to "active" (open + draft)
+  const [yearFilter, setYearFilter] = useState<string>("all");
+  const [monthFilter, setMonthFilter] = useState<string>("all");
+  const [customerFilter, setCustomerFilter] = useState<string>("");
+
+  const toast = useToast();
+
+  // Export filtered invoices
+  const exportFilteredInvoices = async () => {
+    const params = new URLSearchParams();
+    if (statusFilter !== "all") {
+      if (statusFilter === "active") {
+        // For "active" filter, we need to export both open and draft invoices
+        // We'll handle this on the backend by sending both statuses
+        params.append("status", "open,draft");
+      } else {
+        params.append("status", statusFilter);
+      }
+    }
+    if (yearFilter !== "all") params.append("year", yearFilter);
+    if (monthFilter !== "all") params.append("month", monthFilter);
+    if (customerFilter) params.append("customer", customerFilter);
+
+    const queryString = params.toString();
+    const exportUrl = `/api/export/invoices${queryString ? `?${queryString}` : ""}`;
+
+    // Create a temporary link to trigger download
+    const link = document.createElement("a");
+    link.href = exportUrl;
+    link.download = `invoices-filtered-${new Date().toISOString().split("T")[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Filter invoices based on current filter settings
+  const applyFilters = useCallback(
+    (invoicesToFilter: Invoice[]) => {
+      return invoicesToFilter.filter((invoice) => {
+        // Status filter
+        if (statusFilter !== "all") {
+          if (statusFilter === "active") {
+            // Show only open and draft invoices
+            if (invoice.status !== "open" && invoice.status !== "draft") {
+              return false;
+            }
+          } else if (invoice.status !== statusFilter) {
+            return false;
+          }
+        }
+
+        // Year filter
+        if (yearFilter !== "all") {
+          const invoiceYear = new Date(
+            invoice.issueDate || invoice.createdAt || "",
+          )
+            .getFullYear()
+            .toString();
+          if (invoiceYear !== yearFilter) {
+            return false;
+          }
+        }
+
+        // Month filter
+        if (monthFilter !== "all") {
+          const invoiceMonth = (
+            new Date(invoice.issueDate || invoice.createdAt || "").getMonth() +
+            1
+          ).toString();
+          if (invoiceMonth !== monthFilter) {
+            return false;
+          }
+        }
+
+        // Customer name filter
+        if (
+          customerFilter &&
+          !invoice.customerName
+            ?.toLowerCase()
+            .includes(customerFilter.toLowerCase())
+        ) {
+          return false;
+        }
+
+        return true;
+      });
+    },
+    [statusFilter, yearFilter, monthFilter, customerFilter],
+  );
+
+  // Update filtered invoices when invoices or filters change
+  useEffect(() => {
+    setFilteredInvoices(applyFilters(invoices));
+  }, [invoices, applyFilters]);
 
   useEffect(() => {
     // Check if mobile
@@ -111,16 +213,49 @@ export default function InvoicesPage() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  const formatCurrency = (cents: number) => {
-    return `$${(cents / 100).toFixed(2)}`;
-  };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
     });
+  };
+
+  const updateStatus = async (id: string, next: string) => {
+    setInvoices((prev) =>
+      prev.map((inv) =>
+        inv.id === id ? { ...inv, status: next, _saving: true } : inv,
+      ),
+    );
+    try {
+      const r = await fetch(`/api/invoices/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: next }),
+      });
+      if (!r.ok) throw new Error();
+    } catch {
+      // revert
+      setInvoices((prev) =>
+        prev.map((inv) =>
+          inv.id === id
+            ? { ...inv, status: inv.statusBefore ?? inv.status }
+            : inv,
+        ),
+      );
+      toast.error(
+        "Status Update Failed",
+        "Failed to update invoice status. Please try again.",
+      );
+    } finally {
+      setInvoices((prev) =>
+        prev.map((inv) =>
+          inv.id === id
+            ? { ...inv, _saving: undefined, statusBefore: undefined }
+            : inv,
+        ),
+      );
+    }
   };
 
   const handleDeleteInvoice = async (
@@ -144,6 +279,8 @@ export default function InvoicesPage() {
       console.log("Delete response status:", response.status);
       console.log("Delete response headers:", response.headers);
 
+      const result = await safeJson(response);
+
       if (response.ok) {
         // Remove the invoice from the local state
         setInvoices((prev) =>
@@ -151,15 +288,23 @@ export default function InvoicesPage() {
         );
         setShowDeleteModal(false);
         setInvoiceToDelete(null);
-        alert("Invoice deleted successfully!");
+        toast.success(
+          "Invoice Deleted",
+          "Invoice has been deleted successfully!",
+        );
       } else {
-        const error = await response.json();
-        console.error("Delete failed with error:", error);
-        alert(`Failed to delete invoice: ${error.error || "Unknown error"}`);
+        console.error("Delete failed with error:", result);
+        toast.error(
+          "Delete Failed",
+          `Failed to delete invoice: ${result.error || "Unknown error"}`,
+        );
       }
     } catch (error) {
       console.error("Error deleting invoice:", error);
-      alert("Failed to delete invoice. Please try again.");
+      toast.error(
+        "Delete Failed",
+        "Failed to delete invoice. Please try again.",
+      );
     } finally {
       setDeletingInvoiceId(null);
     }
@@ -172,19 +317,12 @@ export default function InvoicesPage() {
 
   if (loading) {
     return (
-      <div
-        style={{
-          padding: isMobile ? "16px" : "24px",
-          backgroundColor: "#f5f5f5",
-          minHeight: "100vh",
-        }}
-      >
-        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-          <div
-            style={{ textAlign: "center", padding: isMobile ? "40px" : "60px" }}
-          >
+      <div className={`${isMobile ? "p-4" : "p-6"} bg-gray-50 min-h-screen`}>
+        <div className="max-w-6xl mx-auto">
+          <div className={`text-center ${isMobile ? "py-10" : "py-16"}`}>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-4"></div>
             <div
-              style={{ fontSize: isMobile ? "1rem" : "1.2rem", color: "#666" }}
+              className={`${isMobile ? "text-base" : "text-lg"} text-black font-medium`}
             >
               Loading invoices...
             </div>
@@ -195,320 +333,250 @@ export default function InvoicesPage() {
   }
 
   return (
-    <div
-      style={{
-        padding: isMobile ? "12px" : "24px",
-        backgroundColor: "#f5f5f5",
-        minHeight: "100vh",
-      }}
-    >
-      <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+    <div className={`${isMobile ? "p-3" : "p-6"} bg-gray-50 min-h-screen`}>
+      <div className="max-w-6xl mx-auto">
         {/* Page Header */}
         <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: isMobile ? "24px" : "32px",
-            flexDirection: isMobile ? "column" : "row",
-            gap: isMobile ? "1rem" : "0",
-            padding: isMobile ? "0 8px" : "0",
-          }}
+          className={`flex justify-between items-center ${isMobile ? "mb-6" : "mb-8"} ${isMobile ? "flex-col gap-4" : "flex-row"} ${isMobile ? "px-2" : ""}`}
         >
-          <div style={{ textAlign: isMobile ? "center" : "left" }}>
+          <div className={isMobile ? "text-center" : "text-left"}>
             <h1
-              style={{
-                fontSize: isMobile ? "1.5rem" : "2rem",
-                margin: "0",
-                color: "#1a1a1a",
-              }}
+              className={`${isMobile ? "text-2xl" : "text-3xl"} font-bold text-black m-0`}
             >
               Invoice Management
             </h1>
-            <p
-              style={{
-                color: "#666",
-                margin: "8px 0 0 0",
-                fontSize: isMobile ? "0.9rem" : "1rem",
-              }}
-            >
+            <p className="text-black mt-2 text-sm lg:text-base">
               Manage and track all customer invoices
             </p>
           </div>
           <Link
             href="/admin/invoices/new"
-            style={{
-              padding: isMobile ? "14px 20px" : "12px 24px",
-              backgroundColor: "#7a6990",
-              color: "white",
-              textDecoration: "none",
-              borderRadius: "8px",
-              fontSize: isMobile ? "0.9rem" : "1rem",
-              fontWeight: "600",
-              textAlign: "center",
-              width: isMobile ? "100%" : "auto",
-            }}
+            className={`px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white no-underline rounded-lg font-semibold transition-colors ${isMobile ? "w-full text-center" : "w-auto"}`}
           >
             + New Invoice
           </Link>
         </div>
 
+        {/* Filter Controls */}
+        {invoices.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 mb-6">
+            <div
+              className={`${isMobile ? "p-4" : "p-6"} border-b border-gray-200 bg-gray-50`}
+            >
+              <h3
+                className={`${isMobile ? "text-lg" : "text-xl"} font-semibold text-gray-900 m-0 ${isMobile ? "text-center" : "text-left"} mb-4`}
+              >
+                Filter Invoices
+              </h3>
+
+              <div
+                className={`grid gap-4 ${isMobile ? "grid-cols-1" : "grid-cols-2 lg:grid-cols-4"}`}
+              >
+                {/* Status Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Status
+                  </label>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white text-gray-700 cursor-pointer focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  >
+                    <option value="active">🟢 Active (Open + Draft)</option>
+                    <option value="all">All Statuses</option>
+                    <option value="draft">📝 Draft</option>
+                    <option value="open">🔵 Open</option>
+                    <option value="sent">📧 Sent (Pending Payment)</option>
+                    <option value="paid">✅ Paid</option>
+                    <option value="void">❌ Void</option>
+                  </select>
+                </div>
+
+                {/* Year Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Year
+                  </label>
+                  <select
+                    value={yearFilter}
+                    onChange={(e) => setYearFilter(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white text-gray-700 cursor-pointer focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  >
+                    <option value="all">All Years</option>
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                    <option value="2023">2023</option>
+                  </select>
+                </div>
+
+                {/* Month Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Month
+                  </label>
+                  <select
+                    value={monthFilter}
+                    onChange={(e) => setMonthFilter(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white text-gray-700 cursor-pointer focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  >
+                    <option value="all">All Months</option>
+                    <option value="1">January</option>
+                    <option value="2">February</option>
+                    <option value="3">March</option>
+                    <option value="4">April</option>
+                    <option value="5">May</option>
+                    <option value="6">June</option>
+                    <option value="7">July</option>
+                    <option value="8">August</option>
+                    <option value="9">September</option>
+                    <option value="10">October</option>
+                    <option value="11">November</option>
+                    <option value="12">December</option>
+                  </select>
+                </div>
+
+                {/* Customer Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Customer
+                  </label>
+                  <input
+                    type="text"
+                    value={customerFilter}
+                    onChange={(e) => setCustomerFilter(e.target.value)}
+                    placeholder="Search by customer name..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white text-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              {/* Filter Actions */}
+              <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
+                <div className="text-sm text-gray-600">
+                  Showing {filteredInvoices.length} of {invoices.length}{" "}
+                  invoices
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      setStatusFilter("active");
+                      setYearFilter("all");
+                      setMonthFilter("all");
+                      setCustomerFilter("");
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                  >
+                    Reset to Active
+                  </button>
+                  <button
+                    onClick={exportFilteredInvoices}
+                    className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors"
+                  >
+                    📊 Export Filtered
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {invoices.length === 0 ? (
           <div
-            style={{
-              backgroundColor: "white",
-              padding: isMobile ? "40px 20px" : "60px",
-              borderRadius: "16px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-              border: "1px solid #e9ecef",
-              textAlign: "center",
-            }}
+            className={`bg-white ${isMobile ? "p-10" : "p-16"} rounded-2xl shadow-lg border border-gray-200 text-center`}
           >
             <div
-              style={{
-                fontSize: isMobile ? "2rem" : "3rem",
-                marginBottom: "24px",
-                opacity: "0.3",
-              }}
+              className={`${isMobile ? "text-4xl" : "text-6xl"} mb-6 opacity-30`}
             >
               📄
             </div>
             <h3
-              style={{
-                fontSize: isMobile ? "1.25rem" : "1.5rem",
-                margin: "0 0 16px 0",
-                color: "#1a1a1a",
-              }}
+              className={`${isMobile ? "text-xl" : "text-2xl"} font-semibold text-gray-900 mb-4`}
             >
               No Invoices Yet
             </h3>
-            <p
-              style={{
-                color: "#666",
-                margin: "0 0 24px 0",
-                fontSize: isMobile ? "1rem" : "1.1rem",
-              }}
-            >
+            <p className="text-gray-800 mb-6 text-base lg:text-lg">
               Create your first invoice to get started
             </p>
             <Link
               href="/admin/invoices/new"
-              style={{
-                padding: isMobile ? "14px 20px" : "12px 24px",
-                backgroundColor: "#7a6990",
-                color: "white",
-                textDecoration: "none",
-                borderRadius: "8px",
-                fontSize: isMobile ? "0.9rem" : "1rem",
-                fontWeight: "600",
-                width: isMobile ? "100%" : "auto",
-                display: "inline-block",
-              }}
+              className={`px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white no-underline rounded-lg font-semibold transition-colors ${isMobile ? "w-full" : "w-auto"} inline-block`}
             >
               Create Invoice
             </Link>
           </div>
         ) : (
-          <div
-            style={{
-              backgroundColor: "white",
-              borderRadius: "16px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-              border: "1px solid #e9ecef",
-              overflow: "hidden",
-            }}
-          >
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
             <div
-              style={{
-                padding: isMobile ? "16px" : "24px",
-                borderBottom: "1px solid #e9ecef",
-                backgroundColor: "#f8f9fa",
-              }}
+              className={`${isMobile ? "p-4" : "p-6"} border-b border-gray-200 bg-gray-50`}
             >
               <h3
-                style={{
-                  fontSize: isMobile ? "1.1rem" : "1.2rem",
-                  margin: "0",
-                  color: "#1a1a1a",
-                  textAlign: isMobile ? "center" : "left",
-                }}
+                className={`${isMobile ? "text-lg" : "text-xl"} font-semibold text-gray-900 m-0 ${isMobile ? "text-center" : "text-left"}`}
               >
-                Invoice List ({invoices.length} invoices)
+                Invoice List ({filteredInvoices.length} invoices)
               </h3>
             </div>
 
             {/* Mobile Card Layout */}
             {isMobile ? (
-              <div style={{ padding: "16px" }}>
-                {invoices.map((invoice) => (
+              <div className="p-4">
+                {filteredInvoices.map((invoice) => (
                   <div
                     key={invoice.id}
-                    style={{
-                      border: "1px solid #e9ecef",
-                      borderRadius: "12px",
-                      padding: "16px",
-                      marginBottom: "16px",
-                      backgroundColor: "#fafbfc",
-                    }}
+                    className="border border-gray-200 rounded-xl p-4 mb-4 bg-gray-50"
                   >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "flex-start",
-                        marginBottom: "12px",
-                      }}
-                    >
+                    <div className="flex justify-between items-start mb-3">
                       <div>
-                        <h4
-                          style={{
-                            margin: "0 0 4px 0",
-                            fontSize: "1.1rem",
-                            color: "#1a1a1a",
-                            fontWeight: "600",
-                          }}
-                        >
+                        <h4 className="text-lg font-semibold text-gray-900 mb-1 m-0">
                           {invoice.invoiceNumber || "N/A"}
                         </h4>
-                        <p
-                          style={{
-                            margin: "0",
-                            fontSize: "0.9rem",
-                            color: "#666",
-                          }}
-                        >
+                        <p className="text-sm text-gray-800 m-0">
                           {invoice.customerName}
                         </p>
                       </div>
                       <select
+                        disabled={(invoice as { _saving?: boolean })._saving}
                         value={invoice.status}
-                        onChange={async (e) => {
-                          try {
-                            const response = await fetch(
-                              `/api/invoices/${invoice.id}`,
-                              {
-                                method: "PATCH",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({
-                                  status: e.target.value,
-                                }),
-                              },
-                            );
-
-                            if (response.ok) {
-                              // Update the local state
-                              setInvoices((prev) =>
-                                prev.map((inv) =>
-                                  inv.id === invoice.id
-                                    ? { ...inv, status: e.target.value }
-                                    : inv,
-                                ),
-                              );
-                            } else {
-                              alert("Failed to update status");
-                            }
-                          } catch (error) {
-                            console.error("Error updating status:", error);
-                            alert("Failed to update status");
-                          }
-                        }}
-                        style={{
-                          padding: "4px 8px",
-                          border: "1px solid #d1d5db",
-                          borderRadius: "6px",
-                          fontSize: "0.75rem",
-                          backgroundColor: "white",
-                          color: "#374151",
-                          cursor: "pointer",
-                        }}
+                        onChange={(e) =>
+                          updateStatus(invoice.id, e.target.value)
+                        }
+                        className="px-2 py-1 border border-gray-300 rounded-md text-xs bg-white text-gray-700 cursor-pointer"
                       >
-                        <option value="draft">Draft</option>
-                        <option value="open">Open</option>
-                        <option value="pending">Pending</option>
-                        <option value="paid">Paid</option>
-                        <option value="void">Void</option>
+                        <option value="draft">📝 Draft</option>
+                        <option value="open">🔵 Open</option>
+                        <option value="sent">📧 Sent (Pending Payment)</option>
+                        <option value="paid">✅ Paid</option>
+                        <option value="void">❌ Void</option>
                       </select>
                     </div>
 
-                    <div
-                      style={{
-                        display: "grid",
-                        gap: "8px",
-                        fontSize: "0.9rem",
-                        marginBottom: "16px",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                        }}
-                      >
-                        <span style={{ color: "#666" }}>Issue Date:</span>
-                        <span style={{ color: "#1a1a1a", fontWeight: "500" }}>
+                    <div className="grid gap-2 text-sm mb-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-800">Issue Date:</span>
+                        <span className="text-gray-900 font-medium">
                           {invoice.issueDate
                             ? formatDate(invoice.issueDate)
                             : "N/A"}
                         </span>
                       </div>
 
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                        }}
-                      >
-                        <span style={{ color: "#666" }}>Total:</span>
-                        <span
-                          style={{
-                            color: "#1a1a1a",
-                            fontWeight: "600",
-                            fontSize: "1rem",
-                          }}
-                        >
-                          {formatCurrency(invoice.total)}
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-800">Total:</span>
+                        <span className="text-gray-900 font-semibold text-base">
+                          {formatCurrency(Number(invoice.total))}
                         </span>
                       </div>
                     </div>
 
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: "8px",
-                        justifyContent: "center",
-                      }}
-                    >
+                    <div className="flex gap-2 justify-center">
                       <Link
                         href={`/admin/invoices/${invoice.id}`}
-                        style={{
-                          padding: "8px 16px",
-                          backgroundColor: "#7a6990",
-                          color: "white",
-                          textDecoration: "none",
-                          borderRadius: "6px",
-                          fontSize: "0.8rem",
-                          fontWeight: "500",
-                          flex: 1,
-                          textAlign: "center",
-                        }}
+                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white no-underline rounded-md text-sm font-medium flex-1 text-center"
                       >
                         View
                       </Link>
                       <Link
                         href={`/admin/invoices/${invoice.id}/edit`}
-                        style={{
-                          padding: "8px 16px",
-                          backgroundColor: "#007bff",
-                          color: "white",
-                          textDecoration: "none",
-                          borderRadius: "6px",
-                          fontSize: "0.8rem",
-                          fontWeight: "500",
-                          flex: 1,
-                          textAlign: "center",
-                        }}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white no-underline rounded-md text-sm font-medium flex-1 text-center"
                       >
                         Edit
                       </Link>
@@ -518,233 +586,81 @@ export default function InvoicesPage() {
               </div>
             ) : (
               /* Desktop Table Layout */
-              <div style={{ overflowX: "auto" }}>
-                <table
-                  style={{
-                    width: "100%",
-                    borderCollapse: "collapse",
-                  }}
-                >
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
                   <thead>
-                    <tr style={{ backgroundColor: "#f8f9fa" }}>
-                      <th
-                        style={{
-                          padding: "16px",
-                          textAlign: "left",
-                          borderBottom: "1px solid #e9ecef",
-                          color: "#1a1a1a",
-                          fontWeight: "600",
-                          fontSize: "0.9rem",
-                        }}
-                      >
+                    <tr className="bg-gray-50">
+                      <th className="p-4 text-left border-b border-gray-200 text-gray-900 font-semibold text-sm">
                         Invoice #
                       </th>
-                      <th
-                        style={{
-                          padding: "16px",
-                          textAlign: "left",
-                          borderBottom: "1px solid #e9ecef",
-                          color: "#1a1a1a",
-                          fontWeight: "600",
-                          fontSize: "0.9rem",
-                        }}
-                      >
+                      <th className="p-4 text-left border-b border-gray-200 text-gray-900 font-semibold text-sm">
                         Customer
                       </th>
-                      <th
-                        style={{
-                          padding: "16px",
-                          textAlign: "left",
-                          borderBottom: "1px solid #e9ecef",
-                          color: "#1a1a1a",
-                          fontWeight: "600",
-                          fontSize: "0.9rem",
-                        }}
-                      >
+                      <th className="p-4 text-left border-b border-gray-200 text-gray-900 font-semibold text-sm">
                         Issue Date
                       </th>
-
-                      <th
-                        style={{
-                          padding: "16px",
-                          textAlign: "right",
-                          borderBottom: "1px solid #e9ecef",
-                          color: "#1a1a1a",
-                          fontWeight: "600",
-                          fontSize: "0.9rem",
-                        }}
-                      >
+                      <th className="p-4 text-right border-b border-gray-200 text-gray-900 font-semibold text-sm">
                         Total
                       </th>
-                      <th
-                        style={{
-                          padding: "16px",
-                          textAlign: "center",
-                          borderBottom: "1px solid #e9ecef",
-                          color: "#1a1a1a",
-                          fontWeight: "600",
-                          fontSize: "0.9rem",
-                        }}
-                      >
+                      <th className="p-4 text-center border-b border-gray-200 text-gray-900 font-semibold text-sm">
                         Status
                       </th>
-                      <th
-                        style={{
-                          padding: "16px",
-                          textAlign: "center",
-                          borderBottom: "1px solid #e9ecef",
-                          color: "#1a1a1a",
-                          fontWeight: "600",
-                          fontSize: "0.9rem",
-                        }}
-                      >
+                      <th className="p-4 text-center border-b border-gray-200 text-gray-900 font-semibold text-sm">
                         Actions
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {invoices.map((invoice) => (
+                    {filteredInvoices.map((invoice) => (
                       <tr
                         key={invoice.id}
-                        style={{
-                          borderBottom: "1px solid #f0f0f0",
-                        }}
+                        className="border-b border-gray-100 hover:bg-gray-50"
                       >
-                        <td
-                          style={{
-                            padding: "16px",
-                            color: "#1a1a1a",
-                            fontWeight: "500",
-                          }}
-                        >
+                        <td className="p-4 text-gray-900 font-medium">
                           {invoice.invoiceNumber || "N/A"}
                         </td>
-                        <td
-                          style={{
-                            padding: "16px",
-                            color: "#1a1a1a",
-                          }}
-                        >
+                        <td className="p-4 text-gray-900">
                           {invoice.customerName}
                         </td>
-                        <td
-                          style={{
-                            padding: "16px",
-                            color: "#666",
-                            fontSize: "0.9rem",
-                          }}
-                        >
+                        <td className="p-4 text-gray-800 text-sm">
                           {invoice.issueDate
                             ? formatDate(invoice.issueDate)
                             : "N/A"}
                         </td>
-
-                        <td
-                          style={{
-                            padding: "16px",
-                            textAlign: "right",
-                            color: "#1a1a1a",
-                            fontWeight: "600",
-                          }}
-                        >
-                          {formatCurrency(invoice.total)}
+                        <td className="p-4 text-right text-gray-900 font-semibold">
+                          {formatCurrency(Number(invoice.total))}
                         </td>
-                        <td
-                          style={{
-                            padding: "16px",
-                            textAlign: "center",
-                          }}
-                        >
+                        <td className="p-4 text-center">
                           <select
+                            disabled={
+                              (invoice as { _saving?: boolean })._saving
+                            }
                             value={invoice.status}
-                            onChange={async (e) => {
-                              try {
-                                const response = await fetch(
-                                  `/api/invoices/${invoice.id}`,
-                                  {
-                                    method: "PATCH",
-                                    headers: {
-                                      "Content-Type": "application/json",
-                                    },
-                                    body: JSON.stringify({
-                                      status: e.target.value,
-                                    }),
-                                  },
-                                );
-
-                                if (response.ok) {
-                                  // Update the local state
-                                  setInvoices((prev) =>
-                                    prev.map((inv) =>
-                                      inv.id === invoice.id
-                                        ? { ...inv, status: e.target.value }
-                                        : inv,
-                                    ),
-                                  );
-                                } else {
-                                  alert("Failed to update status");
-                                }
-                              } catch (error) {
-                                console.error("Error updating status:", error);
-                                alert("Failed to update status");
-                              }
-                            }}
-                            style={{
-                              padding: "4px 8px",
-                              border: "1px solid #d1d5db",
-                              borderRadius: "6px",
-                              fontSize: "0.75rem",
-                              backgroundColor: "white",
-                              color: "#374151",
-                              cursor: "pointer",
-                            }}
+                            onChange={(e) =>
+                              updateStatus(invoice.id, e.target.value)
+                            }
+                            className="px-2 py-1 border border-gray-300 rounded-md text-xs bg-white text-gray-700 cursor-pointer"
                           >
-                            <option value="draft">Draft</option>
-                            <option value="open">Open</option>
-                            <option value="pending">Pending</option>
-                            <option value="paid">Paid</option>
-                            <option value="void">Void</option>
+                            <option value="draft">📝 Draft</option>
+                            <option value="open">🔵 Open</option>
+                            <option value="sent">
+                              📧 Sent (Pending Payment)
+                            </option>
+                            <option value="paid">✅ Paid</option>
+                            <option value="void">❌ Void</option>
                           </select>
                         </td>
-                        <td
-                          style={{
-                            padding: "16px",
-                            textAlign: "center",
-                          }}
-                        >
-                          <div
-                            style={{
-                              display: "flex",
-                              gap: "8px",
-                              justifyContent: "center",
-                            }}
-                          >
+                        <td className="p-4 text-center">
+                          <div className="flex gap-2 justify-center">
                             <Link
                               href={`/admin/invoices/${invoice.id}`}
-                              style={{
-                                padding: "6px 12px",
-                                backgroundColor: "#7a6990",
-                                color: "white",
-                                textDecoration: "none",
-                                borderRadius: "4px",
-                                fontSize: "0.8rem",
-                                fontWeight: "500",
-                              }}
+                              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white no-underline rounded text-sm font-medium"
                             >
                               View
                             </Link>
                             <Link
                               href={`/admin/invoices/${invoice.id}/edit`}
-                              style={{
-                                padding: "6px 12px",
-                                backgroundColor: "#007bff",
-                                color: "white",
-                                textDecoration: "none",
-                                borderRadius: "4px",
-                                fontSize: "0.8rem",
-                                fontWeight: "500",
-                                display: "inline-block",
-                              }}
+                              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white no-underline rounded text-sm font-medium"
                             >
                               Edit
                             </Link>
@@ -758,37 +674,11 @@ export default function InvoicesPage() {
                                 )
                               }
                               disabled={deletingInvoiceId === invoice.id}
-                              style={{
-                                padding: "6px 12px",
-                                backgroundColor:
-                                  deletingInvoiceId === invoice.id
-                                    ? "#6c757d"
-                                    : "#dc2626",
-                                color: "white",
-                                border: "none",
-                                borderRadius: "4px",
-                                fontSize: "0.8rem",
-                                fontWeight: "500",
-                                cursor:
-                                  deletingInvoiceId === invoice.id
-                                    ? "not-allowed"
-                                    : "pointer",
-                                transition: "background-color 0.2s ease",
-                                opacity:
-                                  deletingInvoiceId === invoice.id ? 0.6 : 1,
-                              }}
-                              onMouseEnter={(e) => {
-                                if (deletingInvoiceId !== invoice.id) {
-                                  e.currentTarget.style.backgroundColor =
-                                    "#b91c1c";
-                                }
-                              }}
-                              onMouseLeave={(e) => {
-                                if (deletingInvoiceId !== invoice.id) {
-                                  e.currentTarget.style.backgroundColor =
-                                    "#dc2626";
-                                }
-                              }}
+                              className={`px-3 py-1.5 text-white rounded text-sm font-medium transition-colors ${
+                                deletingInvoiceId === invoice.id
+                                  ? "bg-gray-400 cursor-not-allowed opacity-60"
+                                  : "bg-red-600 hover:bg-red-700 cursor-pointer"
+                              }`}
                             >
                               {deletingInvoiceId === invoice.id
                                 ? "Deleting..."
@@ -808,127 +698,42 @@ export default function InvoicesPage() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && invoiceToDelete && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: "white",
-              borderRadius: "12px",
-              padding: "24px",
-              maxWidth: "400px",
-              width: "90%",
-              boxShadow:
-                "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                marginBottom: "20px",
-              }}
-            >
-              <div
-                style={{
-                  width: "48px",
-                  height: "48px",
-                  borderRadius: "50%",
-                  backgroundColor: "#fef2f2",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginRight: "16px",
-                }}
-              >
-                <span style={{ fontSize: "24px", color: "#dc2626" }}>⚠️</span>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-11/12 shadow-2xl">
+            <div className="flex items-center mb-5">
+              <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mr-4">
+                <span className="text-2xl text-red-600">⚠️</span>
               </div>
               <div>
-                <h3
-                  style={{
-                    margin: "0",
-                    fontSize: "1.25rem",
-                    fontWeight: "600",
-                    color: "#1f2937",
-                  }}
-                >
+                <h3 className="text-xl font-semibold text-gray-800 m-0">
                   Delete Invoice
                 </h3>
-                <p
-                  style={{
-                    margin: "4px 0 0 0",
-                    color: "#6b7280",
-                    fontSize: "0.875rem",
-                  }}
-                >
+                <p className="text-sm text-gray-700 mt-1 m-0">
                   This action cannot be undone
                 </p>
               </div>
             </div>
 
-            <p
-              style={{
-                margin: "0 0 24px 0",
-                color: "#374151",
-                fontSize: "1rem",
-                lineHeight: "1.5",
-              }}
-            >
+            <p className="text-gray-800 mb-6 leading-relaxed">
               Are you sure you want to delete the invoice for{" "}
               <strong>{invoiceToDelete.customerName}</strong>?
             </p>
 
-            <div
-              style={{
-                display: "flex",
-                gap: "12px",
-                justifyContent: "flex-end",
-              }}
-            >
+            <div className="flex gap-3 justify-end">
               <button
                 onClick={cancelDelete}
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor: "transparent",
-                  color: "#6b7280",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "8px",
-                  fontSize: "0.875rem",
-                  fontWeight: "500",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease",
-                }}
+                className="px-5 py-2.5 bg-transparent text-gray-700 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDelete}
                 disabled={deletingInvoiceId !== null}
-                style={{
-                  padding: "10px 20px",
-                  backgroundColor:
-                    deletingInvoiceId !== null ? "#6c757d" : "#dc2626",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "8px",
-                  fontSize: "0.875rem",
-                  fontWeight: "600",
-                  cursor:
-                    deletingInvoiceId !== null ? "not-allowed" : "pointer",
-                  transition: "all 0.2s ease",
-                  opacity: deletingInvoiceId !== null ? 0.6 : 1,
-                }}
+                className={`px-5 py-2.5 text-white border-none rounded-lg text-sm font-semibold transition-all ${
+                  deletingInvoiceId !== null
+                    ? "bg-gray-500 cursor-not-allowed opacity-60"
+                    : "bg-red-600 hover:bg-red-700 cursor-pointer"
+                }`}
               >
                 {deletingInvoiceId !== null ? "Deleting..." : "Delete Invoice"}
               </button>

@@ -1,13 +1,17 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
-    const invoice = await prisma.invoiceMirror.findUnique({
+    const invoice = await (prisma as any).invoice.findUnique({
       where: { id },
       include: {
         customer: {
@@ -29,9 +33,9 @@ export async function GET(
             id: true,
             description: true,
             quantity: true,
-            unitAmount: true,
+            unitPrice: true,
             taxable: true,
-            notes: true,
+            lineTotal: true,
           },
         },
       },
@@ -61,18 +65,21 @@ export async function GET(
         invoice.issueDate?.toISOString() || invoice.createdAt.toISOString(),
       dueDate: invoice.dueDate?.toISOString(),
       status: invoice.status,
-      items: invoice.items.map((item) => ({
+      items: invoice.items.map((item: any) => ({
+        id: item.id,
         description: item.description,
         quantity: item.quantity,
-        rate: item.unitAmount / 100, // Convert from cents
-        amount: (item.unitAmount * item.quantity) / 100, // Convert from cents
+        rate: item.unitPrice,
+        amount: item.lineTotal,
       })),
       notes: invoice.notes || "",
-      terms: "Payment due before delivery",
-      subtotal: invoice.subtotal / 100, // Convert from cents
-      tax: invoice.tax / 100, // Convert from cents
-      total: invoice.total / 100, // Convert from cents
-      invoiceNumber: invoice.invoiceNumber,
+      terms: invoice.internalMemo || "",
+      subtotal: invoice.subtotal,
+      tax: invoice.tax,
+      total: invoice.total,
+      applyTax: invoice.applyTax,
+      taxRate: invoice.taxRate,
+      invoiceNumber: invoice.number,
     };
 
     return NextResponse.json(formattedInvoice);
@@ -95,7 +102,7 @@ export async function PATCH(
 
     // Handle status-only updates (for status changes)
     if (body.status && Object.keys(body).length === 1) {
-      const updatedInvoice = await prisma.invoiceMirror.update({
+      const updatedInvoice = await (prisma as any).invoice.update({
         where: { id },
         data: { status: body.status },
         include: {
@@ -115,6 +122,7 @@ export async function PATCH(
       invoiceDate,
       items,
       notes,
+      terms,
       subtotal,
       tax,
       total,
@@ -165,21 +173,23 @@ export async function PATCH(
     }
 
     // Update invoice items first (delete existing and create new)
-    await prisma.invoiceItemMirror.deleteMany({
+    await (prisma as any).invoiceItem.deleteMany({
       where: { invoiceId: id },
     });
 
     // Update the invoice
-    const updatedInvoice = await prisma.invoiceMirror.update({
+    const updatedInvoice = await (prisma as any).invoice.update({
       where: { id },
       data: {
         customerId: customer.id,
         status: status || "draft",
-        subtotal: Math.round(subtotal * 100), // Convert to cents
-        tax: Math.round(tax * 100), // Convert to cents
-        total: Math.round(total * 100), // Convert to cents
+        subtotal: subtotal,
+        tax: tax,
+        total: total,
+        balance: total,
         issueDate: invoiceDate ? new Date(invoiceDate) : new Date(),
         notes: notes || null,
+        internalMemo: terms || null,
         items: {
           create: items.map(
             (item: {
@@ -190,9 +200,9 @@ export async function PATCH(
             }) => ({
               description: item.description,
               quantity: item.quantity,
-              unitAmount: Math.round(item.rate * 100), // Convert to cents
+              unitPrice: item.rate,
               taxable: true,
-              notes: null,
+              lineTotal: item.amount,
             }),
           ),
         },
@@ -220,12 +230,12 @@ export async function DELETE(
   try {
     const { id } = await params;
     // Delete invoice items first (due to foreign key constraints)
-    await prisma.invoiceItemMirror.deleteMany({
+    await (prisma as any).invoiceItem.deleteMany({
       where: { invoiceId: id },
     });
 
     // Delete the invoice
-    await prisma.invoiceMirror.delete({
+    await (prisma as any).invoice.delete({
       where: { id },
     });
 

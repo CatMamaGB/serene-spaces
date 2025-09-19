@@ -2,7 +2,11 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { PRICING, PRICE_LABELS, type PriceCode } from "@/lib/pricing";
+import { safeJson } from "@/lib/utils";
+import { toCents, fromCents, formatCurrency } from "@/lib/invoice-types";
+import { useToast } from "@/components/ToastProvider";
 
 interface Customer {
   id: string;
@@ -17,6 +21,38 @@ interface Customer {
 }
 
 export default function CreateInvoice() {
+  const router = useRouter();
+  const toast = useToast();
+
+  // Money math helpers
+  const recompute = (
+    items: {
+      description: string;
+      quantity: number;
+      rate: number;
+      amount: number;
+    }[],
+    applyTax: boolean,
+    taxRate: number,
+  ) => {
+    // normalize item amounts from qty * rate
+    const fixedItems = items.map((it) => {
+      const amountC = toCents(it.quantity * it.rate);
+      return { ...it, amount: fromCents(amountC) };
+    });
+
+    const subtotalC = fixedItems.reduce((s, it) => s + toCents(it.amount), 0);
+    const taxC = applyTax ? Math.round(subtotalC * (taxRate / 100)) : 0;
+    const totalC = subtotalC + taxC;
+
+    return {
+      items: fixedItems,
+      subtotal: fromCents(subtotalC),
+      tax: fromCents(taxC),
+      total: fromCents(totalC),
+    };
+  };
+
   const [invoiceData, setInvoiceData] = useState({
     customerName: "",
     customerEmail: "",
@@ -24,15 +60,24 @@ export default function CreateInvoice() {
     customerAddress: "",
     invoiceDate: new Date().toISOString().split("T")[0],
     dueDate: "",
-    items: [{ description: "", quantity: 1, rate: 0, amount: 0 }],
+    items: [] as {
+      description: string;
+      quantity: number;
+      rate: number;
+      amount: number;
+    }[],
     notes: "",
     terms:
       "Payment due before delivery\n\nHow to pay:\n• Zelle: loveserenespaces@gmail.com\n• Venmo: @beth-contos\n• Cash: Due at delivery",
     emailMessage: "",
+    applyTax: true,
+    taxRate: 6.25,
+    _subtotal: 0,
+    _tax: 0,
+    _total: 0,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,36 +85,35 @@ export default function CreateInvoice() {
   const [isTablet, setIsTablet] = useState(false);
 
   useEffect(() => {
-    // Check screen size
-    const checkScreenSize = () => {
-      const width = window.innerWidth;
-      setIsMobile(width <= 640);
-      setIsTablet(width > 640 && width <= 1024);
-    };
+    const ctrl = new AbortController();
 
-    checkScreenSize();
-    window.addEventListener("resize", checkScreenSize);
-
-    // Fetch customers from API
-    const fetchCustomers = async () => {
+    (async () => {
       try {
-        const response = await fetch("/api/customers");
-        if (response.ok) {
-          const data = await response.json();
-          if (Array.isArray(data)) {
-            setCustomers(data);
-          }
+        const r = await fetch("/api/customers", { signal: ctrl.signal });
+        if (r.ok) {
+          const data = await r.json();
+          if (Array.isArray(data)) setCustomers(data);
         }
-      } catch (error) {
-        console.error("Error fetching customers:", error);
+      } catch (e: unknown) {
+        if ((e as Error).name !== "AbortError")
+          console.error("Error fetching customers:", e);
       } finally {
         setLoading(false);
       }
+    })();
+
+    const onResize = () => {
+      const w = window.innerWidth;
+      setIsMobile(w <= 640);
+      setIsTablet(w > 640 && w <= 1024);
     };
+    onResize();
+    window.addEventListener("resize", onResize);
 
-    fetchCustomers();
-
-    return () => window.removeEventListener("resize", checkScreenSize);
+    return () => {
+      ctrl.abort();
+      window.removeEventListener("resize", onResize);
+    };
   }, []);
 
   const handleInputChange = (
@@ -112,52 +156,63 @@ export default function CreateInvoice() {
     field: string,
     value: string | number,
   ) => {
-    const newItems = [...invoiceData.items];
-    newItems[index] = { ...newItems[index], [field]: value };
+    const nextItems = [...invoiceData.items];
+    const v = typeof value === "string" ? value : value; // keep as-is
+    // sanitize numbers
+    if (field === "quantity")
+      nextItems[index].quantity = Math.max(1, Number(v) || 1);
+    else if (field === "rate")
+      nextItems[index].rate = Math.max(0, Number(v) || 0);
+    else nextItems[index].description = String(v);
 
-    // Calculate amount
-    if (field === "quantity" || field === "rate") {
-      const quantity =
-        field === "quantity" ? Number(value) : newItems[index].quantity;
-      const rate = field === "rate" ? Number(value) : newItems[index].rate;
-      newItems[index].amount = quantity * rate;
-    }
-
+    const { items, subtotal, tax, total } = recompute(
+      nextItems,
+      invoiceData.applyTax,
+      invoiceData.taxRate,
+    );
     setInvoiceData((prev) => ({
       ...prev,
-      items: newItems,
+      items,
+      _subtotal: subtotal,
+      _tax: tax,
+      _total: total,
     }));
   };
 
   const addItem = () => {
+    const nextItems = [
+      ...invoiceData.items,
+      { description: "", quantity: 1, rate: 0, amount: 0 },
+    ];
+    const { items, subtotal, tax, total } = recompute(
+      nextItems,
+      invoiceData.applyTax,
+      invoiceData.taxRate,
+    );
     setInvoiceData((prev) => ({
       ...prev,
-      items: [
-        ...prev.items,
-        { description: "", quantity: 1, rate: 0, amount: 0 },
-      ],
+      items,
+      _subtotal: subtotal,
+      _tax: tax,
+      _total: total,
     }));
   };
 
   const removeItem = (index: number) => {
-    if (invoiceData.items.length > 1) {
-      setInvoiceData((prev) => ({
-        ...prev,
-        items: prev.items.filter((_, i) => i !== index),
-      }));
-    }
-  };
-
-  const calculateSubtotal = () => {
-    return invoiceData.items.reduce((sum, item) => sum + item.amount, 0);
-  };
-
-  const calculateTax = () => {
-    return calculateSubtotal() * 0.0625; // 6.25% Illinois Sales Tax
-  };
-
-  const calculateTotal = () => {
-    return calculateSubtotal() + calculateTax();
+    if (invoiceData.items.length <= 1) return;
+    const nextItems = invoiceData.items.filter((_, i) => i !== index);
+    const { items, subtotal, tax, total } = recompute(
+      nextItems,
+      invoiceData.applyTax,
+      invoiceData.taxRate,
+    );
+    setInvoiceData((prev) => ({
+      ...prev,
+      items,
+      _subtotal: subtotal,
+      _tax: tax,
+      _total: total,
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -171,70 +226,8 @@ export default function CreateInvoice() {
         invoiceData.items.length === 0 ||
         invoiceData.items[0].description === ""
       ) {
-        alert(
-          "Please fill in all required fields: customer name and at least one item with description.",
-        );
-        return;
-      }
-
-      // Create invoice data in the format expected by the API
-      const invoicePayload = {
-        customerName: invoiceData.customerName,
-        customerEmail: invoiceData.customerEmail,
-        customerPhone: invoiceData.customerPhone,
-        customerAddress: invoiceData.customerAddress,
-        invoiceDate: invoiceData.invoiceDate,
-        items: invoiceData.items.map((item) => ({
-          description: item.description,
-          quantity: item.quantity,
-          rate: item.rate,
-          amount: item.amount,
-        })),
-        notes: invoiceData.notes,
-        terms: invoiceData.terms,
-        subtotal: calculateSubtotal(),
-        tax: calculateTax(),
-        total: calculateTotal(),
-        status: "draft",
-      };
-
-      // Save to database first
-      const response = await fetch("/api/invoices", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(invoicePayload),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to create invoice");
-      }
-
-      const result = await response.json();
-
-      // Redirect to the invoice view page
-      window.location.href = `/admin/invoices/${result.id}`;
-    } catch (error) {
-      console.error("Error creating invoice:", error);
-      alert(
-        `Failed to create invoice: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleSaveAsDraft = async () => {
-    try {
-      // Validate required fields
-      if (
-        !invoiceData.customerName ||
-        invoiceData.items.length === 0 ||
-        invoiceData.items[0].description === ""
-      ) {
-        alert(
+        toast.error(
+          "Validation Error",
           "Please fill in all required fields: customer name and at least one item with description.",
         );
         return;
@@ -256,9 +249,76 @@ export default function CreateInvoice() {
         })),
         notes: invoiceData.notes,
         terms: invoiceData.terms,
-        subtotal: calculateSubtotal(),
-        tax: calculateTax(),
-        total: calculateTotal(),
+        subtotal: invoiceData._subtotal ?? 0,
+        tax: invoiceData._tax ?? 0,
+        total: invoiceData._total ?? 0,
+        applyTax: invoiceData.applyTax,
+        taxRate: invoiceData.taxRate,
+        status: "draft",
+      };
+
+      // Save to database first
+      const response = await fetch("/api/invoices", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(invoicePayload),
+      });
+
+      const result = await safeJson(response);
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to create invoice");
+      }
+
+      // Redirect to the invoice view page
+      router.push(`/admin/invoices/${result.id}`);
+    } catch (error) {
+      console.error("Error creating invoice:", error);
+      toast.error(
+        "Creation Failed",
+        `Failed to create invoice: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSaveAsDraft = async () => {
+    try {
+      // Validate required fields
+      if (
+        !invoiceData.customerName ||
+        invoiceData.items.length === 0 ||
+        invoiceData.items[0].description === ""
+      ) {
+        toast.error(
+          "Validation Error",
+          "Please fill in all required fields: customer name and at least one item with description.",
+        );
+        return;
+      }
+
+      // Create invoice data in the format expected by the API
+      const invoicePayload = {
+        customerName: invoiceData.customerName,
+        customerEmail: invoiceData.customerEmail,
+        customerPhone: invoiceData.customerPhone,
+        customerAddress: invoiceData.customerAddress,
+        invoiceDate: invoiceData.invoiceDate,
+        dueDate: invoiceData.dueDate,
+        items: invoiceData.items.map((item) => ({
+          description: item.description,
+          quantity: item.quantity,
+          rate: item.rate,
+          amount: item.amount,
+        })),
+        notes: invoiceData.notes,
+        terms: invoiceData.terms,
+        subtotal: invoiceData._subtotal ?? 0,
+        tax: invoiceData._tax ?? 0,
+        total: invoiceData._total ?? 0,
         status: "draft",
       };
 
@@ -271,67 +331,25 @@ export default function CreateInvoice() {
         body: JSON.stringify(invoicePayload),
       });
 
+      const result = await safeJson(response);
+
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to save draft");
+        throw new Error(result.error || "Failed to save draft");
       }
 
-      const result = await response.json();
-
-      alert("Draft saved successfully! Invoice ID: " + result.id);
+      toast.success(
+        "Draft Saved",
+        `Draft saved successfully! Invoice ID: ${result.id}`,
+      );
 
       // Redirect to the invoice view page
-      window.location.href = `/admin/invoices/${result.id}`;
+      router.push(`/admin/invoices/${result.id}`);
     } catch (error) {
       console.error("Error saving draft:", error);
-      alert(
+      toast.error(
+        "Save Failed",
         `Failed to save draft: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
-    }
-  };
-
-  const handleSendEmail = async () => {
-    if (!invoiceData.customerEmail) {
-      alert("Please enter a customer email address to send the invoice.");
-      return;
-    }
-
-    if (
-      invoiceData.items.length === 0 ||
-      invoiceData.items[0].description === ""
-    ) {
-      alert("Please add at least one item to the invoice before sending.");
-      return;
-    }
-
-    setIsSendingEmail(true);
-
-    try {
-      const response = await fetch("/api/invoices/send", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...invoiceData,
-          subtotal: calculateSubtotal(),
-          tax: calculateTax(),
-          total: calculateTotal(),
-        }),
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        alert(`Invoice sent successfully to ${invoiceData.customerEmail}!`);
-      } else {
-        alert(`Failed to send invoice: ${result.error}`);
-      }
-    } catch (error) {
-      console.error("Error sending invoice:", error);
-      alert("Failed to send invoice. Please try again.");
-    } finally {
-      setIsSendingEmail(false);
     }
   };
 
@@ -717,15 +735,43 @@ export default function CreateInvoice() {
                       key={code}
                       type="button"
                       onClick={() => {
-                        const newItem = {
-                          description: PRICE_LABELS[code as PriceCode],
-                          quantity: 1,
-                          rate: price,
-                          amount: price,
-                        };
+                        const description = PRICE_LABELS[code as PriceCode];
+                        const priceValue = PRICING[code as PriceCode];
+
+                        const idx = invoiceData.items.findIndex(
+                          (i) =>
+                            i.description === description &&
+                            i.rate === priceValue,
+                        );
+                        let nextItems;
+                        if (idx >= 0) {
+                          nextItems = invoiceData.items.map((it, i) =>
+                            i === idx
+                              ? { ...it, quantity: it.quantity + 1 }
+                              : it,
+                          );
+                        } else {
+                          nextItems = [
+                            ...invoiceData.items,
+                            {
+                              description,
+                              quantity: 1,
+                              rate: priceValue,
+                              amount: 0,
+                            },
+                          ];
+                        }
+                        const { items, subtotal, tax, total } = recompute(
+                          nextItems,
+                          invoiceData.applyTax,
+                          invoiceData.taxRate,
+                        );
                         setInvoiceData((prev) => ({
                           ...prev,
-                          items: [...prev.items, newItem],
+                          items,
+                          _subtotal: subtotal,
+                          _tax: tax,
+                          _total: total,
                         }));
                       }}
                       style={{
@@ -747,7 +793,7 @@ export default function CreateInvoice() {
                         {PRICE_LABELS[code as PriceCode]}
                       </div>
                       <div style={{ fontSize: "0.625rem", opacity: "0.8" }}>
-                        ${price.toFixed(2)}
+                        {formatCurrency(price)}
                       </div>
                     </button>
                   ))}
@@ -799,17 +845,7 @@ export default function CreateInvoice() {
                   <button
                     type="button"
                     onClick={addItem}
-                    style={{
-                      backgroundColor: "#7a6990",
-                      color: "white",
-                      border: "none",
-                      padding: "0.5rem 1rem",
-                      borderRadius: "0.5rem",
-                      fontSize: "0.875rem",
-                      fontWeight: "500",
-                      cursor: "pointer",
-                      transition: "background-color 0.2s ease",
-                    }}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white border-none rounded-lg text-sm font-medium cursor-pointer transition-all"
                   >
                     + Add Item
                   </button>
@@ -839,6 +875,24 @@ export default function CreateInvoice() {
                     <div>Amount</div>
                     {!isMobile && <div></div>}
                   </div>
+
+                  {invoiceData.items.length === 0 && (
+                    <div
+                      style={{
+                        padding: "2rem",
+                        textAlign: "center",
+                        color: "#64748b",
+                        fontSize: "0.9rem",
+                        backgroundColor: "#f8fafc",
+                        borderRadius: "0.5rem",
+                        border: "1px dashed #cbd5e1",
+                        margin: "1rem 0",
+                      }}
+                    >
+                      No items added yet. Click &quot;+ Add Item&quot; to get
+                      started.
+                    </div>
+                  )}
 
                   {invoiceData.items.map((item, index) => (
                     <div
@@ -883,13 +937,10 @@ export default function CreateInvoice() {
                       {!isMobile && (
                         <input
                           type="number"
+                          inputMode="numeric"
                           value={item.quantity}
                           onChange={(e) =>
-                            handleItemChange(
-                              index,
-                              "quantity",
-                              Number(e.target.value),
-                            )
+                            handleItemChange(index, "quantity", e.target.value)
                           }
                           min="1"
                           style={{
@@ -913,31 +964,19 @@ export default function CreateInvoice() {
                       {!isMobile && (
                         <input
                           type="number"
+                          inputMode="decimal"
+                          step="0.01"
                           value={item.rate}
                           onChange={(e) =>
+                            handleItemChange(index, "rate", e.target.value)
+                          }
+                          onBlur={(e) => {
+                            e.target.style.borderColor = "#e5e7eb";
                             handleItemChange(
                               index,
                               "rate",
-                              Number(e.target.value),
-                            )
-                          }
-                          min="0"
-                          step="0.01"
-                          style={{
-                            padding: "0.5rem",
-                            border: "1px solid #e5e7eb",
-                            borderRadius: "0.375rem",
-                            fontSize: "0.875rem",
-                            backgroundColor: "white",
-                            color: "#374151",
-                            transition: "border-color 0.2s ease",
-                          }}
-                          onFocus={(e) => {
-                            e.target.style.borderColor = "#7a6990";
-                            e.target.style.outline = "none";
-                          }}
-                          onBlur={(e) => {
-                            e.target.style.borderColor = "#e5e7eb";
+                              Number(Number(e.target.value || 0).toFixed(2)),
+                            );
                           }}
                         />
                       )}
@@ -949,38 +988,17 @@ export default function CreateInvoice() {
                           color: "#1e293b",
                         }}
                       >
-                        ${item.amount.toFixed(2)}
+                        {formatCurrency(item.amount)}
                       </div>
                       <button
                         type="button"
                         onClick={() => removeItem(index)}
                         disabled={invoiceData.items.length === 1}
-                        style={{
-                          backgroundColor:
-                            invoiceData.items.length === 1
-                              ? "#9ca3af"
-                              : "#ef4444",
-                          color: "white",
-                          border: "none",
-                          padding: "0.25rem 0.5rem",
-                          borderRadius: "0.375rem",
-                          fontSize: "0.75rem",
-                          cursor:
-                            invoiceData.items.length === 1
-                              ? "not-allowed"
-                              : "pointer",
-                          transition: "background-color 0.2s ease",
-                        }}
-                        onMouseEnter={(e) => {
-                          if (invoiceData.items.length > 1) {
-                            e.currentTarget.style.backgroundColor = "#dc2626";
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (invoiceData.items.length > 1) {
-                            e.currentTarget.style.backgroundColor = "#ef4444";
-                          }
-                        }}
+                        className={`px-2 py-1 text-white border-none rounded text-xs transition-all ${
+                          invoiceData.items.length === 1
+                            ? "bg-gray-400 cursor-not-allowed"
+                            : "bg-red-600 hover:bg-red-700 cursor-pointer"
+                        }`}
                       >
                         ×
                       </button>
@@ -1045,6 +1063,202 @@ export default function CreateInvoice() {
                     e.target.style.borderColor = "#e5e7eb";
                   }}
                 />
+              </div>
+
+              {/* Tax Controls */}
+              <div
+                style={{
+                  backgroundColor: "white",
+                  borderRadius: "0.75rem",
+                  border: "1px solid #e2e8f0",
+                  padding: "1.5rem",
+                  marginBottom: "1.5rem",
+                }}
+              >
+                <h3
+                  style={{
+                    fontSize: "1.25rem",
+                    margin: "0 0 1rem 0",
+                    color: "#1a1a1a",
+                    fontWeight: "600",
+                  }}
+                >
+                  Tax Settings
+                </h3>
+
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: isMobile ? "column" : "row",
+                    gap: "1rem",
+                    alignItems: isMobile ? "stretch" : "center",
+                    marginBottom: "1rem",
+                  }}
+                >
+                  {/* Apply Tax Toggle */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                      flex: 1,
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      id="applyTax"
+                      checked={invoiceData.applyTax}
+                      onChange={(e) => {
+                        const applyTax = e.target.checked;
+                        const { items, subtotal, tax, total } = recompute(
+                          invoiceData.items,
+                          applyTax,
+                          invoiceData.taxRate,
+                        );
+                        setInvoiceData((prev) => ({
+                          ...prev,
+                          applyTax,
+                          items,
+                          _subtotal: subtotal,
+                          _tax: tax,
+                          _total: total,
+                        }));
+                      }}
+                      style={{
+                        width: "18px",
+                        height: "18px",
+                        cursor: "pointer",
+                      }}
+                    />
+                    <label
+                      htmlFor="applyTax"
+                      style={{
+                        fontSize: "1rem",
+                        color: "#333",
+                        cursor: "pointer",
+                        fontWeight: "500",
+                      }}
+                    >
+                      Apply Tax
+                    </label>
+                  </div>
+
+                  {/* Tax Rate Input */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                      flex: 1,
+                    }}
+                  >
+                    <label
+                      htmlFor="taxRate"
+                      style={{
+                        fontSize: "1rem",
+                        color: "#333",
+                        fontWeight: "500",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      Tax Rate:
+                    </label>
+                    <input
+                      type="number"
+                      id="taxRate"
+                      value={invoiceData.taxRate}
+                      onChange={(e) => {
+                        const taxRate = parseFloat(e.target.value) || 0;
+                        const { items, subtotal, tax, total } = recompute(
+                          invoiceData.items,
+                          invoiceData.applyTax,
+                          taxRate,
+                        );
+                        setInvoiceData((prev) => ({
+                          ...prev,
+                          taxRate,
+                          items,
+                          _subtotal: subtotal,
+                          _tax: tax,
+                          _total: total,
+                        }));
+                      }}
+                      min="0"
+                      max="100"
+                      step="0.01"
+                      disabled={!invoiceData.applyTax}
+                      style={{
+                        width: "80px",
+                        padding: "0.5rem 0.75rem",
+                        border: "1px solid #d1d5db",
+                        borderRadius: "0.5rem",
+                        fontSize: "1rem",
+                        backgroundColor: invoiceData.applyTax
+                          ? "white"
+                          : "#f5f5f5",
+                        color: invoiceData.applyTax ? "#333" : "#999",
+                      }}
+                    />
+                    <span
+                      style={{
+                        fontSize: "1rem",
+                        color: "#666",
+                        fontWeight: "500",
+                      }}
+                    >
+                      %
+                    </span>
+                  </div>
+                </div>
+
+                {/* Tax Summary */}
+                <div
+                  style={{
+                    padding: "0.75rem",
+                    backgroundColor: "#f8f9fa",
+                    borderRadius: "0.5rem",
+                    border: "1px solid #e9ecef",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      fontSize: "0.9rem",
+                      color: "#666",
+                      marginBottom: "0.25rem",
+                    }}
+                  >
+                    <span>Subtotal:</span>
+                    <span>{formatCurrency(invoiceData._subtotal ?? 0)}</span>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      fontSize: "0.9rem",
+                      color: "#666",
+                      marginBottom: "0.25rem",
+                    }}
+                  >
+                    <span>Tax ({invoiceData.taxRate}%):</span>
+                    <span>{formatCurrency(invoiceData._tax ?? 0)}</span>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      fontSize: "1rem",
+                      fontWeight: "600",
+                      color: "#1a1a1a",
+                      paddingTop: "0.5rem",
+                      borderTop: "1px solid #e9ecef",
+                    }}
+                  >
+                    <span>Total:</span>
+                    <span>{formatCurrency(invoiceData._total ?? 0)}</span>
+                  </div>
+                </div>
               </div>
 
               {/* Notes & Terms */}
@@ -1235,7 +1449,7 @@ How to pay:
                     }}
                   >
                     <span>Subtotal</span>
-                    <span>${calculateSubtotal().toFixed(2)}</span>
+                    <span>{formatCurrency(invoiceData._subtotal ?? 0)}</span>
                   </div>
                   <div
                     style={{
@@ -1247,7 +1461,7 @@ How to pay:
                     }}
                   >
                     <span>Tax (6.25%)</span>
-                    <span>${calculateTax().toFixed(2)}</span>
+                    <span>{formatCurrency(invoiceData._tax ?? 0)}</span>
                   </div>
                   <div
                     style={{
@@ -1261,7 +1475,7 @@ How to pay:
                     }}
                   >
                     <span>Total</span>
-                    <span>${calculateTotal().toFixed(2)}</span>
+                    <span>{formatCurrency(invoiceData._total ?? 0)}</span>
                   </div>
                 </div>
 
@@ -1277,17 +1491,11 @@ How to pay:
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    style={{
-                      backgroundColor: isSubmitting ? "#9ca3af" : "#7a6990",
-                      color: "white",
-                      border: "none",
-                      padding: "0.75rem 1.5rem",
-                      borderRadius: "0.5rem",
-                      fontSize: "0.875rem",
-                      fontWeight: "600",
-                      cursor: isSubmitting ? "not-allowed" : "pointer",
-                      transition: "all 0.2s ease",
-                    }}
+                    className={`px-6 py-3 text-white border-none rounded-lg text-sm font-semibold transition-all ${
+                      isSubmitting
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-indigo-600 hover:bg-indigo-700 cursor-pointer"
+                    }`}
                   >
                     {isSubmitting ? "Creating..." : "Create Invoice"}
                   </button>
@@ -1295,55 +1503,9 @@ How to pay:
                   <button
                     type="button"
                     onClick={handleSaveAsDraft}
-                    style={{
-                      backgroundColor: "transparent",
-                      color: "#7a6990",
-                      border: "1px solid #7a6990",
-                      padding: "0.75rem 1.5rem",
-                      borderRadius: "0.5rem",
-                      fontSize: "0.875rem",
-                      fontWeight: "500",
-                      cursor: "pointer",
-                      transition: "all 0.2s ease",
-                    }}
+                    className="px-6 py-3 bg-transparent text-blue-600 border-2 border-blue-600 rounded-lg text-sm font-medium hover:bg-blue-50 transition-all cursor-pointer"
                   >
                     Save as Draft
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleSendEmail}
-                    disabled={
-                      isSendingEmail ||
-                      !invoiceData.customerEmail ||
-                      invoiceData.items.length === 0 ||
-                      invoiceData.items[0].description === ""
-                    }
-                    style={{
-                      backgroundColor:
-                        isSendingEmail ||
-                        !invoiceData.customerEmail ||
-                        invoiceData.items.length === 0 ||
-                        invoiceData.items[0].description === ""
-                          ? "#9ca3af"
-                          : "#10b981",
-                      color: "white",
-                      border: "none",
-                      padding: "0.75rem 1.5rem",
-                      borderRadius: "0.5rem",
-                      fontSize: "0.875rem",
-                      fontWeight: "600",
-                      cursor:
-                        isSendingEmail ||
-                        !invoiceData.customerEmail ||
-                        invoiceData.items.length === 0 ||
-                        invoiceData.items[0].description === ""
-                          ? "not-allowed"
-                          : "pointer",
-                      transition: "all 0.2s ease",
-                    }}
-                  >
-                    {isSendingEmail ? "Sending..." : "📧 Send Invoice"}
                   </button>
 
                   <button
@@ -1359,29 +1521,26 @@ How to pay:
                           );
                           const result = await response.json();
                           if (response.ok) {
-                            alert(
+                            toast.success(
+                              "Test Email Sent",
                               `Test email sent successfully to ${testEmail}!`,
                             );
                           } else {
-                            alert(`Failed to send test email: ${result.error}`);
+                            toast.error(
+                              "Test Email Failed",
+                              `Failed to send test email: ${result.error}`,
+                            );
                           }
                         } catch (error) {
                           console.error("Error sending test email:", error);
-                          alert("Failed to send test email. Please try again.");
+                          toast.error(
+                            "Test Email Failed",
+                            "Failed to send test email. Please try again.",
+                          );
                         }
                       }
                     }}
-                    style={{
-                      backgroundColor: "#f59e0b",
-                      color: "white",
-                      border: "none",
-                      padding: "0.75rem 1.5rem",
-                      borderRadius: "0.5rem",
-                      fontSize: "0.875rem",
-                      fontWeight: "500",
-                      cursor: "pointer",
-                      transition: "all 0.2s ease",
-                    }}
+                    className="px-6 py-3 bg-yellow-600 hover:bg-yellow-700 text-white border-none rounded-lg text-sm font-medium cursor-pointer transition-all"
                   >
                     🧪 Test Email
                   </button>

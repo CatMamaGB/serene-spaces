@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 
+export const runtime = "nodejs";
+
 export async function POST(req: Request) {
   // If Stripe is not configured, return early
   if (!stripe) {
@@ -30,7 +32,7 @@ export async function POST(req: Request) {
   }
 
   await prisma.eventLog.create({
-    data: { type: event.type, payload: event as any }, // eslint-disable-line @typescript-eslint/no-explicit-any
+    data: { type: event.type, payload: event as any },
   });
 
   try {
@@ -40,7 +42,6 @@ export async function POST(req: Request) {
       event.type === "invoice.payment_succeeded" ||
       event.type === "invoice.payment_failed"
     ) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const inv = event.data.object as any;
       await prisma.invoiceMirror.update({
         where: { stripeInvoiceId: inv.id },

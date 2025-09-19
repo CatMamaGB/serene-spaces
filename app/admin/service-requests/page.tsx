@@ -2,91 +2,108 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-
-interface ServiceRequest {
-  id: string;
-  customerId: string;
-  customer: {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-  };
-  services: string[];
-  address: string;
-  status: string;
-  createdAt: string;
-  pickupDate?: string;
-  estimatedCost?: number;
-  scheduledPickupDate?: string;
-  repairNotes?: string;
-  waterproofingNotes?: string;
-  allergies?: string;
-  notes?: string;
-}
+import {
+  fetchServiceRequests,
+  markServiceRequestHandled,
+  updateServiceRequestNotes,
+  type ServiceRequest,
+} from "@/lib/api";
+import {
+  formatDate,
+  StatusBadge,
+  ActionButtons,
+} from "@/components/service-requests";
+import { useToast } from "@/components/ToastProvider";
 
 export default function ServiceRequestsPage() {
   const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(
     null,
   );
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showHandled, setShowHandled] = useState(false);
+  const [query, setQuery] = useState("");
+  const toast = useToast();
+
+  // Centralized fetch logic
+  const loadServiceRequests = async () => {
+    try {
+      const data = await fetchServiceRequests();
+      setServiceRequests(data);
+      setError(null);
+    } catch (e) {
+      console.error("Error fetching service requests:", e);
+      setError("Couldn't load requests. Try Refresh.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Optimistic mark handled with rollback
+  const markHandled = async (id: string) => {
+    const previousRequests = serviceRequests;
+    setServiceRequests((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, status: "handled" } : r)),
+    );
+
+    try {
+      await markServiceRequestHandled(id);
+    } catch {
+      // Rollback on error
+      setServiceRequests(previousRequests);
+      toast.error(
+        "Mark Handled Failed",
+        "Failed to mark request as handled. Please try again.",
+      );
+    }
+  };
 
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
     checkMobile();
     window.addEventListener("resize", checkMobile);
 
-    const fetchServiceRequests = async () => {
-      try {
-        const response = await fetch("/api/service-requests");
-        console.log("Service requests response status:", response.status);
-        if (response.ok) {
-          const data = await response.json();
-          console.log("Service requests data:", data);
-          console.log("Number of service requests:", data.length);
-          setServiceRequests(data);
-        } else {
-          console.log("Failed to fetch service requests");
-        }
-      } catch (error) {
-        console.error("Error fetching service requests:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchServiceRequests();
+    loadServiceRequests();
 
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
+  // Modal escape handling
+  useEffect(() => {
+    if (!showDetailsModal) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setShowDetailsModal(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showDetailsModal]);
+
+  // Filtered requests based on search and show handled
+  const filteredRequests = serviceRequests
+    .filter((r) => showHandled || r.status !== "handled")
+    .filter((r) => {
+      const searchQuery = query.trim().toLowerCase();
+      if (!searchQuery) return true;
+      return (
+        r.customer.name.toLowerCase().includes(searchQuery) ||
+        r.customer.email.toLowerCase().includes(searchQuery) ||
+        (r.address || "").toLowerCase().includes(searchQuery) ||
+        (r.services ?? []).some((s) => s.toLowerCase().includes(searchQuery))
+      );
     });
-  };
 
   if (loading) {
     return (
-      <div
-        style={{
-          padding: "24px",
-          backgroundColor: "#f5f5f5",
-          minHeight: "100vh",
-        }}
-      >
-        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
-          <div style={{ textAlign: "center", padding: "60px" }}>
-            <div style={{ fontSize: "1.2rem", color: "#666" }}>
+      <div className="p-6 bg-gray-50 min-h-screen">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center py-16">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+            <div className="text-lg text-gray-800 font-medium">
               Loading service requests...
             </div>
           </div>
@@ -96,152 +113,53 @@ export default function ServiceRequestsPage() {
   }
 
   return (
-    <div
-      style={{
-        padding: "24px",
-        backgroundColor: "#f5f5f5",
-        minHeight: "100vh",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: "1400px",
-          margin: "0 auto",
-          padding: isMobile ? "0" : "0",
-        }}
-      >
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div
-          style={{
-            marginBottom: "2rem",
-            padding: isMobile ? "1.5rem" : "2rem",
-            backgroundColor: "white",
-            borderRadius: "12px",
-            boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-            border: "1px solid #f3f4f6",
-          }}
-        >
+        <div className="mb-8 p-6 lg:p-8 bg-white rounded-xl shadow-sm border border-gray-200">
           <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexDirection: isMobile ? "column" : "row",
-              gap: isMobile ? "1rem" : "0",
-            }}
+            className={`flex justify-between items-center ${isMobile ? "flex-col gap-4" : "flex-row"}`}
           >
             <div>
               <h1
-                style={{
-                  fontSize: isMobile ? "1.75rem" : "2.25rem",
-                  marginBottom: "0.5rem",
-                  color: "#1f2937",
-                  fontWeight: "700",
-                }}
+                className={`${isMobile ? "text-3xl" : "text-4xl"} font-bold text-gray-900 mb-2`}
               >
                 Service Requests
               </h1>
-              <p
-                style={{
-                  color: "#6b7280",
-                  fontSize: isMobile ? "0.875rem" : "1rem",
-                  margin: 0,
-                }}
-              >
+              <p className="text-gray-800 text-sm lg:text-base">
                 Manage incoming service requests from customers
               </p>
             </div>
-            <div style={{ display: "flex", gap: "0.5rem" }}>
+            <div className="flex gap-2 flex-wrap">
+              <input
+                aria-label="Search service requests"
+                placeholder="Search name, email, service, address"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className={`px-3 py-2 border border-gray-300 rounded-lg text-sm ${isMobile ? "w-full" : "w-72"}`}
+              />
               <button
                 onClick={() => setShowHandled(!showHandled)}
-                style={{
-                  padding: isMobile ? "0.75rem 1rem" : "0.5rem 1rem",
-                  backgroundColor: showHandled ? "#6b7280" : "#7a6990",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "8px",
-                  fontSize: isMobile ? "0.875rem" : "0.875rem",
-                  fontWeight: "500",
-                  cursor: "pointer",
-                  transition: "background-color 0.2s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = showHandled
-                    ? "#4b5563"
-                    : "#6b5b7a";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = showHandled
-                    ? "#6b7280"
-                    : "#7a6990";
-                }}
+                className={`px-4 py-2 text-white border-none rounded-lg text-sm font-medium cursor-pointer transition-colors ${
+                  showHandled
+                    ? "bg-gray-600 hover:bg-gray-700"
+                    : "bg-indigo-600 hover:bg-indigo-700"
+                }`}
               >
                 {showHandled ? "Hide Handled" : "Show Handled"}
               </button>
               <button
                 onClick={() => {
                   setLoading(true);
-                  const fetchServiceRequests = async () => {
-                    try {
-                      const response = await fetch("/api/service-requests");
-                      console.log(
-                        "Service requests response status:",
-                        response.status,
-                      );
-                      if (response.ok) {
-                        const data = await response.json();
-                        console.log("Service requests data:", data);
-                        console.log("Number of service requests:", data.length);
-                        setServiceRequests(data);
-                      } else {
-                        console.log("Failed to fetch service requests");
-                      }
-                    } catch (error) {
-                      console.error("Error fetching service requests:", error);
-                    } finally {
-                      setLoading(false);
-                    }
-                  };
-                  fetchServiceRequests();
+                  loadServiceRequests();
                 }}
-                style={{
-                  padding: isMobile ? "0.75rem 1rem" : "0.5rem 1rem",
-                  backgroundColor: "#10b981",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "8px",
-                  fontSize: isMobile ? "0.875rem" : "0.875rem",
-                  fontWeight: "500",
-                  cursor: "pointer",
-                  transition: "background-color 0.2s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#059669";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#10b981";
-                }}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white border-none rounded-lg text-sm font-medium cursor-pointer transition-colors"
               >
                 Refresh
               </button>
               <Link
                 href="/admin"
-                style={{
-                  padding: isMobile ? "0.75rem 1rem" : "0.5rem 1rem",
-                  backgroundColor: "#7a6990",
-                  color: "white",
-                  textDecoration: "none",
-                  borderRadius: "8px",
-                  fontSize: isMobile ? "0.875rem" : "0.875rem",
-                  fontWeight: "500",
-                  transition: "background-color 0.2s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#6b5b7a";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#7a6990";
-                }}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-decoration-none rounded-lg text-sm font-medium transition-colors"
               >
                 Back to Dashboard
               </Link>
@@ -249,34 +167,19 @@ export default function ServiceRequestsPage() {
           </div>
         </div>
 
+        {/* Error Banner */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700">
+            {error}
+          </div>
+        )}
+
         {/* Service Requests List */}
-        <div
-          style={{
-            backgroundColor: "white",
-            borderRadius: "12px",
-            boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-            border: "1px solid #f3f4f6",
-            overflow: "hidden",
-          }}
-        >
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           {serviceRequests.length === 0 ? (
-            <div
-              style={{
-                padding: "60px 24px",
-                textAlign: "center",
-                color: "#6b7280",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: "3rem",
-                  marginBottom: "16px",
-                  opacity: "0.5",
-                }}
-              >
-                📋
-              </div>
-              <h3 style={{ marginBottom: "8px", color: "#374151" }}>
+            <div className="p-16 text-center text-gray-700">
+              <div className="text-6xl mb-4 opacity-50">📋</div>
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">
                 No Service Requests
               </h3>
               <p>
@@ -287,473 +190,156 @@ export default function ServiceRequestsPage() {
           ) : (
             <>
               {/* Table Header */}
-              <div
-                style={{
-                  padding: isMobile ? "1rem" : "1.5rem",
-                  borderBottom: "1px solid #f3f4f6",
-                  backgroundColor: "#f9fafb",
-                }}
-              >
-                <h2
-                  style={{
-                    fontSize: isMobile ? "1.125rem" : "1.25rem",
-                    color: "#1f2937",
-                    fontWeight: "600",
-                    margin: 0,
-                  }}
-                >
-                  Recent Requests ({serviceRequests.length})
+              <div className="p-4 lg:p-6 border-b border-gray-200 bg-gray-50">
+                <h2 className="text-lg lg:text-xl font-semibold text-gray-900">
+                  Recent Requests ({filteredRequests.length})
                 </h2>
               </div>
 
               {/* Requests List */}
               {isMobile ? (
                 // Mobile card layout
-                <div style={{ padding: "0" }}>
-                  {serviceRequests
-                    .filter(
-                      (request) => showHandled || request.status !== "handled",
-                    )
-                    .map((request, index) => (
-                      <div
-                        key={request.id}
-                        style={{
-                          padding: "1rem",
-                          borderBottom:
-                            index < serviceRequests.length - 1
-                              ? "1px solid #f3f4f6"
-                              : "none",
-                          backgroundColor: "white",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "flex-start",
-                            marginBottom: "0.75rem",
-                          }}
-                        >
-                          <div style={{ flex: 1 }}>
-                            <div
-                              style={{
-                                fontSize: "1rem",
-                                fontWeight: "600",
-                                color: "#1f2937",
-                                marginBottom: "0.25rem",
-                              }}
-                            >
-                              {request.customer.name}
-                            </div>
-                            <div
-                              style={{
-                                fontSize: "0.875rem",
-                                color: "#6b7280",
-                                marginBottom: "0.5rem",
-                              }}
+                <div>
+                  {filteredRequests.map((request, index) => (
+                    <div
+                      key={request.id}
+                      className={`p-4 ${index < filteredRequests.length - 1 ? "border-b border-gray-200" : ""} bg-white`}
+                    >
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1">
+                          <div className="text-base font-semibold text-gray-900 mb-1">
+                            {request.customer.name}
+                          </div>
+                          <div className="text-sm text-gray-800 mb-2">
+                            <a
+                              href={`mailto:${request.customer.email}`}
+                              className="text-indigo-600 hover:text-indigo-700"
                             >
                               {request.customer.email}
-                            </div>
-                            <div
-                              style={{
-                                fontSize: "0.875rem",
-                                color: "#6b7280",
-                              }}
-                            >
-                              {request.address}
-                            </div>
+                            </a>
                           </div>
-                          <div
-                            style={{
-                              padding: "0.25rem 0.5rem",
-                              border: "1px solid #d1d5db",
-                              borderRadius: "4px",
-                              fontSize: "0.75rem",
-                              backgroundColor: "#f3f4f6",
-                              color: "#6b7280",
-                              minWidth: "100px",
-                              textAlign: "center",
+                          <div className="text-sm text-gray-800">
+                            {request.address}
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          <StatusBadge value={request.status} />
+                          <ActionButtons
+                            request={request}
+                            onViewDetails={() => {
+                              setSelectedRequest(request);
+                              setShowDetailsModal(true);
                             }}
-                          >
-                            {request.status || "New"}
-                          </div>
-                          {request.status === "pending" && (
-                            <button
-                              onClick={async () => {
-                                try {
-                                  const response = await fetch(
-                                    "/api/service-requests",
-                                    {
-                                      method: "PUT",
-                                      headers: {
-                                        "Content-Type": "application/json",
-                                      },
-                                      body: JSON.stringify({
-                                        id: request.id,
-                                        status: "handled",
-                                      }),
-                                    },
-                                  );
-                                  if (response.ok) {
-                                    // Update local state
-                                    setServiceRequests((prev) =>
-                                      prev.map((req) =>
-                                        req.id === request.id
-                                          ? { ...req, status: "handled" }
-                                          : req,
-                                      ),
-                                    );
-                                  }
-                                } catch (error) {
-                                  console.error(
-                                    "Error marking as handled:",
-                                    error,
-                                  );
-                                }
-                              }}
-                              style={{
-                                padding: "0.25rem 0.5rem",
-                                backgroundColor: "#10b981",
-                                color: "white",
-                                border: "none",
-                                borderRadius: "4px",
-                                fontSize: "0.75rem",
-                                cursor: "pointer",
-                                marginTop: "0.25rem",
-                              }}
-                            >
-                              Mark Handled
-                            </button>
-                          )}
-                        </div>
-
-                        <div
-                          style={{
-                            display: "flex",
-                            flexWrap: "wrap",
-                            gap: "0.5rem",
-                            marginBottom: "0.75rem",
-                          }}
-                        >
-                          {request.services.map((service, idx) => (
-                            <span
-                              key={idx}
-                              style={{
-                                padding: "0.25rem 0.5rem",
-                                backgroundColor: "#f3f4f6",
-                                color: "#374151",
-                                borderRadius: "4px",
-                                fontSize: "0.75rem",
-                                fontWeight: "500",
-                              }}
-                            >
-                              {service}
-                            </span>
-                          ))}
-                        </div>
-
-                        <div
-                          style={{
-                            fontSize: "0.75rem",
-                            color: "#6b7280",
-                          }}
-                        >
-                          Submitted: {formatDate(request.createdAt)}
+                            onMarkHandled={() => markHandled(request.id)}
+                            isMobile={true}
+                          />
                         </div>
                       </div>
-                    ))}
+
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {(request.services ?? []).map((service, idx) => (
+                          <span
+                            key={`${service}-${idx}`}
+                            className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium"
+                          >
+                            {service}
+                          </span>
+                        ))}
+                      </div>
+
+                      <div className="text-xs text-gray-500">
+                        Submitted: {formatDate(request.createdAt)}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : (
                 // Desktop table layout
-                <div style={{ overflow: "auto" }}>
-                  <table
-                    style={{
-                      width: "100%",
-                      borderCollapse: "collapse",
-                    }}
-                  >
+                <div className="overflow-auto">
+                  <table className="w-full border-collapse">
                     <thead>
-                      <tr
-                        style={{
-                          backgroundColor: "#f9fafb",
-                          borderBottom: "1px solid #e5e7eb",
-                        }}
-                      >
-                        <th
-                          style={{
-                            padding: "1rem 1.5rem",
-                            textAlign: "left",
-                            fontSize: "0.875rem",
-                            fontWeight: "600",
-                            color: "#374151",
-                          }}
-                        >
+                      <tr className="bg-gray-50 border-b border-gray-200">
+                        <th className="p-4 text-left text-sm font-semibold text-gray-700">
                           Customer
                         </th>
-                        <th
-                          style={{
-                            padding: "1rem 1.5rem",
-                            textAlign: "left",
-                            fontSize: "0.875rem",
-                            fontWeight: "600",
-                            color: "#374151",
-                          }}
-                        >
+                        <th className="p-4 text-left text-sm font-semibold text-gray-700">
                           Services
                         </th>
-                        <th
-                          style={{
-                            padding: "1rem 1.5rem",
-                            textAlign: "left",
-                            fontSize: "0.875rem",
-                            fontWeight: "600",
-                            color: "#374151",
-                          }}
-                        >
+                        <th className="p-4 text-left text-sm font-semibold text-gray-700">
                           Address
                         </th>
-
-                        <th
-                          style={{
-                            padding: "1rem 1.5rem",
-                            textAlign: "left",
-                            fontSize: "0.875rem",
-                            fontWeight: "600",
-                            color: "#374151",
-                          }}
-                        >
+                        <th className="p-4 text-left text-sm font-semibold text-gray-700">
                           Submitted
                         </th>
-                        <th
-                          style={{
-                            padding: "1rem 1.5rem",
-                            textAlign: "left",
-                            fontSize: "0.875rem",
-                            fontWeight: "600",
-                            color: "#374151",
-                          }}
-                        >
+                        <th className="p-4 text-left text-sm font-semibold text-gray-700">
                           Actions
                         </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {serviceRequests
-                        .filter(
-                          (request) =>
-                            showHandled || request.status !== "handled",
-                        )
-                        .map((request) => (
-                          <tr
-                            key={request.id}
-                            style={{
-                              borderBottom: "1px solid #f3f4f6",
-                              backgroundColor: "white",
-                            }}
-                          >
-                            <td
-                              style={{
-                                padding: "1rem 1.5rem",
-                                verticalAlign: "top",
-                              }}
-                            >
-                              <div
-                                style={{
-                                  fontSize: "0.875rem",
-                                  fontWeight: "500",
-                                  color: "#1f2937",
-                                  marginBottom: "0.25rem",
-                                }}
-                              >
-                                {request.customer.name}
-                              </div>
-                              <div
-                                style={{
-                                  fontSize: "0.75rem",
-                                  color: "#6b7280",
-                                }}
+                      {filteredRequests.map((request) => (
+                        <tr
+                          key={request.id}
+                          className="border-b border-gray-200 bg-white"
+                        >
+                          <td className="p-4 align-top">
+                            <div className="text-sm font-medium text-gray-900 mb-1">
+                              {request.customer.name}
+                            </div>
+                            <div className="text-xs text-gray-600">
+                              <a
+                                href={`mailto:${request.customer.email}`}
+                                className="text-indigo-600 hover:text-indigo-700"
                               >
                                 {request.customer.email}
-                              </div>
-                              {request.customer.phone && (
-                                <div
-                                  style={{
-                                    fontSize: "0.75rem",
-                                    color: "#6b7280",
-                                  }}
+                              </a>
+                            </div>
+                            {request.customer.phone && (
+                              <div className="text-xs text-gray-600">
+                                <a
+                                  href={`tel:${request.customer.phone}`}
+                                  className="text-indigo-600 hover:text-indigo-700"
                                 >
                                   {request.customer.phone}
-                                </div>
-                              )}
-                            </td>
-                            <td
-                              style={{
-                                padding: "1rem 1.5rem",
-                                verticalAlign: "top",
-                              }}
-                            >
-                              <div
-                                style={{
-                                  display: "flex",
-                                  flexWrap: "wrap",
-                                  gap: "0.25rem",
-                                }}
-                              >
-                                {request.services.map((service, idx) => (
-                                  <span
-                                    key={idx}
-                                    style={{
-                                      padding: "0.25rem 0.5rem",
-                                      backgroundColor: "#f3f4f6",
-                                      color: "#374151",
-                                      borderRadius: "4px",
-                                      fontSize: "0.75rem",
-                                      fontWeight: "500",
-                                    }}
-                                  >
-                                    {service}
-                                  </span>
-                                ))}
+                                </a>
                               </div>
-                            </td>
-                            <td
-                              style={{
-                                padding: "1rem 1.5rem",
-                                verticalAlign: "top",
-                                maxWidth: "200px",
-                              }}
-                            >
-                              <div
-                                style={{
-                                  fontSize: "0.875rem",
-                                  color: "#374151",
-                                  lineHeight: "1.4",
-                                }}
-                              >
-                                {request.address}
-                              </div>
-                            </td>
-
-                            <td
-                              style={{
-                                padding: "1rem 1.5rem",
-                                verticalAlign: "top",
-                              }}
-                            >
-                              <div
-                                style={{
-                                  fontSize: "0.875rem",
-                                  color: "#6b7280",
-                                }}
-                              >
-                                {formatDate(request.createdAt)}
-                              </div>
-                            </td>
-                            <td
-                              style={{
-                                padding: "1rem 1.5rem",
-                                verticalAlign: "top",
-                              }}
-                            >
-                              <div
-                                style={{
-                                  display: "flex",
-                                  gap: "0.5rem",
-                                  flexDirection: "column",
-                                  alignItems: "flex-start",
-                                }}
-                              >
-                                <button
-                                  onClick={() => {
-                                    setSelectedRequest(request);
-                                    setShowDetailsModal(true);
-                                  }}
-                                  style={{
-                                    padding: "0.5rem 1rem",
-                                    backgroundColor: "#7a6990",
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "6px",
-                                    fontSize: "0.875rem",
-                                    fontWeight: "500",
-                                    cursor: "pointer",
-                                    transition: "background-color 0.2s",
-                                    width: "100%",
-                                  }}
-                                  onMouseEnter={(e) => {
-                                    e.currentTarget.style.backgroundColor =
-                                      "#6b5b7a";
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    e.currentTarget.style.backgroundColor =
-                                      "#7a6990";
-                                  }}
+                            )}
+                          </td>
+                          <td className="p-4 align-top">
+                            <div className="flex flex-wrap gap-1">
+                              {(request.services ?? []).map((service, idx) => (
+                                <span
+                                  key={`${service}-${idx}`}
+                                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium"
                                 >
-                                  View Details
-                                </button>
-                                {request.status === "pending" && (
-                                  <button
-                                    onClick={async () => {
-                                      try {
-                                        const response = await fetch(
-                                          "/api/service-requests",
-                                          {
-                                            method: "PUT",
-                                            headers: {
-                                              "Content-Type":
-                                                "application/json",
-                                            },
-                                            body: JSON.stringify({
-                                              id: request.id,
-                                              status: "handled",
-                                            }),
-                                          },
-                                        );
-                                        if (response.ok) {
-                                          // Update local state
-                                          setServiceRequests((prev) =>
-                                            prev.map((req) =>
-                                              req.id === request.id
-                                                ? { ...req, status: "handled" }
-                                                : req,
-                                            ),
-                                          );
-                                        }
-                                      } catch (error) {
-                                        console.error(
-                                          "Error marking as handled:",
-                                          error,
-                                        );
-                                      }
-                                    }}
-                                    style={{
-                                      padding: "0.5rem 1rem",
-                                      backgroundColor: "#10b981",
-                                      color: "white",
-                                      border: "none",
-                                      borderRadius: "6px",
-                                      fontSize: "0.875rem",
-                                      fontWeight: "500",
-                                      cursor: "pointer",
-                                      transition: "background-color 0.2s",
-                                      width: "100%",
-                                    }}
-                                    onMouseEnter={(e) => {
-                                      e.currentTarget.style.backgroundColor =
-                                        "#059669";
-                                    }}
-                                    onMouseLeave={(e) => {
-                                      e.currentTarget.style.backgroundColor =
-                                        "#10b981";
-                                    }}
-                                  >
-                                    Mark Handled
-                                  </button>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
+                                  {service}
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+                          <td className="p-4 align-top max-w-xs">
+                            <div className="text-sm text-gray-700 leading-relaxed">
+                              {request.address}
+                            </div>
+                          </td>
+                          <td className="p-4 align-top">
+                            <div className="text-sm text-gray-800">
+                              {formatDate(request.createdAt)}
+                            </div>
+                          </td>
+                          <td className="p-4 align-top">
+                            <ActionButtons
+                              request={request}
+                              onViewDetails={() => {
+                                setSelectedRequest(request);
+                                setShowDetailsModal(true);
+                              }}
+                              onMarkHandled={() => markHandled(request.id)}
+                              isMobile={false}
+                            />
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
@@ -766,216 +352,102 @@ export default function ServiceRequestsPage() {
       {/* Service Request Details Modal */}
       {showDetailsModal && selectedRequest && (
         <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-            padding: "1rem",
-          }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="sr-modal-title"
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
           onClick={() => setShowDetailsModal(false)}
         >
           <div
-            style={{
-              backgroundColor: "white",
-              borderRadius: "12px",
-              padding: "2rem",
-              maxWidth: "600px",
-              width: "100%",
-              maxHeight: "90vh",
-              overflow: "auto",
-              position: "relative",
-            }}
+            className="bg-white rounded-xl p-8 max-w-2xl w-full max-h-[90vh] overflow-auto relative"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close Button */}
             <button
               onClick={() => setShowDetailsModal(false)}
-              style={{
-                position: "absolute",
-                top: "1rem",
-                right: "1rem",
-                background: "none",
-                border: "none",
-                fontSize: "1.5rem",
-                cursor: "pointer",
-                color: "#6b7280",
-                padding: "0.5rem",
-                borderRadius: "4px",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "#f3f4f6";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "transparent";
-              }}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold p-2 hover:bg-gray-100 rounded"
             >
               ×
             </button>
 
             {/* Header */}
-            <div style={{ marginBottom: "2rem" }}>
+            <div className="mb-8">
               <h2
-                style={{
-                  fontSize: "1.5rem",
-                  fontWeight: "600",
-                  color: "#1f2937",
-                  marginBottom: "0.5rem",
-                }}
+                id="sr-modal-title"
+                className="text-2xl font-semibold text-gray-900 mb-2"
               >
                 Service Request Details
               </h2>
-              <p
-                style={{
-                  color: "#6b7280",
-                  fontSize: "0.875rem",
-                }}
-              >
+              <p className="text-gray-600 text-sm">
                 Submitted on {formatDate(selectedRequest.createdAt)}
               </p>
             </div>
 
             {/* Customer Information */}
-            <div style={{ marginBottom: "2rem" }}>
-              <h3
-                style={{
-                  fontSize: "1.125rem",
-                  fontWeight: "600",
-                  color: "#374151",
-                  marginBottom: "1rem",
-                  borderBottom: "1px solid #e5e7eb",
-                  paddingBottom: "0.5rem",
-                }}
-              >
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200">
                 Customer Information
               </h3>
-              <div style={{ display: "grid", gap: "0.75rem" }}>
+              <div className="grid gap-4">
                 <div>
-                  <label
-                    style={{
-                      fontWeight: "500",
-                      color: "#6b7280",
-                      fontSize: "0.875rem",
-                    }}
-                  >
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
                     Name
                   </label>
-                  <p style={{ margin: "0.25rem 0 0 0", color: "#1f2937" }}>
+                  <p className="text-gray-900">
                     {selectedRequest.customer.name}
                   </p>
                 </div>
                 <div>
-                  <label
-                    style={{
-                      fontWeight: "500",
-                      color: "#6b7280",
-                      fontSize: "0.875rem",
-                    }}
-                  >
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
                     Email
                   </label>
-                  <p style={{ margin: "0.25rem 0 0 0", color: "#1f2937" }}>
-                    {selectedRequest.customer.email}
+                  <p className="text-gray-900">
+                    <a
+                      href={`mailto:${selectedRequest.customer.email}`}
+                      className="text-indigo-600 hover:text-indigo-700"
+                    >
+                      {selectedRequest.customer.email}
+                    </a>
                   </p>
                 </div>
                 {selectedRequest.customer.phone && (
                   <div>
-                    <label
-                      style={{
-                        fontWeight: "500",
-                        color: "#6b7280",
-                        fontSize: "0.875rem",
-                      }}
-                    >
+                    <label className="block text-sm font-medium text-gray-600 mb-1">
                       Phone
                     </label>
-                    <p style={{ margin: "0.25rem 0 0 0", color: "#1f2937" }}>
-                      {selectedRequest.customer.phone}
+                    <p className="text-gray-900">
+                      <a
+                        href={`tel:${selectedRequest.customer.phone}`}
+                        className="text-indigo-600 hover:text-indigo-700"
+                      >
+                        {selectedRequest.customer.phone}
+                      </a>
                     </p>
                   </div>
                 )}
                 <div>
-                  <label
-                    style={{
-                      fontWeight: "500",
-                      color: "#6b7280",
-                      fontSize: "0.875rem",
-                    }}
-                  >
-                    Full Address (from intake form)
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                    Full Address
                   </label>
-                  <p
-                    style={{
-                      margin: "0.25rem 0 0 0",
-                      color: "#1f2937",
-                      whiteSpace: "pre-wrap",
-                      backgroundColor: "#f9fafb",
-                      padding: "0.75rem",
-                      borderRadius: "6px",
-                      border: "1px solid #e5e7eb",
-                    }}
-                  >
-                    {selectedRequest.address || "No address provided"}
-                  </p>
-                  {!selectedRequest.address && (
-                    <p
-                      style={{
-                        fontSize: "0.75rem",
-                        color: "#ef4444",
-                        marginTop: "0.25rem",
-                      }}
-                    >
-                      ⚠️ Address field is empty - check if data is being saved
-                      correctly
+                  <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                    <p className="text-gray-900 whitespace-pre-wrap">
+                      {selectedRequest.address || "No address provided"}
                     </p>
-                  )}
-                  {selectedRequest.address && (
-                    <p
-                      style={{
-                        fontSize: "0.75rem",
-                        color: "#10b981",
-                        marginTop: "0.25rem",
-                      }}
-                    >
-                      ✅ Address captured from intake form
-                    </p>
-                  )}
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Services Requested */}
-            <div style={{ marginBottom: "2rem" }}>
-              <h3
-                style={{
-                  fontSize: "1.125rem",
-                  fontWeight: "600",
-                  color: "#374151",
-                  marginBottom: "1rem",
-                  borderBottom: "1px solid #e5e7eb",
-                  paddingBottom: "0.5rem",
-                }}
-              >
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200">
                 Services Requested
               </h3>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+              <div className="flex flex-wrap gap-2">
                 {selectedRequest.services.map((service, idx) => (
                   <span
                     key={idx}
-                    style={{
-                      padding: "0.5rem 0.75rem",
-                      backgroundColor: "#7a6990",
-                      color: "white",
-                      borderRadius: "6px",
-                      fontSize: "0.875rem",
-                      fontWeight: "500",
-                    }}
+                    className="px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium"
                   >
                     {service}
                   </span>
@@ -988,37 +460,22 @@ export default function ServiceRequestsPage() {
               selectedRequest.repairNotes ||
               selectedRequest.waterproofingNotes ||
               selectedRequest.allergies) && (
-              <div style={{ marginBottom: "2rem" }}>
-                <h3
-                  style={{
-                    fontSize: "1.125rem",
-                    fontWeight: "600",
-                    color: "#374151",
-                    marginBottom: "1rem",
-                    borderBottom: "1px solid #e5e7eb",
-                    paddingBottom: "0.5rem",
-                  }}
-                >
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200">
                   Additional Details
                 </h3>
-                <div style={{ display: "grid", gap: "0.75rem" }}>
+                <div className="grid gap-4">
                   {selectedRequest.pickupDate && (
                     <div>
-                      <label
-                        style={{
-                          fontWeight: "500",
-                          color: "#6b7280",
-                          fontSize: "0.875rem",
-                        }}
-                      >
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
                         Preferred Pickup Date
                       </label>
-                      <p style={{ margin: "0.25rem 0 0 0", color: "#1f2937" }}>
+                      <p className="text-gray-900">
                         {(() => {
                           try {
-                            const date = new Date(selectedRequest.pickupDate);
+                            const date = new Date(selectedRequest.pickupDate!);
                             if (isNaN(date.getTime())) {
-                              return selectedRequest.pickupDate; // Return raw value if parsing fails
+                              return selectedRequest.pickupDate;
                             }
                             return date.toLocaleDateString("en-US", {
                               weekday: "long",
@@ -1027,83 +484,38 @@ export default function ServiceRequestsPage() {
                               day: "numeric",
                             });
                           } catch {
-                            return selectedRequest.pickupDate; // Return raw value if error
+                            return selectedRequest.pickupDate;
                           }
                         })()}
-                      </p>
-                      <p
-                        style={{
-                          fontSize: "0.75rem",
-                          color: "#6b7280",
-                          marginTop: "0.25rem",
-                        }}
-                      >
-                        📅 Customer selected this date from the intake form
                       </p>
                     </div>
                   )}
                   {selectedRequest.repairNotes && (
                     <div>
-                      <label
-                        style={{
-                          fontWeight: "500",
-                          color: "#6b7280",
-                          fontSize: "0.875rem",
-                        }}
-                      >
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
                         Repair Notes
                       </label>
-                      <p
-                        style={{
-                          margin: "0.25rem 0 0 0",
-                          color: "#1f2937",
-                          whiteSpace: "pre-wrap",
-                        }}
-                      >
+                      <p className="text-gray-900 whitespace-pre-wrap">
                         {selectedRequest.repairNotes}
                       </p>
                     </div>
                   )}
                   {selectedRequest.waterproofingNotes && (
                     <div>
-                      <label
-                        style={{
-                          fontWeight: "500",
-                          color: "#6b7280",
-                          fontSize: "0.875rem",
-                        }}
-                      >
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
                         Waterproofing Notes
                       </label>
-                      <p
-                        style={{
-                          margin: "0.25rem 0 0 0",
-                          color: "#1f2937",
-                          whiteSpace: "pre-wrap",
-                        }}
-                      >
+                      <p className="text-gray-900 whitespace-pre-wrap">
                         {selectedRequest.waterproofingNotes}
                       </p>
                     </div>
                   )}
                   {selectedRequest.allergies && (
                     <div>
-                      <label
-                        style={{
-                          fontWeight: "500",
-                          color: "#6b7280",
-                          fontSize: "0.875rem",
-                        }}
-                      >
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
                         Allergies
                       </label>
-                      <p
-                        style={{
-                          margin: "0.25rem 0 0 0",
-                          color: "#1f2937",
-                          whiteSpace: "pre-wrap",
-                        }}
-                      >
+                      <p className="text-gray-900 whitespace-pre-wrap">
                         {selectedRequest.allergies}
                       </p>
                     </div>
@@ -1113,141 +525,47 @@ export default function ServiceRequestsPage() {
             )}
 
             {/* Notes Management */}
-            <div style={{ marginBottom: "2rem" }}>
-              <h3
-                style={{
-                  fontSize: "1.125rem",
-                  fontWeight: "600",
-                  color: "#374151",
-                  marginBottom: "1rem",
-                  borderBottom: "1px solid #e5e7eb",
-                  paddingBottom: "0.5rem",
-                }}
-              >
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200">
                 Notes & Management
               </h3>
-              <div style={{ display: "grid", gap: "0.75rem" }}>
-                <div>
-                  <label
-                    style={{
-                      fontWeight: "500",
-                      color: "#6b7280",
-                      fontSize: "0.875rem",
-                    }}
-                  >
-                    Internal Notes
-                  </label>
-                  <textarea
-                    value={selectedRequest.notes || ""}
-                    onChange={async (e) => {
-                      try {
-                        const newNotes = e.target.value;
-                        // Update notes via API
-                        const response = await fetch("/api/service-requests", {
-                          method: "PUT",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({
-                            id: selectedRequest.id,
-                            notes: newNotes,
-                          }),
-                        });
-                        if (response.ok) {
-                          setSelectedRequest({
-                            ...selectedRequest,
-                            notes: newNotes,
-                          });
-                        }
-                      } catch (error) {
-                        console.error("Error updating notes:", error);
-                      }
-                    }}
-                    placeholder="Add internal notes about this request..."
-                    rows={3}
-                    style={{
-                      padding: "0.5rem",
-                      border: "1px solid #d1d5db",
-                      borderRadius: "6px",
-                      fontSize: "0.875rem",
-                      backgroundColor: "white",
-                      width: "100%",
-                      marginTop: "0.25rem",
-                      resize: "vertical",
-                    }}
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">
+                  Internal Notes
+                </label>
+                <textarea
+                  value={selectedRequest.notes || ""}
+                  onChange={async (e) => {
+                    try {
+                      const newNotes = e.target.value;
+                      await updateServiceRequestNotes(
+                        selectedRequest.id,
+                        newNotes,
+                      );
+                      setSelectedRequest({
+                        ...selectedRequest,
+                        notes: newNotes,
+                      });
+                    } catch (error) {
+                      console.error("Error updating notes:", error);
+                      toast.error(
+                        "Update Failed",
+                        "Failed to update notes. Please try again.",
+                      );
+                    }
+                  }}
+                  placeholder="Add internal notes about this request..."
+                  rows={3}
+                  className="w-full p-3 border border-gray-300 rounded-lg text-sm resize-y focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
               </div>
             </div>
 
-            {/* Debug Information (Development Only) */}
-            {process.env.NODE_ENV === "development" && (
-              <div
-                style={{
-                  marginBottom: "2rem",
-                  padding: "1rem",
-                  backgroundColor: "#f3f4f6",
-                  borderRadius: "6px",
-                  border: "1px solid #d1d5db",
-                }}
-              >
-                <h4
-                  style={{
-                    fontSize: "0.875rem",
-                    fontWeight: "600",
-                    color: "#374151",
-                    marginBottom: "0.5rem",
-                  }}
-                >
-                  Debug Info (Raw Data)
-                </h4>
-                <details style={{ fontSize: "0.75rem", color: "#6b7280" }}>
-                  <summary
-                    style={{ cursor: "pointer", marginBottom: "0.5rem" }}
-                  >
-                    Click to view raw data
-                  </summary>
-                  <pre
-                    style={{
-                      backgroundColor: "white",
-                      padding: "0.5rem",
-                      borderRadius: "4px",
-                      overflow: "auto",
-                      fontSize: "0.7rem",
-                      whiteSpace: "pre-wrap",
-                    }}
-                  >
-                    {JSON.stringify(selectedRequest, null, 2)}
-                  </pre>
-                </details>
-              </div>
-            )}
-
             {/* Action Buttons */}
-            <div
-              style={{
-                display: "flex",
-                gap: "1rem",
-                justifyContent: "flex-end",
-              }}
-            >
+            <div className="flex justify-end gap-4">
               <button
                 onClick={() => setShowDetailsModal(false)}
-                style={{
-                  padding: "0.75rem 1.5rem",
-                  backgroundColor: "#6b7280",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "6px",
-                  fontSize: "0.875rem",
-                  fontWeight: "500",
-                  cursor: "pointer",
-                  transition: "background-color 0.2s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#4b5563";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#6b7280";
-                }}
+                className="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white border-none rounded-lg text-sm font-medium cursor-pointer transition-colors"
               >
                 Close
               </button>

@@ -1,6 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -113,7 +117,7 @@ export async function DELETE(
 
     // Check if customer has associated invoices or service requests
     const [invoices, serviceRequests] = await Promise.all([
-      prisma.invoiceMirror.findMany({
+      prisma.invoice.findMany({
         where: { customerId: id },
         take: 1,
       }),
@@ -124,10 +128,13 @@ export async function DELETE(
     ]);
 
     if (invoices.length > 0 || serviceRequests.length > 0) {
+      const issues = [];
+      if (invoices.length > 0) issues.push("invoices");
+      if (serviceRequests.length > 0) issues.push("service requests");
+
       return NextResponse.json(
         {
-          error:
-            "Cannot delete customer with associated invoices or service requests. Please delete those first.",
+          error: `Cannot delete customer with associated ${issues.join(" and ")}. Please delete those first.`,
         },
         { status: 400 },
       );

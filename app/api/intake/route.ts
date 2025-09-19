@@ -1,5 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 import { createGmailTransporter } from "@/lib/gmail-oauth";
 
 export async function POST(req: Request) {
@@ -53,8 +57,6 @@ export async function POST(req: Request) {
     const serviceRequest = await prisma.serviceRequest.create({
       data: {
         customerId: customer.id,
-        services: services,
-        address: address,
         pickupDate:
           pickupMonth && pickupDay
             ? (() => {
@@ -72,10 +74,8 @@ export async function POST(req: Request) {
                 return selectedDate;
               })()
             : null,
-        repairNotes: repairNotes || null,
-        waterproofingNotes: waterproofingNotes || null,
-        allergies: allergies || null,
-        status: "pending",
+        internalNotes: `Services: ${services.join(", ")}\nRepair Notes: ${repairNotes || "None"}\nWaterproofing Notes: ${waterproofingNotes || "None"}\nAllergies: ${allergies || "None"}`,
+        status: "draft",
       },
     });
 

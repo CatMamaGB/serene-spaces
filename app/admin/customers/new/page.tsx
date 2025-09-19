@@ -1,6 +1,16 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useIsMobile } from "@/lib/hooks";
+import {
+  cleanFormData,
+  isValidEmail,
+  isValidZipCode,
+  toNull,
+  safeJson,
+} from "@/lib/utils";
+import { useToast } from "@/components/ToastProvider";
 
 type CustomerFormData = {
   name: string;
@@ -29,18 +39,9 @@ export default function NewCustomerPage() {
 
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    // Check if mobile
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+  const router = useRouter();
+  const isMobile = useIsMobile();
+  const toast = useToast();
 
   const handleInputChange = (field: keyof CustomerFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -51,80 +52,92 @@ export default function NewCustomerPage() {
     setSaving(true);
 
     try {
+      // Clean and validate form data
+      const cleaned = cleanFormData(formData);
+
+      // Basic validation
+      if (!cleaned.name.trim()) {
+        toast.error("Validation Error", "Customer name is required");
+        setSaving(false);
+        return;
+      }
+
+      if (!isValidEmail(cleaned.email)) {
+        toast.error("Validation Error", "Please enter a valid email address");
+        setSaving(false);
+        return;
+      }
+
+      if (!isValidZipCode(cleaned.postalCode)) {
+        toast.error(
+          "Validation Error",
+          "Please enter a valid ZIP code (e.g., 60014 or 60014-1234)",
+        );
+        setSaving(false);
+        return;
+      }
+
+      // Prepare payload with null conversion for optional fields
+      const payload = {
+        ...cleaned,
+        addressLine2: toNull(cleaned.addressLine2),
+        phone: toNull(cleaned.phone),
+        notes: toNull(cleaned.notes),
+      };
+
       const response = await fetch("/api/customers", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
-      const result = await response.json();
+      const result = await safeJson(response);
 
       if (response.ok) {
+        toast.success(
+          "Customer Created",
+          "Customer has been created successfully!",
+        );
         setSaved(true);
-        // Redirect to customers list after 1 second
-        setTimeout(() => {
-          window.location.href = "/admin/customers";
-        }, 1000);
+        router.push("/admin/customers");
       } else {
-        // Show detailed error message
         const errorMessage = result.error || "Unknown error";
-        const errorDetails = result.details ? `\n\nDetails: ${result.details}` : "";
-        alert(`Error saving customer: ${errorMessage}${errorDetails}`);
+        const errorDetails = result.details
+          ? `\n\nDetails: ${result.details}`
+          : "";
+        toast.error(
+          "Creation Failed",
+          `Error saving customer: ${errorMessage}${errorDetails}`,
+        );
         console.error("Customer creation failed:", result);
       }
     } catch (error) {
       console.error("Error:", error);
-      alert("Network error: Unable to connect to server. Please check your internet connection and try again.");
+      toast.error(
+        "Network Error",
+        "Unable to connect to server. Please check your internet connection and try again.",
+      );
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <main
-      style={{
-        padding: isMobile ? "16px" : "24px",
-        backgroundColor: "#f5f5f5",
-        minHeight: "100vh",
-      }}
-    >
-      <div style={{ maxWidth: "800px", margin: "0 auto" }}>
+    <main className={`${isMobile ? "p-4" : "p-6"} bg-gray-50 min-h-screen`}>
+      <div className="max-w-4xl mx-auto">
         <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "32px",
-            flexDirection: isMobile ? "column" : "row",
-            gap: isMobile ? "1rem" : "0",
-          }}
+          className={`flex justify-between items-center mb-8 ${isMobile ? "flex-col gap-4" : "flex-row"}`}
         >
           <h1
-            style={{
-              fontSize: isMobile ? "1.5rem" : "2rem",
-              margin: "0",
-              color: "#1a1a1a",
-              textAlign: isMobile ? "center" : "left",
-            }}
+            className={`${isMobile ? "text-2xl" : "text-3xl"} font-bold text-gray-900 ${isMobile ? "text-center" : "text-left"}`}
           >
             New Customer Intake
           </h1>
           <Link
             href="/admin/customers"
-            style={{
-              padding: isMobile ? "14px 20px" : "12px 24px",
-              backgroundColor: "transparent",
-              color: "#7a6990",
-              textDecoration: "none",
-              borderRadius: "8px",
-              fontSize: isMobile ? "0.9rem" : "1rem",
-              fontWeight: "600",
-              border: "2px solid #7a6990",
-              textAlign: "center",
-              width: isMobile ? "100%" : "auto",
-            }}
+            className={`px-6 py-3 bg-transparent text-indigo-600 border-2 border-indigo-600 rounded-lg font-semibold hover:bg-indigo-50 transition-colors ${isMobile ? "w-full text-center" : "w-auto"}`}
           >
             View All Customers
           </Link>
@@ -132,46 +145,21 @@ export default function NewCustomerPage() {
 
         <form onSubmit={handleSubmit}>
           <div
-            style={{
-              backgroundColor: "white",
-              padding: isMobile ? "20px" : "32px",
-              borderRadius: "16px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-              border: "1px solid #e9ecef",
-            }}
+            className={`bg-white ${isMobile ? "p-5" : "p-8"} rounded-2xl shadow-lg border border-gray-200`}
           >
             {/* Personal Information */}
-            <div style={{ marginBottom: "32px" }}>
+            <div className="mb-8">
               <h2
-                style={{
-                  fontSize: isMobile ? "1.25rem" : "1.5rem",
-                  margin: "0 0 24px 0",
-                  color: "#7a6990",
-                  borderBottom: "2px solid #e9ecef",
-                  paddingBottom: "12px",
-                }}
+                className={`${isMobile ? "text-xl" : "text-2xl"} font-semibold text-indigo-600 mb-6 pb-3 border-b-2 border-gray-200`}
               >
                 Personal Information
               </h2>
 
               <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-                  gap: isMobile ? "16px" : "20px",
-                  marginBottom: "20px",
-                }}
+                className={`grid ${isMobile ? "grid-cols-1" : "grid-cols-2"} gap-5 mb-5`}
               >
                 <div>
-                  <label
-                    style={{
-                      display: "block",
-                      marginBottom: "8px",
-                      fontWeight: "600",
-                      color: "#333",
-                      fontSize: isMobile ? "0.9rem" : "1rem",
-                    }}
-                  >
+                  <label className="block mb-2 font-semibold text-gray-700 text-sm">
                     Full Name *
                   </label>
                   <input
@@ -179,35 +167,11 @@ export default function NewCustomerPage() {
                     required
                     value={formData.name}
                     onChange={(e) => handleInputChange("name", e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: isMobile ? "10px" : "12px",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: "8px",
-                      fontSize: isMobile ? "0.9rem" : "1rem",
-                      backgroundColor: "white",
-                      color: "#374151",
-                      transition: "border-color 0.2s ease",
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = "#7a6990";
-                      e.target.style.outline = "none";
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = "#e5e7eb";
-                    }}
+                    className="w-full px-3 py-3 border border-gray-300 rounded-lg text-base text-gray-900 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                   />
                 </div>
                 <div>
-                  <label
-                    style={{
-                      display: "block",
-                      marginBottom: "8px",
-                      fontWeight: "600",
-                      color: "#333",
-                      fontSize: isMobile ? "0.9rem" : "1rem",
-                    }}
-                  >
+                  <label className="block mb-2 font-semibold text-gray-700 text-sm">
                     Email *
                   </label>
                   <input
@@ -215,45 +179,16 @@ export default function NewCustomerPage() {
                     required
                     value={formData.email}
                     onChange={(e) => handleInputChange("email", e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: isMobile ? "10px" : "12px",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: "8px",
-                      fontSize: isMobile ? "0.9rem" : "1rem",
-                      backgroundColor: "white",
-                      color: "#374151",
-                      transition: "border-color 0.2s ease",
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = "#7a6990";
-                      e.target.style.outline = "none";
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = "#e5e7eb";
-                    }}
+                    className="w-full px-3 py-3 border border-gray-300 rounded-lg text-base text-gray-900 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                   />
                 </div>
               </div>
 
               <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-                  gap: isMobile ? "16px" : "20px",
-                  marginBottom: "20px",
-                }}
+                className={`grid ${isMobile ? "grid-cols-1" : "grid-cols-2"} gap-5 mb-5`}
               >
                 <div>
-                  <label
-                    style={{
-                      display: "block",
-                      marginBottom: "8px",
-                      fontWeight: "600",
-                      color: "#333",
-                      fontSize: isMobile ? "0.9rem" : "1rem",
-                    }}
-                  >
+                  <label className="block mb-2 font-semibold text-gray-700 text-sm">
                     Phone *
                   </label>
                   <input
@@ -261,23 +196,7 @@ export default function NewCustomerPage() {
                     required
                     value={formData.phone}
                     onChange={(e) => handleInputChange("phone", e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: isMobile ? "10px" : "12px",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: "8px",
-                      fontSize: isMobile ? "0.9rem" : "1rem",
-                      backgroundColor: "white",
-                      color: "#374151",
-                      transition: "border-color 0.2s ease",
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = "#7a6990";
-                      e.target.style.outline = "none";
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = "#e5e7eb";
-                    }}
+                    className="w-full px-3 py-3 border border-gray-300 rounded-lg text-base text-gray-900 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                   />
                 </div>
                 <div>{/* Empty div to maintain grid layout on desktop */}</div>
@@ -285,29 +204,15 @@ export default function NewCustomerPage() {
             </div>
 
             {/* Address Information */}
-            <div style={{ marginBottom: "32px" }}>
+            <div className="mb-8">
               <h2
-                style={{
-                  fontSize: isMobile ? "1.25rem" : "1.5rem",
-                  margin: "0 0 24px 0",
-                  color: "#7f86ac",
-                  borderBottom: "2px solid #e9ecef",
-                  paddingBottom: "12px",
-                }}
+                className={`${isMobile ? "text-xl" : "text-2xl"} font-semibold text-indigo-500 mb-6 pb-3 border-b-2 border-gray-200`}
               >
                 Address Information
               </h2>
 
-              <div style={{ marginBottom: "20px" }}>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "8px",
-                    fontWeight: "600",
-                    color: "#333",
-                    fontSize: isMobile ? "0.9rem" : "1rem",
-                  }}
-                >
+              <div className="mb-5">
+                <label className="block mb-2 font-semibold text-gray-700 text-sm">
                   Street Address *
                 </label>
                 <input
@@ -317,36 +222,12 @@ export default function NewCustomerPage() {
                   onChange={(e) =>
                     handleInputChange("addressLine1", e.target.value)
                   }
-                  style={{
-                    width: "100%",
-                    padding: isMobile ? "10px" : "12px",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "8px",
-                    fontSize: isMobile ? "0.9rem" : "1rem",
-                    backgroundColor: "white",
-                    color: "#374151",
-                    transition: "border-color 0.2s ease",
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = "#7a6990";
-                    e.target.style.outline = "none";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = "#e5e7eb";
-                  }}
+                  className="w-full px-3 py-3 border border-gray-300 rounded-lg text-base text-gray-900 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                 />
               </div>
 
-              <div style={{ marginBottom: "20px" }}>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "8px",
-                    fontWeight: "600",
-                    color: "#333",
-                    fontSize: isMobile ? "0.9rem" : "1rem",
-                  }}
-                >
+              <div className="mb-5">
+                <label className="block mb-2 font-semibold text-gray-700 text-sm">
                   Address Line 2
                 </label>
                 <input
@@ -356,43 +237,15 @@ export default function NewCustomerPage() {
                     handleInputChange("addressLine2", e.target.value)
                   }
                   placeholder="Apartment, suite, unit, etc."
-                  style={{
-                    width: "100%",
-                    padding: isMobile ? "10px" : "12px",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "8px",
-                    fontSize: isMobile ? "0.9rem" : "1rem",
-                    backgroundColor: "white",
-                    color: "#374151",
-                    transition: "border-color 0.2s ease",
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = "#7a6990";
-                    e.target.style.outline = "none";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = "#e5e7eb";
-                  }}
+                  className="w-full px-3 py-3 border border-gray-300 rounded-lg text-base text-gray-900 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                 />
               </div>
 
               <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr",
-                  gap: isMobile ? "16px" : "20px",
-                }}
+                className={`grid ${isMobile ? "grid-cols-1" : "grid-cols-3"} gap-5`}
               >
                 <div>
-                  <label
-                    style={{
-                      display: "block",
-                      marginBottom: "8px",
-                      fontWeight: "600",
-                      color: "#333",
-                      fontSize: isMobile ? "0.9rem" : "1rem",
-                    }}
-                  >
+                  <label className="block mb-2 font-semibold text-gray-700 text-sm">
                     City *
                   </label>
                   <input
@@ -400,58 +253,18 @@ export default function NewCustomerPage() {
                     required
                     value={formData.city}
                     onChange={(e) => handleInputChange("city", e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: isMobile ? "10px" : "12px",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: "8px",
-                      fontSize: isMobile ? "0.9rem" : "1rem",
-                      backgroundColor: "white",
-                      color: "#374151",
-                      transition: "border-color 0.2s ease",
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = "#7a6990";
-                      e.target.style.outline = "none";
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = "#e5e7eb";
-                    }}
+                    className="w-full px-3 py-3 border border-gray-300 rounded-lg text-base text-gray-900 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                   />
                 </div>
                 <div>
-                  <label
-                    style={{
-                      display: "block",
-                      marginBottom: "8px",
-                      fontWeight: "600",
-                      color: "#333",
-                      fontSize: isMobile ? "0.9rem" : "1rem",
-                    }}
-                  >
+                  <label className="block mb-2 font-semibold text-gray-700 text-sm">
                     State *
                   </label>
                   <select
                     required
                     value={formData.state}
                     onChange={(e) => handleInputChange("state", e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: isMobile ? "10px" : "12px",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: "8px",
-                      fontSize: isMobile ? "0.9rem" : "1rem",
-                      backgroundColor: "white",
-                      color: "#374151",
-                      transition: "border-color 0.2s ease",
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = "#7a6990";
-                      e.target.style.outline = "none";
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = "#e5e7eb";
-                    }}
+                    className="w-full px-3 py-3 border border-gray-300 rounded-lg text-base text-gray-900 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                   >
                     <option value="">Select state</option>
                     <option value="IL">Illinois</option>
@@ -462,15 +275,7 @@ export default function NewCustomerPage() {
                   </select>
                 </div>
                 <div>
-                  <label
-                    style={{
-                      display: "block",
-                      marginBottom: "8px",
-                      fontWeight: "600",
-                      color: "#333",
-                      fontSize: isMobile ? "0.9rem" : "1rem",
-                    }}
-                  >
+                  <label className="block mb-2 font-semibold text-gray-700 text-sm">
                     ZIP Code *
                   </label>
                   <input
@@ -480,131 +285,59 @@ export default function NewCustomerPage() {
                     onChange={(e) =>
                       handleInputChange("postalCode", e.target.value)
                     }
-                    style={{
-                      width: "100%",
-                      padding: isMobile ? "10px" : "12px",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: "8px",
-                      fontSize: isMobile ? "0.9rem" : "1rem",
-                      backgroundColor: "white",
-                      color: "#374151",
-                      transition: "border-color 0.2s ease",
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = "#7a6990";
-                      e.target.style.outline = "none";
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = "#e5e7eb";
-                    }}
+                    className="w-full px-3 py-3 border border-gray-300 rounded-lg text-base text-gray-900 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                   />
                 </div>
               </div>
             </div>
 
             {/* Additional Notes */}
-            <div style={{ marginBottom: "32px" }}>
+            <div className="mb-8">
               <h2
-                style={{
-                  fontSize: isMobile ? "1.25rem" : "1.5rem",
-                  margin: "0 0 24px 0",
-                  color: "#5f4b6a",
-                  borderBottom: "2px solid #e9ecef",
-                  paddingBottom: "12px",
-                }}
+                className={`${isMobile ? "text-xl" : "text-2xl"} font-semibold text-purple-600 mb-6 pb-3 border-b-2 border-gray-200`}
               >
                 Additional Information
               </h2>
 
               <div>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "8px",
-                    fontWeight: "600",
-                    color: "#333",
-                    fontSize: isMobile ? "0.9rem" : "1rem",
-                  }}
-                >
+                <label className="block mb-2 font-semibold text-gray-700 text-sm">
                   Special Instructions or Notes
                 </label>
                 <textarea
                   value={formData.notes}
                   onChange={(e) => handleInputChange("notes", e.target.value)}
                   placeholder="Any special instructions, preferences, or additional information..."
-                  style={{
-                    width: "100%",
-                    padding: isMobile ? "10px" : "12px",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "8px",
-                    fontSize: isMobile ? "0.9rem" : "1rem",
-                    minHeight: isMobile ? "80px" : "100px",
-                    resize: "vertical",
-                    backgroundColor: "white",
-                    color: "#374151",
-                    transition: "border-color 0.2s ease",
-                    fontFamily: "inherit",
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = "#7a6990";
-                    e.target.style.outline = "none";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = "#e5e7eb";
-                  }}
+                  rows={4}
+                  className="w-full px-3 py-3 border border-gray-300 rounded-lg text-base text-gray-900 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors resize-y"
                 />
               </div>
             </div>
 
             {/* Submit Button */}
             <div
-              style={{
-                display: "flex",
-                gap: "16px",
-                justifyContent: "center",
-                paddingTop: "24px",
-                borderTop: "1px solid #e9ecef",
-                flexDirection: isMobile ? "column" : "row",
-              }}
+              className={`flex gap-4 justify-center pt-6 border-t border-gray-200 ${isMobile ? "flex-col" : "flex-row"}`}
             >
               <Link
                 href="/admin/customers"
-                style={{
-                  padding: isMobile ? "14px 20px" : "16px 32px",
-                  backgroundColor: "transparent",
-                  color: "#7a6990",
-                  textDecoration: "none",
-                  borderRadius: "8px",
-                  fontSize: isMobile ? "0.9rem" : "1rem",
-                  fontWeight: "600",
-                  border: "2px solid #7a6990",
-                  textAlign: "center",
-                  width: isMobile ? "100%" : "auto",
-                }}
+                className={`px-8 py-4 bg-transparent text-indigo-600 border-2 border-indigo-600 rounded-lg font-semibold hover:bg-indigo-50 transition-colors ${isMobile ? "w-full text-center" : "w-auto"}`}
               >
                 Cancel
               </Link>
               <button
                 type="submit"
                 disabled={saving}
-                style={{
-                  padding: isMobile ? "14px 20px" : "16px 32px",
-                  backgroundColor: saved ? "#28a745" : "#7a6990",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "8px",
-                  fontSize: isMobile ? "0.9rem" : "1rem",
-                  fontWeight: "600",
-                  cursor: saving ? "not-allowed" : "pointer",
-                  opacity: saving ? 0.6 : 1,
-                  width: isMobile ? "100%" : "auto",
-                }}
+                className={`px-8 py-4 ${saved ? "bg-green-600 hover:bg-green-700" : "bg-indigo-600 hover:bg-indigo-700"} text-white border-none rounded-lg font-semibold transition-colors ${saving ? "cursor-not-allowed opacity-60" : "cursor-pointer"} ${isMobile ? "w-full" : "w-auto"}`}
               >
-                {saving
-                  ? "Saving..."
-                  : saved
-                    ? "Customer Saved!"
-                    : "Save Customer"}
+                {saving ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Saving...
+                  </span>
+                ) : saved ? (
+                  "Customer Saved!"
+                ) : (
+                  "Save Customer"
+                )}
               </button>
             </div>
           </div>

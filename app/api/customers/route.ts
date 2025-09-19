@@ -1,9 +1,19 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
+import { auth } from "@/lib/auth";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET() {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     // Check if DATABASE_URL is set
     if (!process.env.DATABASE_URL) {
       return NextResponse.json([]);
@@ -23,21 +33,26 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     // Check if DATABASE_URL is set
     if (!process.env.DATABASE_URL) {
       console.error("DATABASE_URL not set in environment variables");
       return NextResponse.json(
-        { 
-          error: "Database not configured", 
-          details: "DATABASE_URL environment variable is missing" 
-        }, 
-        { status: 500 }
+        {
+          error: "Database not configured",
+          details: "DATABASE_URL environment variable is missing",
+        },
+        { status: 500 },
       );
     }
 
     const body = await req.json();
     console.log("Creating customer with data:", body);
-    
+
     const {
       name,
       email,
@@ -51,8 +66,8 @@ export async function POST(req: Request) {
 
     if (!name) {
       return NextResponse.json(
-        { error: "Missing required field: name" }, 
-        { status: 400 }
+        { error: "Missing required field: name" },
+        { status: 400 },
       );
     }
 
@@ -90,16 +105,16 @@ export async function POST(req: Request) {
         stripeId,
       },
     });
-    
+
     console.log("Customer created successfully:", customer.id);
     return NextResponse.json(customer);
   } catch (error) {
     console.error("Error creating customer:", error);
-    
+
     // Provide more detailed error information
     let errorMessage = "Failed to create customer";
     let errorDetails = "Unknown error";
-    
+
     if (error instanceof Error) {
       errorDetails = error.message;
       if (error.message.includes("Unique constraint")) {
@@ -108,14 +123,14 @@ export async function POST(req: Request) {
         errorMessage = "Database connection failed";
       }
     }
-    
+
     return NextResponse.json(
-      { 
+      {
         error: errorMessage,
         details: errorDetails,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

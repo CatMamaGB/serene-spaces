@@ -10,6 +10,7 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
 const nextConfig: NextConfig = {
   /* config options here */
   reactStrictMode: true,
+  productionBrowserSourceMaps: true,
   env: {
     DATABASE_URL: process.env.DATABASE_URL,
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
@@ -33,8 +34,8 @@ const nextConfig: NextConfig = {
   webpack: (config, { isServer }) => {
     if (isServer) {
       // Externalize Prisma client for serverless
-      config.externals.push('@prisma/client');
-      
+      config.externals.push("@prisma/client");
+
       // Add fallbacks for Node.js modules
       config.resolve = config.resolve || {};
       config.resolve.fallback = {

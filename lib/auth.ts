@@ -25,13 +25,16 @@ const requiredEnvVars = {
 };
 
 // For local development, override NEXTAUTH_URL if it's pointing to production
-const isLocalDevelopment = process.env.NODE_ENV === "development" && 
+const isLocalDevelopment =
+  process.env.NODE_ENV === "development" &&
   process.env.NEXTAUTH_URL?.includes("loveserenespaces.com");
 
 if (isLocalDevelopment) {
   console.warn("⚠️  NEXTAUTH_URL is set to production URL in development mode");
   console.warn("   This will cause OAuth configuration errors");
-  console.warn("   Please set NEXTAUTH_URL=http://localhost:3000 for local development");
+  console.warn(
+    "   Please set NEXTAUTH_URL=http://localhost:3000 for local development",
+  );
 }
 
 const missingVars = Object.entries(requiredEnvVars)
@@ -59,10 +62,12 @@ if (missingVars.length > 0) {
   );
   console.error("Environment check - NODE_ENV:", process.env.NODE_ENV);
   console.error("All environment keys:", Object.keys(process.env));
-  
+
   // In production, throw an error to prevent startup with missing auth
   if (process.env.NODE_ENV === "production") {
-    throw new Error(`Missing required environment variables: ${missingVars.join(", ")}`);
+    throw new Error(
+      `Missing required environment variables: ${missingVars.join(", ")}`,
+    );
   }
 }
 
@@ -76,7 +81,7 @@ const getBaseUrl = () => {
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "database" },
+  session: { strategy: "jwt" },
   trustHost: true,
   secret: process.env.NEXTAUTH_SECRET,
   events: {
@@ -85,130 +90,140 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     },
   },
   providers: [
-          Google({
-            clientId: process.env.GOOGLE_CLIENT_ID!,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-            authorization: {
-              params: {
-                prompt: "consent",
-                access_type: "offline",
-                response_type: "code",
-                scope: "openid email profile",
-              },
-            },
-          }),
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code",
+          scope: "openid email profile",
+        },
+      },
+    }),
     Credentials({
       name: "credentials",
       credentials: {
         email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
+        password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
           return null;
         }
 
-            try {
-              // Admin account for loveserenespaces@gmail.com
-              const adminEmail = "loveserenespaces@gmail.com";
-              const adminPassword = "Spaces123"; // Updated password
-              
-              if (credentials.email === adminEmail) {
-                // For demo purposes, we'll accept the password directly
-                // In production, you'd hash the password and compare
-                if (credentials.password === adminPassword) {
-                  return {
-                    id: "admin",
-                    email: adminEmail,
-                    name: "Serene Spaces Admin",
-                    image: null,
-                  };
-                }
-              }
-          
+        try {
+          // Admin account for loveserenespaces@gmail.com
+          const adminEmail = "loveserenespaces@gmail.com";
+          const adminPassword = "Spaces123"; // Updated password
+
+          if (credentials.email === adminEmail) {
+            // For demo purposes, we'll accept the password directly
+            // In production, you'd hash the password and compare
+            if (credentials.password === adminPassword) {
+              return {
+                id: "admin",
+                email: adminEmail,
+                name: "Serene Spaces Admin",
+                image: null,
+                role: "admin",
+              };
+            }
+          }
+
           return null;
         } catch (error) {
           console.error("Authorization error:", error);
           return null;
         }
-      }
+      },
     }),
   ],
-        callbacks: {
-          async signIn({ user, account }) {
-            console.log("SignIn callback triggered:", { 
-              userEmail: user?.email, 
-              provider: account?.provider,
-              userId: user?.id,
-              accountType: account?.type,
-              accountProvider: account?.provider
-            });
-            
-            // Only allow sign in for loveserenespaces@gmail.com
-            if (account?.provider === "google") {
-              if (!user?.email) {
-                console.error("No email found in Google OAuth user object");
-                return false;
-              }
-              
-              const isAuthorized = user.email === "loveserenespaces@gmail.com";
-              console.log("Google OAuth authorization:", { 
-                email: user.email, 
-                authorized: isAuthorized,
-                userObject: user
-              });
-              
-              if (!isAuthorized) {
-                console.log("Access denied for email:", user.email);
-              }
-              
-              return isAuthorized;
-            }
-            
-            // Allow credentials provider (email/password) for admin
-            if (account?.provider === "credentials") {
-              console.log("Credentials provider authorization:", { 
-                email: user?.email, 
-                authorized: true 
-              });
-              return true;
-            }
-            
-            console.log("Sign in denied for provider:", account?.provider);
-            return false;
-          },
-    async session({ session, user }) {
-      // Ensure session has user ID
-      if (session.user) {
-        session.user.id = user.id;
+  callbacks: {
+    async signIn({ user, account }) {
+      console.log("SignIn callback triggered:", {
+        userEmail: user?.email,
+        provider: account?.provider,
+        userId: user?.id,
+        accountType: account?.type,
+        accountProvider: account?.provider,
+      });
+
+      // Only allow sign in for loveserenespaces@gmail.com
+      if (account?.provider === "google") {
+        if (!user?.email) {
+          console.error("No email found in Google OAuth user object");
+          return false;
+        }
+
+        const isAuthorized = user.email === "loveserenespaces@gmail.com";
+        console.log("Google OAuth authorization:", {
+          email: user.email,
+          authorized: isAuthorized,
+          userObject: user,
+        });
+
+        if (!isAuthorized) {
+          console.log("Access denied for email:", user.email);
+        }
+
+        return isAuthorized;
+      }
+
+      // Allow credentials provider (email/password) for admin
+      if (account?.provider === "credentials") {
+        console.log("Credentials provider authorization:", {
+          email: user?.email,
+          authorized: true,
+        });
+        return true;
+      }
+
+      console.log("Sign in denied for provider:", account?.provider);
+      return false;
+    },
+    async session({ session, token }) {
+      // Ensure session has user ID from token
+      if (session.user && token) {
+        session.user.id = token.sub || (token.id as string);
+        session.user.role = (token.role as string) || "staff";
       }
       return session;
     },
-          async redirect({ url, baseUrl }) {
-            const correctBaseUrl = getBaseUrl();
-            console.log("Redirect callback:", { url, baseUrl, correctBaseUrl });
-            
-            // Allows relative callback URLs
-            if (url.startsWith("/")) {
-              const redirectUrl = `${correctBaseUrl}${url}`;
-              console.log("Redirecting to:", redirectUrl);
-              return redirectUrl;
-            }
-            
-            // Allows callback URLs on the same origin
-            try {
-              const urlObj = new URL(url);
-              if (urlObj.origin === correctBaseUrl) {
-                console.log("Redirecting to same origin:", url);
-                return url;
-              }
-            } catch (error) {
-              console.error("Invalid URL in redirect:", error);
-            }
-            
-            console.log("Default redirect to correctBaseUrl:", correctBaseUrl);
-            return correctBaseUrl;
-          },
+    async jwt({ token, user }) {
+      // Persist the user ID to the token right after signin
+      if (user) {
+        token.id = user.id;
+        token.role = user.role || "staff";
+      }
+      return token;
+    },
+    async redirect({ url, baseUrl }) {
+      const correctBaseUrl = getBaseUrl();
+      console.log("Redirect callback:", { url, baseUrl, correctBaseUrl });
+
+      // Allows relative callback URLs
+      if (url.startsWith("/")) {
+        const redirectUrl = `${correctBaseUrl}${url}`;
+        console.log("Redirecting to:", redirectUrl);
+        return redirectUrl;
+      }
+
+      // Allows callback URLs on the same origin
+      try {
+        const urlObj = new URL(url);
+        if (urlObj.origin === correctBaseUrl) {
+          console.log("Redirecting to same origin:", url);
+          return url;
+        }
+      } catch (error) {
+        console.error("Invalid URL in redirect:", error);
+      }
+
+      console.log("Default redirect to correctBaseUrl:", correctBaseUrl);
+      return correctBaseUrl;
+    },
   },
   // Add error handling
   debug: process.env.NODE_ENV === "development",

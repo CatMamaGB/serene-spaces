@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createGmailTransporter } from "@/lib/gmail-oauth";
+import { prisma } from "@/lib/prisma";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function POST(req: NextRequest) {
   try {
@@ -7,6 +12,7 @@ export async function POST(req: NextRequest) {
     console.log("Send invoice request body:", JSON.stringify(body, null, 2));
 
     const {
+      invoiceId,
       customerName,
       customerEmail,
       customerPhone,
@@ -117,6 +123,23 @@ export async function POST(req: NextRequest) {
       response: info.response,
     });
 
+    // Update invoice status to "sent" if invoiceId is provided
+    if (invoiceId) {
+      try {
+        await (prisma as any).invoice.update({
+          where: { id: invoiceId },
+          data: { status: "sent" },
+        });
+        console.log(
+          "✅ Invoice status updated to 'sent' for invoice:",
+          invoiceId,
+        );
+      } catch (updateError) {
+        console.error("⚠️ Failed to update invoice status:", updateError);
+        // Don't fail the entire request if status update fails
+      }
+    }
+
     return NextResponse.json({
       success: true,
       messageId: info.messageId,
@@ -207,7 +230,6 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function generateInvoiceHtml(invoiceData: any) {
   const {
     customerName,

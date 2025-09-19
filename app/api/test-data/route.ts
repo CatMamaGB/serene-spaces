@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+
 export async function POST() {
   try {
     // Create a test customer
@@ -21,23 +23,22 @@ export async function POST() {
     const serviceRequest = await prisma.serviceRequest.create({
       data: {
         customerId: customer.id,
-        services: ["Blanket Cleaning", "Waterproofing"],
-        address: "123 Test Street, Test City, TS 12345",
-        status: "pending",
-        notes: "Test service request",
+        internalNotes:
+          "Services: Blanket Cleaning, Waterproofing\nTest service request",
+        status: "draft",
       },
     });
 
-    // Create a test invoice
-    const invoice = await prisma.invoiceMirror.create({
+    // Create a test invoice using the new Invoice model
+    const invoice = await (prisma as any).invoice.create({
       data: {
         customerId: customer.id,
-        stripeInvoiceId: `test-${Date.now()}`,
+        number: `TEST-${Date.now()}`,
         status: "draft",
-        subtotal: 5000, // $50.00 in cents
-        tax: 312, // $3.12 in cents (6.25%)
-        total: 5312, // $53.12 in cents
-        invoiceNumber: `TEST-${Date.now()}`,
+        subtotal: 50.0,
+        tax: 3.12,
+        total: 53.12,
+        balance: 53.12,
         issueDate: new Date(),
         dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
         notes: "Test invoice",
@@ -46,14 +47,16 @@ export async function POST() {
             {
               description: "Blanket Cleaning",
               quantity: 1,
-              unitAmount: 2500, // $25.00 in cents
+              unitPrice: 25.0,
               taxable: true,
+              lineTotal: 25.0,
             },
             {
               description: "Waterproofing",
               quantity: 1,
-              unitAmount: 2500, // $25.00 in cents
+              unitPrice: 20.0,
               taxable: true,
+              lineTotal: 20.0,
             },
           ],
         },
@@ -105,7 +108,9 @@ export async function DELETE() {
 
     await prisma.serviceRequest.deleteMany({
       where: {
-        notes: "Test service request",
+        internalNotes: {
+          contains: "Test service request",
+        },
       },
     });
 

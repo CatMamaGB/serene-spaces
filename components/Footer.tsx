@@ -1,108 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
 
 export default function Footer() {
-  const [isMobile, setIsMobile] = useState(false);
-  const [isTablet, setIsTablet] = useState(false);
-
-  useEffect(() => {
-    const checkScreenSize = () => {
-      const width = window.innerWidth;
-      setIsMobile(width < 640);
-      setIsTablet(width >= 640 && width < 1024);
-    };
-
-    checkScreenSize();
-    window.addEventListener("resize", checkScreenSize);
-    return () => window.removeEventListener("resize", checkScreenSize);
-  }, []);
-
-  const getGridColumns = () => {
-    if (isMobile) return "1fr";
-    if (isTablet) return "1fr 1fr";
-    return "2fr 1fr 1fr";
-  };
-
-  const getGap = () => {
-    if (isMobile) return "40px";
-    if (isTablet) return "50px";
-    return "60px";
-  };
-
   return (
-    <footer
-      style={{
-        backgroundColor: "#0f172a",
-        color: "white",
-        padding: isMobile ? "40px 20px" : isTablet ? "60px 24px" : "80px 24px",
-        textAlign: "center",
-        borderTop: "1px solid rgba(255, 255, 255, 0.1)",
-        position: "relative",
-      }}
-    >
+    <footer className="bg-slate-900 text-white relative border-t border-white/10">
       {/* Background Pattern */}
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background:
-            "radial-gradient(circle at 20% 80%, rgba(122, 105, 144, 0.08) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(122, 105, 144, 0.04) 0%, transparent 50%)",
-          pointerEvents: "none",
-        }}
-      />
+      <div className="absolute inset-0 bg-gradient-radial from-primary/8 via-transparent to-transparent pointer-events-none" />
 
-      <div
-        style={{
-          maxWidth: "1200px",
-          margin: "0 auto",
-          position: "relative",
-          zIndex: 1,
-        }}
-      >
+      <div className="container-responsive relative z-10">
         {/* Main Footer Content */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: getGridColumns(),
-            gap: getGap(),
-            marginBottom: isMobile ? "40px" : "60px",
-            textAlign: isMobile ? "center" : "left",
-          }}
-        >
-          {/* Company Info - Takes up more space */}
-          <div style={{ minWidth: 0 }}>
-            <div
-              style={{
-                fontSize: isMobile
-                  ? "1.5rem"
-                  : isTablet
-                    ? "1.75rem"
-                    : "2.25rem",
-                fontWeight: "700",
-                marginBottom: "20px",
-                background: "linear-gradient(135deg, #7a6990 0%, #9f8bb3 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}
-            >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-12 lg:gap-16 mb-12 sm:mb-16 text-center md:text-left">
+          {/* Company Info */}
+          <div className="min-w-0">
+            <div className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-primary to-primary-light bg-clip-text text-transparent">
               Serene Spaces
             </div>
-            <p
-              style={{
-                color: "rgba(255,255,255,0.85)",
-                margin: "0 0 25px 0",
-                lineHeight: "1.7",
-                fontSize: isMobile ? "0.95rem" : "1.1rem",
-                maxWidth: isMobile ? "100%" : "400px",
-                wordWrap: "break-word",
-              }}
-            >
+            <p className="text-white/85 mb-6 sm:mb-8 leading-relaxed text-sm sm:text-base lg:text-lg max-w-md mx-auto md:mx-0">
               Professional horse blanket cleaning, repairs, and waterproofing
               services. Serving the equestrian community with expertise and care
               over 10 years.
@@ -110,62 +24,15 @@ export default function Footer() {
 
             {/* Social Media Section */}
             <div>
-              <h4
-                style={{
-                  fontSize: isMobile ? "0.95rem" : "1.1rem",
-                  marginBottom: "16px",
-                  fontWeight: "600",
-                  color: "rgba(255,255,255,0.9)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                }}
-              >
+              <h4 className="text-sm sm:text-base lg:text-lg mb-4 font-semibold text-white/90 uppercase tracking-wider">
                 Follow Us
               </h4>
-              <div
-                style={{
-                  display: "flex",
-                  gap: "16px",
-                  justifyContent: isMobile ? "center" : "flex-start",
-                  flexWrap: "wrap",
-                }}
-              >
+              <div className="flex gap-4 justify-center md:justify-start flex-wrap">
                 <a
                   href="https://instagram.com/loveserenespaces"
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{
-                    color: "rgba(255,255,255,0.7)",
-                    textDecoration: "none",
-                    fontSize: "1.3rem",
-                    transition: "all 0.3s ease",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: "48px",
-                    height: "48px",
-                    borderRadius: "12px",
-                    backgroundColor: "rgba(255,255,255,0.08)",
-                    border: "1px solid rgba(255,255,255,0.15)",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.color = "#E4405F";
-                    e.currentTarget.style.backgroundColor =
-                      "rgba(228, 64, 95, 0.15)";
-                    e.currentTarget.style.borderColor = "#E4405F";
-                    e.currentTarget.style.transform = "translateY(-3px)";
-                    e.currentTarget.style.boxShadow =
-                      "0 10px 30px rgba(228, 64, 95, 0.3)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.color = "rgba(255,255,255,0.7)";
-                    e.currentTarget.style.backgroundColor =
-                      "rgba(255,255,255,0.08)";
-                    e.currentTarget.style.borderColor =
-                      "rgba(255,255,255,0.15)";
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "none";
-                  }}
+                  className="w-12 h-12 rounded-xl bg-white/8 border border-white/15 flex items-center justify-center text-xl transition-all duration-300 hover:text-pink-500 hover:bg-pink-500/15 hover:border-pink-500 hover:-translate-y-1 hover:shadow-lg hover:shadow-pink-500/30"
                   title="Follow us on Instagram @loveserenespaces"
                 >
                   📷
@@ -174,76 +41,14 @@ export default function Footer() {
                   href="https://facebook.com/loveserenespaces"
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{
-                    color: "rgba(255,255,255,0.7)",
-                    textDecoration: "none",
-                    fontSize: "1.3rem",
-                    transition: "all 0.3s ease",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: "48px",
-                    height: "48px",
-                    borderRadius: "12px",
-                    backgroundColor: "rgba(255,255,255,0.08)",
-                    border: "1px solid rgba(255,255,255,0.15)",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.color = "#1877F2";
-                    e.currentTarget.style.backgroundColor =
-                      "rgba(24, 119, 242, 0.15)";
-                    e.currentTarget.style.borderColor = "#1877F2";
-                    e.currentTarget.style.transform = "translateY(-3px)";
-                    e.currentTarget.style.boxShadow =
-                      "0 10px 30px rgba(24, 119, 242, 0.3)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.color = "rgba(255,255,255,0.7)";
-                    e.currentTarget.style.backgroundColor =
-                      "rgba(255,255,255,0.08)";
-                    e.currentTarget.style.borderColor =
-                      "rgba(255,255,255,0.15)";
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "none";
-                  }}
+                  className="w-12 h-12 rounded-xl bg-white/8 border border-white/15 flex items-center justify-center text-xl transition-all duration-300 hover:text-blue-500 hover:bg-blue-500/15 hover:border-blue-500 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/30"
                   title="Follow us on Facebook"
                 >
                   📘
                 </a>
                 <a
                   href="mailto:loveserenespaces@gmail.com"
-                  style={{
-                    color: "rgba(255,255,255,0.7)",
-                    textDecoration: "none",
-                    fontSize: "1.3rem",
-                    transition: "all 0.3s ease",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: "48px",
-                    height: "48px",
-                    borderRadius: "12px",
-                    backgroundColor: "rgba(255,255,255,0.08)",
-                    border: "1px solid rgba(255,255,255,0.15)",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.color = "#EA4335";
-                    e.currentTarget.style.backgroundColor =
-                      "rgba(234, 67, 53, 0.15)";
-                    e.currentTarget.style.borderColor = "#EA4335";
-                    e.currentTarget.style.transform = "translateY(-3px)";
-                    e.currentTarget.style.boxShadow =
-                      "0 10px 30px rgba(234, 67, 53, 0.3)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.color = "rgba(255,255,255,0.7)";
-                    e.currentTarget.style.backgroundColor =
-                      "rgba(255,255,255,0.08)";
-                    e.currentTarget.style.borderColor =
-                      "rgba(255,255,255,0.15)";
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "none";
-                  }}
+                  className="w-12 h-12 rounded-xl bg-white/8 border border-white/15 flex items-center justify-center text-xl transition-all duration-300 hover:text-red-500 hover:bg-red-500/15 hover:border-red-500 hover:-translate-y-1 hover:shadow-lg hover:shadow-red-500/30"
                   title="Email us at loveserenespaces@gmail.com"
                 >
                   ✉️
@@ -253,26 +58,11 @@ export default function Footer() {
           </div>
 
           {/* Quick Links */}
-          <div style={{ minWidth: 0 }}>
-            <h4
-              style={{
-                fontSize: isMobile ? "1rem" : "1.2rem",
-                marginBottom: "24px",
-                fontWeight: "600",
-                color: "rgba(255,255,255,0.95)",
-                textTransform: "uppercase",
-                letterSpacing: "0.5px",
-              }}
-            >
+          <div className="min-w-0">
+            <h4 className="text-base sm:text-lg lg:text-xl mb-6 font-semibold text-white/95 uppercase tracking-wider">
               Quick Links
             </h4>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "16px",
-              }}
-            >
+            <div className="flex flex-col gap-4">
               {[
                 { href: "/", label: "Home" },
                 { href: "/pricing", label: "Pricing" },
@@ -283,24 +73,7 @@ export default function Footer() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  style={{
-                    color: "rgba(255,255,255,0.7)",
-                    textDecoration: "none",
-                    transition: "all 0.3s ease",
-                    fontSize: "1rem",
-                    fontWeight: "500",
-                    position: "relative",
-                    padding: "6px 0",
-                    whiteSpace: "nowrap",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.color = "rgba(255,255,255,0.95)";
-                    e.currentTarget.style.transform = "translateX(6px)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.color = "rgba(255,255,255,0.7)";
-                    e.currentTarget.style.transform = "translateX(0)";
-                  }}
+                  className="text-white/70 hover:text-white/95 transition-all duration-300 text-sm sm:text-base font-medium py-1.5 hover:translate-x-1.5"
                 >
                   {link.label}
                 </Link>
@@ -309,107 +82,29 @@ export default function Footer() {
           </div>
 
           {/* Contact Information */}
-          <div style={{ minWidth: 0 }}>
-            <h4
-              style={{
-                fontSize: isMobile ? "1rem" : "1.2rem",
-                marginBottom: "24px",
-                fontWeight: "600",
-                color: "rgba(255,255,255,0.95)",
-                textTransform: "uppercase",
-                letterSpacing: "0.5px",
-              }}
-            >
+          <div className="min-w-0">
+            <h4 className="text-base sm:text-lg lg:text-xl mb-6 font-semibold text-white/95 uppercase tracking-wider">
               Contact
             </h4>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "20px",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "14px",
-                  justifyContent: isMobile ? "center" : "flex-start",
-                }}
-              >
-                <div
-                  style={{
-                    width: "40px",
-                    height: "40px",
-                    borderRadius: "10px",
-                    backgroundColor: "rgba(255,255,255,0.08)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "1.2rem",
-                    flexShrink: 0,
-                  }}
-                >
+            <div className="flex flex-col gap-5">
+              <div className="flex items-center gap-3.5 justify-center md:justify-start">
+                <div className="w-10 h-10 rounded-lg bg-white/8 flex items-center justify-center text-lg flex-shrink-0">
                   📧
                 </div>
                 <a
                   href="mailto:loveserenespaces@gmail.com"
-                  style={{
-                    color: "rgba(255,255,255,0.7)",
-                    textDecoration: "none",
-                    transition: "color 0.3s ease",
-                    fontSize: "1rem",
-                    fontWeight: "500",
-                    wordBreak: "break-word",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.color = "rgba(255,255,255,0.95)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.color = "rgba(255,255,255,0.7)";
-                  }}
+                  className="text-white/70 hover:text-white/95 transition-colors duration-300 text-sm sm:text-base font-medium break-all"
                 >
                   loveserenespaces@gmail.com
                 </a>
               </div>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "14px",
-                  justifyContent: isMobile ? "center" : "flex-start",
-                }}
-              >
-                <div
-                  style={{
-                    width: "40px",
-                    height: "40px",
-                    borderRadius: "10px",
-                    backgroundColor: "rgba(255,255,255,0.08)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "1.2rem",
-                    flexShrink: 0,
-                  }}
-                >
+              <div className="flex items-center gap-3.5 justify-center md:justify-start">
+                <div className="w-10 h-10 rounded-lg bg-white/8 flex items-center justify-center text-lg flex-shrink-0">
                   📞
                 </div>
                 <a
                   href="tel:+18156213509"
-                  style={{
-                    color: "rgba(255,255,255,0.7)",
-                    textDecoration: "none",
-                    transition: "color 0.3s ease",
-                    fontSize: "1rem",
-                    fontWeight: "500",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.color = "rgba(255,255,255,0.95)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.color = "rgba(255,255,255,0.7)";
-                  }}
+                  className="text-white/70 hover:text-white/95 transition-colors duration-300 text-sm sm:text-base font-medium"
                 >
                   (815) 621-3509
                 </a>
@@ -419,79 +114,24 @@ export default function Footer() {
         </div>
 
         {/* Bottom Section */}
-        <div
-          style={{
-            borderTop: "1px solid rgba(255,255,255,0.1)",
-            paddingTop: isMobile ? "30px" : "40px",
-            textAlign: "center",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              flexDirection: isMobile ? "column" : "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: isMobile ? "20px" : "0",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "8px",
-                alignItems: isMobile ? "center" : "flex-start",
-              }}
-            >
-              <p
-                style={{
-                  fontSize: isMobile ? "0.9rem" : "1rem",
-                  color: "rgba(255,255,255,0.85)",
-                  margin: "0",
-                  fontWeight: "500",
-                }}
-              >
+        <div className="border-t border-white/10 pt-8 sm:pt-10 text-center">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-5">
+            <div className="flex flex-col gap-2 items-center sm:items-start">
+              <p className="text-sm sm:text-base text-white/85 font-medium">
                 © 2025 Serene Spaces. All rights reserved.
               </p>
-              <p
-                style={{
-                  fontSize: isMobile ? "0.8rem" : "0.9rem",
-                  color: "rgba(255,255,255,0.6)",
-                  margin: "0",
-                }}
-              >
+              <p className="text-xs sm:text-sm text-white/60">
                 Professional horse equipment care services
               </p>
             </div>
 
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "10px",
-                fontSize: isMobile ? "0.8rem" : "0.9rem",
-                color: "rgba(255,255,255,0.6)",
-                flexWrap: "wrap",
-                justifyContent: "center",
-              }}
-            >
+            <div className="flex items-center gap-2.5 text-xs sm:text-sm text-white/60 flex-wrap justify-center">
               <span>Made with ❤️ by</span>
               <a
                 href="https://codeandcosmos.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{
-                  color: "rgba(255,255,255,0.7)",
-                  textDecoration: "none",
-                  fontWeight: "600",
-                  transition: "color 0.3s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = "rgba(255,255,255,0.9)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = "rgba(255,255,255,0.7)";
-                }}
+                className="text-white/70 hover:text-white/90 transition-colors duration-300 font-semibold"
               >
                 Code & Cosmos
               </a>
