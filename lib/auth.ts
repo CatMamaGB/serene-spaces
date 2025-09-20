@@ -81,7 +81,7 @@ const getBaseUrl = () => {
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "database" },
+  session: { strategy: "jwt" },
   trustHost: true,
   secret: process.env.NEXTAUTH_SECRET,
   events: {
@@ -183,13 +183,21 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       console.log("Sign in denied for provider:", account?.provider);
       return false;
     },
-    async session({ session, user }) {
-      // Ensure session has user ID and role from database
-      if (session.user && user) {
-        session.user.id = user.id;
-        session.user.role = user.role || "staff";
+    async session({ session, token }) {
+      // Ensure session has user ID from token
+      if (session.user && token) {
+        session.user.id = token.sub || (token.id as string);
+        session.user.role = (token.role as string) || "staff";
       }
       return session;
+    },
+    async jwt({ token, user }) {
+      // Persist the user ID to the token right after signin
+      if (user) {
+        token.id = user.id;
+        token.role = user.role || "staff";
+      }
+      return token;
     },
     async redirect({ url, baseUrl }) {
       const correctBaseUrl = getBaseUrl();
