@@ -6,7 +6,8 @@ export async function middleware(req: NextRequest) {
   // Force immediate logging to ensure we see this
   console.log("=".repeat(50));
   console.log("🚀 MIDDLEWARE EXECUTING FOR:", req.nextUrl.pathname);
-  console.log("🔧 MIDDLEWARE VERSION: 2.0 - ENHANCED DIAGNOSTICS");
+  console.log("🔧 MIDDLEWARE VERSION: 3.0 - UPDATED SECRET SYNC TEST");
+  console.log("🕐 TIMESTAMP:", new Date().toISOString());
   console.log("=".repeat(50));
   
   // Enforce www host to prevent cookie domain mismatches
@@ -50,6 +51,7 @@ export async function middleware(req: NextRequest) {
       hasSecret: !!process.env.NEXTAUTH_SECRET,
       secretLength: process.env.NEXTAUTH_SECRET?.length || 0,
       secretPreview: process.env.NEXTAUTH_SECRET?.substring(0, 8) + "...",
+      secretHash: process.env.NEXTAUTH_SECRET ? "SET" : "NOT_SET",
     });
 
     console.log("🔑 Attempting token validation...");
