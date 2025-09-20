@@ -72,9 +72,9 @@ function SignInContent() {
     setError(null);
 
     try {
-      await signIn("google", { 
+      await signIn("google", {
         callbackUrl,
-        redirect: true // Let NextAuth handle the redirect
+        redirect: true, // Let NextAuth handle the redirect
       });
     } catch {
       setError("Google sign in failed. Please try again.");

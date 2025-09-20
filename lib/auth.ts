@@ -85,8 +85,19 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   trustHost: true,
   secret: process.env.NEXTAUTH_SECRET,
   events: {
-    async signIn() {
+    async signIn(message) {
+      console.log("✅ SignIn event:", {
+        user: message.user?.email,
+        account: message.account?.provider,
+        isNewUser: message.isNewUser,
+      });
       await testDatabaseConnection();
+    },
+    async signOut(message) {
+      console.log("🚪 SignOut event:", {
+        session: (message as any).session?.user?.email,
+        token: (message as any).token?.email,
+      });
     },
   },
   providers: [
@@ -199,19 +210,51 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       return false;
     },
     async session({ session, token }) {
+      console.log("🔑 Session callback:", {
+        sessionUser: session.user?.email,
+        tokenSub: token.sub,
+        tokenEmail: token.email,
+        tokenRole: token.role,
+      });
+
       // Ensure session has user ID from token
       if (session.user && token) {
         session.user.id = token.sub || (token.id as string);
         session.user.role = (token.role as string) || "staff";
       }
+
+      console.log("🔑 Session callback result:", {
+        sessionUser: session.user?.email,
+        sessionUserId: session.user?.id,
+        sessionUserRole: session.user?.role,
+      });
+
       return session;
     },
     async jwt({ token, user }) {
+      console.log("🎫 JWT callback:", {
+        tokenSub: token.sub,
+        tokenEmail: token.email,
+        tokenRole: token.role,
+        userEmail: user?.email,
+        userId: user?.id,
+        userRole: user?.role,
+      });
+
       // Persist the user ID to the token right after signin
       if (user) {
         token.id = user.id;
         token.role = user.role || "staff";
+        token.email = user.email;
       }
+
+      console.log("🎫 JWT callback result:", {
+        tokenSub: token.sub,
+        tokenEmail: token.email,
+        tokenRole: token.role,
+        tokenId: token.id,
+      });
+
       return token;
     },
     async redirect({ url, baseUrl }) {

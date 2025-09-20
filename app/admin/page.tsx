@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { useState, useEffect } from "react";
 import { safeJson } from "@/lib/utils";
+import { useSession } from "next-auth/react";
 
 interface DashboardStats {
   totalCustomers: number;
@@ -21,6 +22,7 @@ interface RecentInvoice {
 }
 
 export default function AdminDashboard() {
+  const { data: session, status } = useSession();
   const [stats, setStats] = useState<DashboardStats>({
     totalCustomers: 0,
     pendingInvoices: 0,
@@ -29,6 +31,31 @@ export default function AdminDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [recentInvoices, setRecentInvoices] = useState<RecentInvoice[]>([]);
+
+  useEffect(() => {
+    console.log("🏠 Admin Dashboard - Session Status:", status);
+    console.log("🏠 Admin Dashboard - Session Data:", session);
+
+    if (status === "unauthenticated") {
+      console.log(
+        "❌ Admin Dashboard - User not authenticated, redirecting to login",
+      );
+      window.location.href = "/auth/signin";
+      return;
+    }
+
+    if (status === "loading") {
+      console.log("⏳ Admin Dashboard - Session loading...");
+      return;
+    }
+
+    if (status === "authenticated" && session?.user) {
+      console.log(
+        "✅ Admin Dashboard - User authenticated:",
+        session.user.email,
+      );
+    }
+  }, [session, status]);
 
   useEffect(() => {
     const fetchStats = async () => {
