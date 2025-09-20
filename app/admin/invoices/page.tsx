@@ -2,7 +2,6 @@
 import { useEffect, useState, useCallback } from "react";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
 import Link from "next/link";
 import { safeJson } from "@/lib/utils";
 import { formatCurrency } from "@/lib/invoice-types";
