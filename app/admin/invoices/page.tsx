@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 
-export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { safeJson } from "@/lib/utils";
 import { formatCurrency } from "@/lib/invoice-types";

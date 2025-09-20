@@ -1,7 +1,6 @@
 "use client";
 import Link from "next/link";
 
-export const dynamic = "force-dynamic";
 import { useState, useEffect } from "react";
 import { safeJson } from "@/lib/utils";
 

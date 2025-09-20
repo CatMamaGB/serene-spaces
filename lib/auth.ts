@@ -225,9 +225,12 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         if (callbackUrl) {
           console.log("Found callbackUrl parameter:", callbackUrl);
           // Ensure the callback URL is safe and on the same origin
-          if (callbackUrl.startsWith("/") || callbackUrl.startsWith(correctBaseUrl)) {
-            const redirectUrl = callbackUrl.startsWith("/") 
-              ? `${correctBaseUrl}${callbackUrl}` 
+          if (
+            callbackUrl.startsWith("/") ||
+            callbackUrl.startsWith(correctBaseUrl)
+          ) {
+            const redirectUrl = callbackUrl.startsWith("/")
+              ? `${correctBaseUrl}${callbackUrl}`
               : callbackUrl;
             console.log("Redirecting to callbackUrl:", redirectUrl);
             return redirectUrl;
