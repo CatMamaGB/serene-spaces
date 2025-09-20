@@ -55,9 +55,18 @@ export async function middleware(req: NextRequest) {
     });
 
     console.log("🔑 Attempting token validation...");
+    
+    // Try with explicit secret first
+    const secret = process.env.NEXTAUTH_SECRET;
+    console.log("🔐 Secret details:", {
+      hasSecret: !!secret,
+      secretLength: secret?.length || 0,
+      secretType: typeof secret,
+    });
+    
     const token = await getToken({
       req,
-      secret: process.env.NEXTAUTH_SECRET,
+      secret: secret,
     });
     
     console.log("🔒 Token validation result:", {
@@ -81,4 +90,4 @@ export async function middleware(req: NextRequest) {
   return NextResponse.next();
 }
 
-export const config = { matcher: [] }; // Temporarily disable middleware
+export const config = { matcher: ["/admin/:path*"] };
