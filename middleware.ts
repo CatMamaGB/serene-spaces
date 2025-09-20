@@ -5,9 +5,9 @@ import { getToken } from "next-auth/jwt";
 export async function middleware(req: NextRequest) {
   // Force immediate logging to ensure we see this
   console.log("=".repeat(50));
-  console.log("🚀 MIDDLEWARE EXECUTING FOR:", req.nextUrl.pathname);
-  console.log("🔧 MIDDLEWARE VERSION: 3.0 - UPDATED SECRET SYNC TEST");
+  console.log("🚀 NEW MIDDLEWARE VERSION 4.0 - COMPLETE RESET");
   console.log("🕐 TIMESTAMP:", new Date().toISOString());
+  console.log("📍 PATH:", req.nextUrl.pathname);
   console.log("=".repeat(50));
   
   // Enforce www host to prevent cookie domain mismatches
