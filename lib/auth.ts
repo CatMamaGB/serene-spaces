@@ -122,12 +122,27 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             // For demo purposes, we'll accept the password directly
             // In production, you'd hash the password and compare
             if (credentials.password === adminPassword) {
+              // Check if admin user exists in database, create if not
+              let user = await prisma.user.findUnique({
+                where: { email: adminEmail },
+              });
+
+              if (!user) {
+                user = await prisma.user.create({
+                  data: {
+                    email: adminEmail,
+                    name: "Serene Spaces Admin",
+                    role: "admin",
+                  } as any,
+                });
+              }
+
               return {
-                id: "admin",
-                email: adminEmail,
-                name: "Serene Spaces Admin",
-                image: null,
-                role: "admin",
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                image: user.image,
+                role: (user as any).role,
               };
             }
           }
