@@ -6,6 +6,7 @@ export async function middleware(req: NextRequest) {
   // Force immediate logging to ensure we see this
   console.log("=".repeat(50));
   console.log("🚀 MIDDLEWARE EXECUTING FOR:", req.nextUrl.pathname);
+  console.log("🔧 MIDDLEWARE VERSION: 2.0 - ENHANCED DIAGNOSTICS");
   console.log("=".repeat(50));
   
   // Enforce www host to prevent cookie domain mismatches
