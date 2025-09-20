@@ -218,36 +218,14 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       const correctBaseUrl = getBaseUrl();
       console.log("Redirect callback:", { url, baseUrl, correctBaseUrl });
 
-      // Check if there's a callbackUrl parameter in the URL
-      try {
-        const urlObj = new URL(url);
-        const callbackUrl = urlObj.searchParams.get("callbackUrl");
-        if (callbackUrl) {
-          console.log("Found callbackUrl parameter:", callbackUrl);
-          // Ensure the callback URL is safe and on the same origin
-          if (
-            callbackUrl.startsWith("/") ||
-            callbackUrl.startsWith(correctBaseUrl)
-          ) {
-            const redirectUrl = callbackUrl.startsWith("/")
-              ? `${correctBaseUrl}${callbackUrl}`
-              : callbackUrl;
-            console.log("Redirecting to callbackUrl:", redirectUrl);
-            return redirectUrl;
-          }
-        }
-      } catch (error) {
-        console.error("Error parsing URL for callbackUrl:", error);
-      }
-
-      // Allows relative callback URLs
+      // If it's a relative URL, make it absolute
       if (url.startsWith("/")) {
         const redirectUrl = `${correctBaseUrl}${url}`;
-        console.log("Redirecting to:", redirectUrl);
+        console.log("Redirecting to relative URL:", redirectUrl);
         return redirectUrl;
       }
 
-      // Allows callback URLs on the same origin
+      // If it's an absolute URL on the same origin, allow it
       try {
         const urlObj = new URL(url);
         if (urlObj.origin === correctBaseUrl) {
@@ -258,8 +236,9 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         console.error("Invalid URL in redirect:", error);
       }
 
-      console.log("Default redirect to correctBaseUrl:", correctBaseUrl);
-      return correctBaseUrl;
+      // Default to admin dashboard
+      console.log("Default redirect to admin dashboard");
+      return `${correctBaseUrl}/admin`;
     },
   },
   // Add error handling

@@ -54,21 +54,15 @@ function SignInContent() {
     setError(null);
 
     try {
-      const result = await signIn("credentials", {
+      await signIn("credentials", {
         email,
         password,
         callbackUrl,
-        redirect: false,
+        redirect: true, // Let NextAuth handle the redirect
       });
-
-      if (result?.error) {
-        setError("Invalid email or password. Please try again.");
-      } else if (result?.ok) {
-        window.location.href = callbackUrl;
-      }
-    } catch {
+    } catch (error) {
+      console.error("Sign in error:", error);
       setError("An unexpected error occurred. Please try again.");
-    } finally {
       setIsLoading(false);
     }
   };
@@ -78,7 +72,10 @@ function SignInContent() {
     setError(null);
 
     try {
-      await signIn("google", { callbackUrl });
+      await signIn("google", { 
+        callbackUrl,
+        redirect: true // Let NextAuth handle the redirect
+      });
     } catch {
       setError("Google sign in failed. Please try again.");
       setIsLoading(false);

@@ -10,9 +10,13 @@ export async function middleware(req: NextRequest) {
       req,
       secret: process.env.NEXTAUTH_SECRET,
     });
+    
+    console.log("Middleware check:", { pathname, hasToken: !!token, tokenEmail: token?.email });
+    
     if (!token) {
       const url = new URL("/auth/signin", req.url);
       url.searchParams.set("callbackUrl", req.url);
+      console.log("Redirecting to signin:", url.toString());
       return NextResponse.redirect(url);
     }
   }
