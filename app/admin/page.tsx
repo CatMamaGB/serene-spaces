@@ -1,5 +1,8 @@
 "use client";
 import Link from "next/link";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 import { useState, useEffect } from "react";
 import { safeJson } from "@/lib/utils";
 
