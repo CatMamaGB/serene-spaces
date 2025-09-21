@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { safeJson } from "@/lib/utils";
 import { useSession } from "next-auth/react";
+import { usePendingCount } from "@/hooks/usePendingCount";
 
 interface DashboardStats {
   totalCustomers: number;
@@ -23,6 +24,7 @@ interface RecentInvoice {
 
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
+  const { pendingCount: pendingRequests, isLoading: pendingRequestsLoading } = usePendingCount();
   const [stats, setStats] = useState<DashboardStats>({
     totalCustomers: 0,
     pendingInvoices: 0,
@@ -78,14 +80,7 @@ export default function AdminDashboard() {
             invoice.status === "partial_paid",
         ).length;
 
-        // Fetch service requests count
-        const requestsResponse = await fetch("/api/service-requests");
-        const requestsData = await safeJson(requestsResponse);
-        const requests = Array.isArray(requestsData) ? requestsData : [];
-        const pendingRequests = requests.filter(
-          (request: any) =>
-            request.status !== "handled" && request.status !== "completed",
-        ).length;
+        // Pending requests count is now handled by the usePendingCount hook
 
         // Calculate monthly revenue (from paid invoices)
         const currentMonth = new Date().getMonth();
@@ -125,7 +120,7 @@ export default function AdminDashboard() {
         setStats({
           totalCustomers,
           pendingInvoices,
-          pendingRequests,
+          pendingRequests: pendingRequests, // From usePendingCount hook
           monthlyRevenue: monthlyRevenue, // Already in dollars
         });
         setRecentInvoices(recentInvoicesData);
@@ -138,9 +133,9 @@ export default function AdminDashboard() {
     };
 
     fetchStats();
-  }, []);
+  }, [pendingRequests]);
 
-  if (loading) {
+  if (loading || pendingRequestsLoading) {
     return (
       <div className="p-6 bg-gray-50 min-h-screen">
         <div className="max-w-7xl mx-auto">

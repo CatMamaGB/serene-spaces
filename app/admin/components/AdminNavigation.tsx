@@ -3,6 +3,8 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { useState } from "react";
+import { usePendingCount } from "@/hooks/usePendingCount";
+import { PendingBadge } from "@/components/PendingBadge";
 
 const NavItem = ({
   href,
@@ -24,6 +26,7 @@ const NavItem = ({
 
 export default function AdminNavigation({ children }: { children: ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { pendingCount } = usePendingCount();
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -45,7 +48,10 @@ export default function AdminNavigation({ children }: { children: ReactNode }) {
             <NavItem href="/admin" label="Dashboard" />
             <NavItem href="/admin/customers" label="Customers" />
             <NavItem href="/admin/invoices" label="Invoices" />
-            <NavItem href="/admin/service-requests" label="Service Requests" />
+            <div className="flex items-center justify-between">
+              <NavItem href="/admin/service-requests" label="Service Requests" />
+              {pendingCount > 0 && <PendingBadge count={pendingCount} />}
+            </div>
             <NavItem href="/admin/pricing" label="Pricing" />
           </nav>
         </aside>
@@ -152,11 +158,14 @@ export default function AdminNavigation({ children }: { children: ReactNode }) {
                     label="Invoices"
                     onClick={closeMobileMenu}
                   />
-                  <NavItem
-                    href="/admin/service-requests"
-                    label="Service Requests"
-                    onClick={closeMobileMenu}
-                  />
+                  <div className="flex items-center justify-between">
+                    <NavItem
+                      href="/admin/service-requests"
+                      label="Service Requests"
+                      onClick={closeMobileMenu}
+                    />
+                    {pendingCount > 0 && <PendingBadge count={pendingCount} isMobile />}
+                  </div>
                   <NavItem
                     href="/admin/pricing"
                     label="Pricing"

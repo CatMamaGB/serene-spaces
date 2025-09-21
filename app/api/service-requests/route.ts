@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const session = await auth();
     if (!session?.user) {
@@ -18,7 +18,24 @@ export async function GET() {
       return NextResponse.json([]);
     }
 
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get("status");
+    const select = searchParams.get("select");
+
+    // Handle count queries
+    if (select === "count") {
+      const whereClause = status ? { status } : {};
+      const count = await prisma.serviceRequest.count({
+        where: whereClause,
+      });
+      return NextResponse.json({ count });
+    }
+
+    // Handle status filtering
+    const whereClause = status ? { status } : {};
+
     const serviceRequests = await prisma.serviceRequest.findMany({
+      where: whereClause,
       include: {
         customer: {
           select: {
@@ -57,7 +74,7 @@ export async function PUT(req: Request) {
       );
     }
 
-    const updatedRequest = await prisma.serviceRequest.update({
+    const updatedRequest = await (prisma as any).serviceRequest.update({
       where: { id },
       data: {
         status: status || undefined,
