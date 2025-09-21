@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { auth } from "@/lib/auth";
 
 export async function middleware(req: NextRequest) {
   // Force immediate logging to ensure we see this
   console.log("=".repeat(50));
-  console.log("🚀 NEW MIDDLEWARE VERSION 4.0 - COMPLETE RESET");
+  console.log("🚀 NEW MIDDLEWARE VERSION 5.0 - USING AUTH FUNCTION");
   console.log("🕐 TIMESTAMP:", new Date().toISOString());
   console.log("📍 PATH:", req.nextUrl.pathname);
   console.log("=".repeat(50));
@@ -28,7 +28,7 @@ export async function middleware(req: NextRequest) {
   });
 
   if (req.nextUrl.pathname.startsWith("/admin")) {
-    console.log("🔍 ADMIN ROUTE - Starting cookie analysis...");
+    console.log("🔍 ADMIN ROUTE - Starting authentication check...");
     
     // Get all cookies for debugging
     const allCookies = req.cookies.getAll();
@@ -46,44 +46,33 @@ export async function middleware(req: NextRequest) {
       plainCookieLength: plainCookie?.length || 0,
     });
 
-    // Check environment
-    console.log("🔧 Environment Check:", {
-      hasSecret: !!process.env.NEXTAUTH_SECRET,
-      secretLength: process.env.NEXTAUTH_SECRET?.length || 0,
-      secretPreview: process.env.NEXTAUTH_SECRET?.substring(0, 8) + "...",
-      secretHash: process.env.NEXTAUTH_SECRET ? "SET" : "NOT_SET",
-    });
-
-    console.log("🔑 Attempting token validation...");
+    console.log("🔑 Attempting session validation with auth()...");
     
-    // Try with explicit secret first
-    const secret = process.env.NEXTAUTH_SECRET;
-    console.log("🔐 Secret details:", {
-      hasSecret: !!secret,
-      secretLength: secret?.length || 0,
-      secretType: typeof secret,
-    });
-    
-    const token = await getToken({
-      req,
-      secret: secret,
-    });
-    
-    console.log("🔒 Token validation result:", {
-      hasToken: !!token,
-      tokenEmail: token?.email,
-      tokenSub: token?.sub,
-      tokenExp: token?.exp,
-    });
-    
-    if (!token) {
+    try {
+      const session = await auth();
+      
+      console.log("🔒 Session validation result:", {
+        hasSession: !!session,
+        sessionUser: session?.user?.email,
+        sessionUserId: session?.user?.id,
+        sessionUserRole: session?.user?.role,
+      });
+      
+      if (!session || !session.user) {
+        const url = new URL("/auth/signin", req.url);
+        url.searchParams.set("callbackUrl", req.url);
+        console.log("❌ NO VALID SESSION - Redirecting to signin:", url.toString());
+        return NextResponse.redirect(url);
+      }
+      
+      console.log("✅ SESSION VALID - Allowing access to admin");
+    } catch (error) {
+      console.error("❌ Session validation error:", error);
       const url = new URL("/auth/signin", req.url);
       url.searchParams.set("callbackUrl", req.url);
-      console.log("❌ NO VALID TOKEN - Redirecting to signin:", url.toString());
+      console.log("❌ SESSION ERROR - Redirecting to signin:", url.toString());
       return NextResponse.redirect(url);
     }
-    
-    console.log("✅ TOKEN VALID - Allowing access to admin");
   }
   
   console.log("➡️ Middleware complete - proceeding to next");
