@@ -22,27 +22,27 @@ const MobileCardLayout = ({
         key={customer.id}
         className="rounded-2xl border bg-white p-6 shadow-sm hover:shadow-md transition-shadow"
       >
-        <div className="flex justify-between items-start mb-4">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-4 gap-3">
           <h4 className="text-lg font-semibold text-gray-900">
             {customer.name}
           </h4>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Link
               href={`/admin/customers/${customer.id}`}
-              className="px-3 py-1 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
+              className="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors min-h-[40px] w-full sm:w-auto"
             >
               View
             </Link>
             <Link
               href={`/admin/customers/${customer.id}/edit`}
-              className="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors min-h-[40px] w-full sm:w-auto"
             >
               Edit
             </Link>
             <button
               onClick={() => onDelete(customer.id)}
               disabled={deletingCustomerId === customer.id}
-              className={`px-3 py-1 rounded-lg text-sm font-medium text-white transition-colors ${
+              className={`inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors min-h-[40px] w-full sm:w-auto ${
                 deletingCustomerId === customer.id
                   ? "bg-gray-400 cursor-not-allowed"
                   : "bg-red-600 hover:bg-red-700"
@@ -125,20 +125,20 @@ const DesktopTableLayout = ({
                 <div className="flex gap-2 justify-center">
                   <Link
                     href={`/admin/customers/${customer.id}`}
-                    className="px-3 py-1 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
+                    className="inline-flex items-center justify-center px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors min-h-[36px]"
                   >
                     View
                   </Link>
                   <Link
                     href={`/admin/customers/${customer.id}/edit`}
-                    className="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                    className="inline-flex items-center justify-center px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors min-h-[36px]"
                   >
                     Edit
                   </Link>
                   <button
                     onClick={() => onDelete(customer.id)}
                     disabled={deletingCustomerId === customer.id}
-                    className={`px-3 py-1 rounded-lg text-sm font-medium text-white transition-colors ${
+                    className={`inline-flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium text-white transition-colors min-h-[36px] ${
                       deletingCustomerId === customer.id
                         ? "bg-gray-400 cursor-not-allowed"
                         : "bg-red-600 hover:bg-red-700"
@@ -248,18 +248,18 @@ export default function CustomersPage() {
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
                 Customer Management
               </h1>
-              <p className="text-gray-600 mt-2">
+              <p className="text-gray-600 mt-2 text-sm sm:text-base">
                 Manage your customer database and information
               </p>
             </div>
             <Link
               href="/admin/customers/new"
-              className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+              className="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors w-full sm:w-auto min-h-[44px]"
             >
               + Add New Customer
             </Link>
@@ -291,7 +291,7 @@ export default function CustomersPage() {
             </p>
             <Link
               href="/admin/customers/new"
-              className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+              className="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors w-full sm:w-auto min-h-[40px]"
             >
               Add Customer
             </Link>
@@ -360,7 +360,7 @@ export default function CustomersPage() {
               </button>
               <button
                 onClick={confirmDeleteCustomer}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
+                className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors w-full sm:w-auto min-h-[40px]"
               >
                 Delete Customer
               </button>

@@ -244,7 +244,7 @@ export default function PricingPage() {
                 <div className="flex gap-2">
                   <button
                     onClick={createPriceList}
-                    className="px-3 py-1 bg-indigo-600 text-white rounded text-sm"
+                    className="inline-flex items-center justify-center px-3 py-2 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700 transition-colors min-h-[32px]"
                   >
                     Create
                   </button>
@@ -272,12 +272,12 @@ export default function PricingPage() {
                     className="w-full p-2 border rounded text-sm"
                   />
                   <div className="flex gap-2">
-                    <button
-                      onClick={() => updatePriceListName(editingList)}
-                      className="px-3 py-1 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700"
-                    >
-                      Save
-                    </button>
+                      <button
+                        onClick={() => updatePriceListName(editingList)}
+                        className="inline-flex items-center justify-center px-3 py-2 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700 transition-colors min-h-[32px]"
+                      >
+                        Save
+                      </button>
                     <button
                       onClick={() => setEditingList(null)}
                       className="px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
@@ -367,13 +367,13 @@ export default function PricingPage() {
                       </span>
                     </p>
                   </div>
-                  <button
-                    onClick={() => setShowNewItemForm(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-                  >
-                    <PlusIcon className="h-4 w-4" />
-                    Add Item
-                  </button>
+                    <button
+                      onClick={() => setShowNewItemForm(true)}
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors min-h-[40px] w-full sm:w-auto"
+                    >
+                      <PlusIcon className="h-4 w-4" />
+                      Add Item
+                    </button>
                 </div>
               </div>
 
@@ -481,7 +481,7 @@ export default function PricingPage() {
                     <div className="mt-4 flex gap-2">
                       <button
                         onClick={createPriceItem}
-                        className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                        className="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors min-h-[40px] w-full sm:w-auto"
                       >
                         Add Item
                       </button>
@@ -681,7 +681,7 @@ export default function PricingPage() {
                     <p>No price items in this list yet.</p>
                     <button
                       onClick={() => setShowNewItemForm(true)}
-                      className="mt-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                      className="inline-flex items-center justify-center mt-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors min-h-[40px] w-full sm:w-auto"
                     >
                       Add your first item
                     </button>
@@ -694,7 +694,7 @@ export default function PricingPage() {
               <p className="text-gray-500 mb-4">No price lists found.</p>
               <button
                 onClick={() => setShowNewListForm(true)}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                className="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors min-h-[40px] w-full sm:w-auto"
               >
                 Create your first price list
               </button>

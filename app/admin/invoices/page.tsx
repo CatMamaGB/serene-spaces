@@ -352,7 +352,7 @@ export default function InvoicesPage() {
           </div>
           <Link
             href="/admin/invoices/new"
-            className={`px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white no-underline rounded-lg font-semibold transition-colors ${isMobile ? "w-full text-center" : "w-auto"}`}
+            className="inline-flex items-center justify-center px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white no-underline rounded-lg font-semibold transition-colors w-full sm:w-auto min-h-[44px]"
           >
             + New Invoice
           </Link>
@@ -471,7 +471,7 @@ export default function InvoicesPage() {
                   </button>
                   <button
                     onClick={exportFilteredInvoices}
-                    className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors"
+                    className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors min-h-[40px] w-full sm:w-auto"
                   >
                     📊 Export Filtered
                   </button>
@@ -500,7 +500,7 @@ export default function InvoicesPage() {
             </p>
             <Link
               href="/admin/invoices/new"
-              className={`px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white no-underline rounded-lg font-semibold transition-colors ${isMobile ? "w-full" : "w-auto"} inline-block`}
+              className="inline-flex items-center justify-center px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white no-underline rounded-lg font-semibold transition-colors w-full sm:w-auto min-h-[44px]"
             >
               Create Invoice
             </Link>
@@ -571,13 +571,13 @@ export default function InvoicesPage() {
                     <div className="flex gap-2 justify-center">
                       <Link
                         href={`/admin/invoices/${invoice.id}`}
-                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white no-underline rounded-md text-sm font-medium flex-1 text-center"
+                        className="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white no-underline rounded-md text-sm font-medium flex-1 min-h-[40px]"
                       >
                         View
                       </Link>
                       <Link
                         href={`/admin/invoices/${invoice.id}/edit`}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white no-underline rounded-md text-sm font-medium flex-1 text-center"
+                        className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white no-underline rounded-md text-sm font-medium flex-1 min-h-[40px]"
                       >
                         Edit
                       </Link>

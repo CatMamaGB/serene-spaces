@@ -19,30 +19,13 @@ export default function IntakePage() {
     allergies: "",
   });
 
-  // Custom checkbox styles
-  const getCheckboxStyle = (isChecked: boolean) => ({
-    marginRight: "12px",
-    transform: "scale(1.2)",
-    width: "18px",
-    height: "18px",
-    cursor: "pointer",
-    backgroundColor: isChecked ? "#7a6990" : "white",
-    border: `2px solid ${isChecked ? "#7a6990" : "#d1d5db"}`,
-    borderRadius: "4px",
-    appearance: "none" as const,
-    WebkitAppearance: "none" as const,
-    MozAppearance: "none" as const,
-    position: "relative" as const,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    color: "white",
-    fontSize: "12px",
-    fontWeight: "bold",
-  });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [isDayDropdownOpen, setIsDayDropdownOpen] = useState(false);
+  const [daySearchTerm, setDaySearchTerm] = useState("");
+  const [isMonthDropdownOpen, setIsMonthDropdownOpen] = useState(false);
+  const [monthSearchTerm, setMonthSearchTerm] = useState("");
   const toast = useToast();
 
   const handleInputChange = (
@@ -56,6 +39,47 @@ export default function IntakePage() {
       [name]: value,
     }));
   };
+
+  const handleDaySelect = (day: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      pickupDay: day,
+    }));
+    setIsDayDropdownOpen(false);
+    setDaySearchTerm("");
+  };
+
+  const handleMonthSelect = (month: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      pickupMonth: month,
+    }));
+    setIsMonthDropdownOpen(false);
+    setMonthSearchTerm("");
+  };
+
+  const months = [
+    { value: "01", label: "January" },
+    { value: "02", label: "February" },
+    { value: "03", label: "March" },
+    { value: "04", label: "April" },
+    { value: "05", label: "May" },
+    { value: "06", label: "June" },
+    { value: "07", label: "July" },
+    { value: "08", label: "August" },
+    { value: "09", label: "September" },
+    { value: "10", label: "October" },
+    { value: "11", label: "November" },
+    { value: "12", label: "December" },
+  ];
+
+  const filteredDays = Array.from({ length: 31 }, (_, i) => i + 1)
+    .map((day) => day.toString().padStart(2, '0'))
+    .filter((day) => day.includes(daySearchTerm));
+
+  const filteredMonths = months.filter((month) =>
+    month.label.toLowerCase().includes(monthSearchTerm.toLowerCase())
+  );
 
   const handleCheckboxChange = (service: string, checked: boolean) => {
     setFormData((prev) => ({
@@ -190,129 +214,47 @@ export default function IntakePage() {
           line-height: 1;
         }
       `}</style>
-      <div
-        style={{
-          minHeight: "100vh",
-          backgroundColor: "#f5f5f5",
-          padding: "40px 20px",
-        }}
-      >
-        <div
-          style={{
-            maxWidth: "800px",
-            margin: "0 auto",
-            backgroundColor: "white",
-            borderRadius: "12px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-            overflow: "hidden",
-          }}
-        >
+      <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8">
+        <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
           {/* Header */}
-          <div
-            style={{
-              backgroundColor: "#7a6990",
-              color: "white",
-              padding: "40px",
-              textAlign: "center",
-            }}
-          >
-            <h1
-              style={{
-                fontSize: "2.5rem",
-                marginBottom: "16px",
-                fontWeight: "700",
-              }}
-            >
+          <div className="bg-[#7a6990] text-white p-6 sm:p-8 text-center">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4">
               Service Request Form
             </h1>
-            <p
-              style={{
-                fontSize: "1.1rem",
-                opacity: "0.9",
-                lineHeight: "1.6",
-              }}
-            >
+            <p className="text-sm sm:text-base lg:text-lg opacity-90 leading-relaxed">
               Let us know what services you need and we&apos;ll schedule your
               pickup
             </p>
           </div>
 
           {/* Service Area Information */}
-          <div
-            style={{
-              backgroundColor: "#f8fafc",
-              borderTop: "1px solid #e2e8f0",
-              borderBottom: "1px solid #e2e8f0",
-              padding: "30px 40px",
-              textAlign: "center",
-            }}
-          >
-            <div style={{ marginBottom: "16px" }}>
-              <span style={{ fontSize: "2rem" }}>📍</span>
+          <div className="bg-slate-50 border-t border-b border-slate-200 p-4 sm:p-6 text-center">
+            <div className="mb-4">
+              <span className="text-3xl">📍</span>
             </div>
-            <h3
-              style={{
-                color: "#7a6990",
-                fontSize: "1.25rem",
-                marginBottom: "12px",
-                fontWeight: "600",
-              }}
-            >
+            <h3 className="text-[#7a6990] text-lg sm:text-xl font-semibold mb-3">
               Service Area
             </h3>
-            <p
-              style={{
-                color: "#6b7280",
-                fontSize: "1rem",
-                margin: "0 0 16px 0",
-                lineHeight: "1.5",
-              }}
-            >
+            <p className="text-gray-600 text-sm sm:text-base mb-4 leading-relaxed">
               We proudly serve the <strong>Crystal Lake, IL</strong> area with a{" "}
               <strong>25-mile radius</strong> for pickup and delivery services.
             </p>
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                backgroundColor: "rgba(122, 105, 144, 0.1)",
-                color: "#7a6990",
-                padding: "8px 16px",
-                borderRadius: "20px",
-                fontSize: "0.9rem",
-                fontWeight: "500",
-              }}
-            >
-              <span style={{ fontSize: "1.1rem" }}>🚚</span>
+            <div className="inline-flex items-center gap-2 bg-[#7a6990]/10 text-[#7a6990] px-4 py-2 rounded-full text-sm font-medium">
+              <span className="text-lg">🚚</span>
               Free pickup & delivery within service area
             </div>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} style={{ padding: "40px" }}>
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6 lg:p-8">
             {/* Customer Information */}
-            <div style={{ marginBottom: "40px" }}>
-              <h2
-                style={{
-                  color: "#374151",
-                  fontSize: "1.5rem",
-                  marginBottom: "24px",
-                  fontWeight: "600",
-                }}
-              >
+            <div className="mb-6 sm:mb-8">
+              <h2 className="text-gray-800 text-lg sm:text-xl font-semibold mb-4 sm:mb-6">
                 Customer Information
               </h2>
 
-              <div style={{ marginBottom: "20px" }}>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "8px",
-                    fontWeight: "500",
-                    color: "#374151",
-                  }}
-                >
+              <div className="mb-4 sm:mb-5">
+                <label className="block mb-2 font-medium text-gray-800">
                   Full Name *
                 </label>
                 <input
@@ -321,39 +263,12 @@ export default function IntakePage() {
                   value={formData.fullName}
                   onChange={handleInputChange}
                   required
-                  style={{
-                    width: "100%",
-                    padding: "12px 16px",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "8px",
-                    fontSize: "1rem",
-                    backgroundColor: "#fafafa",
-                    color: "#374151",
-                    transition: "all 0.2s ease",
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = "#7a6990";
-                    e.target.style.backgroundColor = "#ffffff";
-                    e.target.style.boxShadow =
-                      "0 0 0 3px rgba(122, 105, 144, 0.1)";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = "#e5e7eb";
-                    e.target.style.backgroundColor = "#fafafa";
-                    e.target.style.boxShadow = "none";
-                  }}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base bg-gray-50 text-gray-800 transition-all duration-200 min-h-[48px] focus:border-[#7a6990] focus:bg-white focus:ring-4 focus:ring-[#7a6990]/10 focus:outline-none"
                 />
               </div>
 
-              <div style={{ marginBottom: "20px" }}>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "8px",
-                    fontWeight: "500",
-                    color: "#374151",
-                  }}
-                >
+              <div className="mb-4 sm:mb-5">
+                <label className="block mb-2 font-medium text-gray-800">
                   Email *
                 </label>
                 <input
@@ -362,39 +277,12 @@ export default function IntakePage() {
                   value={formData.email}
                   onChange={handleInputChange}
                   required
-                  style={{
-                    width: "100%",
-                    padding: "12px 16px",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "8px",
-                    fontSize: "1rem",
-                    backgroundColor: "#fafafa",
-                    color: "#374151",
-                    transition: "all 0.2s ease",
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = "#7a6990";
-                    e.target.style.backgroundColor = "#ffffff";
-                    e.target.style.boxShadow =
-                      "0 0 0 3px rgba(122, 105, 144, 0.1)";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = "#e5e7eb";
-                    e.target.style.backgroundColor = "#fafafa";
-                    e.target.style.boxShadow = "none";
-                  }}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base bg-gray-50 text-gray-800 transition-all duration-200 min-h-[48px] focus:border-[#7a6990] focus:bg-white focus:ring-4 focus:ring-[#7a6990]/10 focus:outline-none"
                 />
               </div>
 
-              <div style={{ marginBottom: "20px" }}>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "8px",
-                    fontWeight: "500",
-                    color: "#374151",
-                  }}
-                >
+              <div className="mb-4 sm:mb-5">
+                <label className="block mb-2 font-medium text-gray-800">
                   Phone Number
                 </label>
                 <input
@@ -402,53 +290,19 @@ export default function IntakePage() {
                   name="phone"
                   value={formData.phone}
                   onChange={handleInputChange}
-                  style={{
-                    width: "100%",
-                    padding: "12px 16px",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "8px",
-                    fontSize: "1rem",
-                    backgroundColor: "#fafafa",
-                    color: "#374151",
-                    transition: "all 0.2s ease",
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = "#7a6990";
-                    e.target.style.backgroundColor = "#ffffff";
-                    e.target.style.boxShadow =
-                      "0 0 0 3px rgba(122, 105, 144, 0.1)";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = "#e5e7eb";
-                    e.target.style.backgroundColor = "#fafafa";
-                    e.target.style.boxShadow = "none";
-                  }}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base bg-gray-50 text-gray-800 transition-all duration-200 min-h-[48px] focus:border-[#7a6990] focus:bg-white focus:ring-4 focus:ring-[#7a6990]/10 focus:outline-none"
                 />
               </div>
             </div>
 
             {/* Pickup Information */}
-            <div style={{ marginBottom: "40px" }}>
-              <h2
-                style={{
-                  color: "#374151",
-                  fontSize: "1.5rem",
-                  marginBottom: "24px",
-                  fontWeight: "600",
-                }}
-              >
+            <div className="mb-6 sm:mb-8">
+              <h2 className="text-gray-800 text-lg sm:text-xl font-semibold mb-4 sm:mb-6">
                 Pickup Information
               </h2>
 
-              <div style={{ marginBottom: "20px" }}>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "8px",
-                    fontWeight: "500",
-                    color: "#374151",
-                  }}
-                >
+              <div className="mb-4 sm:mb-5">
+                <label className="block mb-2 font-medium text-gray-800">
                   Address *
                 </label>
                 <textarea
@@ -458,205 +312,243 @@ export default function IntakePage() {
                   required
                   rows={3}
                   placeholder="Please provide your full address for pickup"
-                  style={{
-                    width: "100%",
-                    padding: "12px 16px",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "8px",
-                    fontSize: "1rem",
-                    resize: "vertical",
-                    backgroundColor: "#fafafa",
-                    color: "#374151",
-                    transition: "all 0.2s ease",
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = "#7a6990";
-                    e.target.style.backgroundColor = "#ffffff";
-                    e.target.style.boxShadow =
-                      "0 0 0 3px rgba(122, 105, 144, 0.1)";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = "#e5e7eb";
-                    e.target.style.backgroundColor = "#fafafa";
-                    e.target.style.boxShadow = "none";
-                  }}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg text-base resize-y bg-gray-50 text-gray-800 transition-all duration-200 min-h-[80px] focus:border-[#7a6990] focus:bg-white focus:ring-4 focus:ring-[#7a6990]/10 focus:outline-none"
                 />
               </div>
 
-              <div style={{ marginBottom: "20px" }}>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "8px",
-                    fontWeight: "500",
-                    color: "#374151",
-                  }}
-                >
+              <div className="mb-4 sm:mb-5">
+                <label className="block mb-2 font-medium text-gray-800">
                   Preferred Pickup (Month & Day)
                 </label>
-                <div style={{ display: "flex", gap: "12px" }}>
-                  <div style={{ flex: 1 }}>
-                    <select
-                      name="pickupMonth"
-                      value={formData.pickupMonth || ""}
-                      onChange={handleInputChange}
-                      style={{
-                        width: "100%",
-                        padding: "12px 16px",
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "8px",
-                        fontSize: "1rem",
-                        backgroundColor: "#fafafa",
-                        color: "#374151",
-                        transition: "all 0.2s ease",
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = "#7a6990";
-                        e.target.style.backgroundColor = "#ffffff";
-                        e.target.style.boxShadow =
-                          "0 0 0 3px rgba(122, 105, 144, 0.1)";
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = "#e5e7eb";
-                        e.target.style.backgroundColor = "#fafafa";
-                        e.target.style.boxShadow = "none";
-                      }}
-                    >
-                      <option value="">Select Month</option>
-                      <option value="01">January</option>
-                      <option value="02">February</option>
-                      <option value="03">March</option>
-                      <option value="04">April</option>
-                      <option value="05">May</option>
-                      <option value="06">June</option>
-                      <option value="07">July</option>
-                      <option value="08">August</option>
-                      <option value="09">September</option>
-                      <option value="10">October</option>
-                      <option value="11">November</option>
-                      <option value="12">December</option>
-                    </select>
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <select
-                      name="pickupDay"
-                      value={formData.pickupDay || ""}
-                      onChange={handleInputChange}
-                      style={{
-                        width: "100%",
-                        padding: "12px 16px",
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "8px",
-                        fontSize: "1rem",
-                        backgroundColor: "#fafafa",
-                        color: "#374151",
-                        transition: "all 0.2s ease",
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = "#7a6990";
-                        e.target.style.backgroundColor = "#ffffff";
-                        e.target.style.boxShadow =
-                          "0 0 0 3px rgba(122, 105, 144, 0.1)";
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = "#e5e7eb";
-                        e.target.style.backgroundColor = "#fafafa";
-                        e.target.style.boxShadow = "none";
-                      }}
-                    >
-                      <option value="">Select Day</option>
-                      {Array.from({ length: 31 }, (_, i) => i + 1).map(
-                        (day) => (
-                          <option
-                            key={day}
-                            value={day.toString().padStart(2, "0")}
-                          >
-                            {day}
-                          </option>
-                        ),
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="flex-1 relative">
+                    {/* Custom Month Dropdown */}
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setIsMonthDropdownOpen(!isMonthDropdownOpen)}
+                        className="w-full px-4 py-3 sm:py-3 border border-gray-300 rounded-lg text-base bg-white text-gray-800 transition-all duration-200 h-[48px] sm:min-h-[48px] focus:border-[#7a6990] focus:bg-white focus:ring-4 focus:ring-[#7a6990]/10 focus:outline-none text-left flex items-center justify-between hover:bg-gray-50 active:bg-gray-100 touch-manipulation"
+                      >
+                        <span className={formData.pickupMonth ? "text-gray-800" : "text-gray-500"}>
+                          {formData.pickupMonth 
+                            ? months.find(m => m.value === formData.pickupMonth)?.label 
+                            : "Select Month"
+                          }
+                        </span>
+                        <svg
+                          className={`w-5 h-5 transition-transform duration-200 ${
+                            isMonthDropdownOpen ? "rotate-180" : ""
+                          }`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </button>
+
+                      {isMonthDropdownOpen && (
+                        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-hidden">
+                          {/* Search Input */}
+                          <div className="p-2 border-b border-gray-200">
+                            <input
+                              type="text"
+                              placeholder="Search months..."
+                              value={monthSearchTerm}
+                              onChange={(e) => setMonthSearchTerm(e.target.value)}
+                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#7a6990]/20 focus:border-[#7a6990]"
+                              autoFocus
+                            />
+                          </div>
+
+                          {/* Month Options */}
+                          <div className="max-h-48 overflow-y-auto">
+                            {filteredMonths.length > 0 ? (
+                              filteredMonths.map((month) => (
+                                <button
+                                  key={month.value}
+                                  type="button"
+                                  onClick={() => handleMonthSelect(month.value)}
+                                  className={`w-full px-4 py-2 text-left text-sm hover:bg-[#7a6990]/10 transition-colors duration-150 ${
+                                    formData.pickupMonth === month.value
+                                      ? "bg-[#7a6990]/20 text-[#7a6990] font-medium"
+                                      : "text-gray-700"
+                                  }`}
+                                >
+                                  {month.label}
+                                </button>
+                              ))
+                            ) : (
+                              <div className="px-4 py-2 text-sm text-gray-500">
+                                No months found
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       )}
-                    </select>
+                    </div>
+
+                    {/* Click outside to close */}
+                    {isMonthDropdownOpen && (
+                      <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setIsMonthDropdownOpen(false)}
+                      />
+                    )}
+                  </div>
+                  <div className="flex-1 relative">
+                    {/* Custom Day Dropdown */}
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setIsDayDropdownOpen(!isDayDropdownOpen)}
+                        className="w-full px-4 py-3 sm:py-3 border border-gray-300 rounded-lg text-base bg-white text-gray-800 transition-all duration-200 h-[48px] sm:min-h-[48px] focus:border-[#7a6990] focus:bg-white focus:ring-4 focus:ring-[#7a6990]/10 focus:outline-none text-left flex items-center justify-between hover:bg-gray-50 active:bg-gray-100 touch-manipulation"
+                      >
+                        <span className={formData.pickupDay ? "text-gray-800" : "text-gray-500"}>
+                          {formData.pickupDay || "Select Day"}
+                        </span>
+                        <svg
+                          className={`w-5 h-5 transition-transform duration-200 ${
+                            isDayDropdownOpen ? "rotate-180" : ""
+                          }`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </button>
+
+                      {isDayDropdownOpen && (
+                        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-hidden">
+                          {/* Search Input */}
+                          <div className="p-2 border-b border-gray-200">
+                            <input
+                              type="text"
+                              placeholder="Search days..."
+                              value={daySearchTerm}
+                              onChange={(e) => setDaySearchTerm(e.target.value)}
+                              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#7a6990]/20 focus:border-[#7a6990]"
+                              autoFocus
+                            />
+                          </div>
+
+                          {/* Day Options */}
+                          <div className="max-h-48 overflow-y-auto">
+                            {filteredDays.length > 0 ? (
+                              filteredDays.map((day) => (
+                                <button
+                                  key={day}
+                                  type="button"
+                                  onClick={() => handleDaySelect(day)}
+                                  className={`w-full px-4 py-2 text-left text-sm hover:bg-[#7a6990]/10 transition-colors duration-150 ${
+                                    formData.pickupDay === day
+                                      ? "bg-[#7a6990]/20 text-[#7a6990] font-medium"
+                                      : "text-gray-700"
+                                  }`}
+                                >
+                                  {parseInt(day)}
+                                </button>
+                              ))
+                            ) : (
+                              <div className="px-4 py-2 text-sm text-gray-500">
+                                No days found
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Click outside to close */}
+                    {isDayDropdownOpen && (
+                      <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setIsDayDropdownOpen(false)}
+                      />
+                    )}
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Services Needed */}
-            <div style={{ marginBottom: "40px" }}>
-              <h2
-                style={{
-                  color: "#374151",
-                  fontSize: "1.5rem",
-                  marginBottom: "24px",
-                  fontWeight: "600",
-                }}
-              >
+            <div className="mb-6 sm:mb-8">
+              <h2 className="text-gray-800 text-lg sm:text-xl font-semibold mb-4 sm:mb-6">
                 Services Needed *
               </h2>
 
               <div style={{ marginBottom: "20px" }}>
-                <label
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    marginBottom: "12px",
-                    cursor: "pointer",
-                    padding: "8px",
-                    borderRadius: "6px",
-                    transition: "background-color 0.2s ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = "#f9fafb";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                  }}
-                >
+                <label className="flex items-center gap-3 cursor-pointer mb-3 p-2 rounded-md transition-colors duration-200 hover:bg-gray-50">
                   <input
                     type="checkbox"
                     checked={formData.services.includes("cleaning")}
                     onChange={(e) =>
                       handleCheckboxChange("cleaning", e.target.checked)
                     }
-                    style={getCheckboxStyle(
-                      formData.services.includes("cleaning"),
-                    )}
+                    className="appearance-none h-5 w-5 rounded-[4px] border border-gray-300 grid place-content-center checked:bg-[#7a6990] checked:border-[#7a6990] focus:ring-2 focus:ring-[#7a6990]/20 focus:outline-none"
+                    style={{
+                      WebkitAppearance: 'none',
+                      MozAppearance: 'none',
+                      appearance: 'none',
+                      width: '20px',
+                      height: '20px',
+                      minWidth: '20px',
+                      minHeight: '20px',
+                      maxWidth: '20px',
+                      maxHeight: '20px',
+                      backgroundSize: '12px 12px',
+                      backgroundPosition: 'center',
+                      backgroundRepeat: 'no-repeat',
+                      backgroundImage: formData.services.includes("cleaning") 
+                        ? "url(\"data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m13.854 3.646-7.5 7.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6 10.293l7.146-7.147a.5.5 0 0 1 .708.708z'/%3e%3c/svg%3e\")" 
+                        : "none"
+                    }}
                   />
-                  <span style={{ fontWeight: "500", color: "#374151" }}>
+                  <span className="font-medium text-gray-800">
                     Cleaning
                   </span>
                 </label>
               </div>
 
-              <div style={{ marginBottom: "20px" }}>
-                <label
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    marginBottom: "12px",
-                    cursor: "pointer",
-                    padding: "8px",
-                    borderRadius: "6px",
-                    transition: "background-color 0.2s ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = "#f9fafb";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                  }}
-                >
+              <div className="mb-4 sm:mb-5">
+                <label className="flex items-center gap-3 cursor-pointer mb-3 p-2 rounded-md transition-colors duration-200 hover:bg-gray-50">
                   <input
                     type="checkbox"
                     checked={formData.services.includes("repairs")}
                     onChange={(e) =>
                       handleCheckboxChange("repairs", e.target.checked)
                     }
-                    style={getCheckboxStyle(
-                      formData.services.includes("repairs"),
-                    )}
+                    className="appearance-none h-5 w-5 rounded-[4px] border border-gray-300 grid place-content-center checked:bg-[#7a6990] checked:border-[#7a6990] focus:ring-2 focus:ring-[#7a6990]/20 focus:outline-none"
+                    style={{
+                      WebkitAppearance: 'none',
+                      MozAppearance: 'none',
+                      appearance: 'none',
+                      width: '20px',
+                      height: '20px',
+                      minWidth: '20px',
+                      minHeight: '20px',
+                      maxWidth: '20px',
+                      maxHeight: '20px',
+                      backgroundSize: '12px 12px',
+                      backgroundPosition: 'center',
+                      backgroundRepeat: 'no-repeat',
+                      backgroundImage: formData.services.includes("repairs") 
+                        ? "url(\"data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m13.854 3.646-7.5 7.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6 10.293l7.146-7.147a.5.5 0 0 1 .708.708z'/%3e%3c/svg%3e\")" 
+                        : "none"
+                    }}
                   />
-                  <span style={{ fontWeight: "500", color: "#374151" }}>
+                  <span className="font-medium text-gray-800">
                     Repairs
                   </span>
                 </label>
@@ -696,35 +588,34 @@ export default function IntakePage() {
                 )}
               </div>
 
-              <div style={{ marginBottom: "20px" }}>
-                <label
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    marginBottom: "12px",
-                    cursor: "pointer",
-                    padding: "8px",
-                    borderRadius: "6px",
-                    transition: "background-color 0.2s ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = "#f9fafb";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                  }}
-                >
+              <div className="mb-4 sm:mb-5">
+                <label className="flex items-center gap-3 cursor-pointer mb-3 p-2 rounded-md transition-colors duration-200 hover:bg-gray-50">
                   <input
                     type="checkbox"
                     checked={formData.services.includes("waterproofing")}
                     onChange={(e) =>
                       handleCheckboxChange("waterproofing", e.target.checked)
                     }
-                    style={getCheckboxStyle(
-                      formData.services.includes("waterproofing"),
-                    )}
+                    className="appearance-none h-5 w-5 rounded-[4px] border border-gray-300 grid place-content-center checked:bg-[#7a6990] checked:border-[#7a6990] focus:ring-2 focus:ring-[#7a6990]/20 focus:outline-none"
+                    style={{
+                      WebkitAppearance: 'none',
+                      MozAppearance: 'none',
+                      appearance: 'none',
+                      width: '20px',
+                      height: '20px',
+                      minWidth: '20px',
+                      minHeight: '20px',
+                      maxWidth: '20px',
+                      maxHeight: '20px',
+                      backgroundSize: '12px 12px',
+                      backgroundPosition: 'center',
+                      backgroundRepeat: 'no-repeat',
+                      backgroundImage: formData.services.includes("waterproofing") 
+                        ? "url(\"data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m13.854 3.646-7.5 7.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6 10.293l7.146-7.147a.5.5 0 0 1 .708.708z'/%3e%3c/svg%3e\")" 
+                        : "none"
+                    }}
                   />
-                  <span style={{ fontWeight: "500", color: "#374151" }}>
+                  <span className="font-medium text-gray-800">
                     Waterproofing
                   </span>
                 </label>
@@ -766,12 +657,12 @@ export default function IntakePage() {
             </div>
 
             {/* Additional Questions */}
-            <div style={{ marginBottom: "40px" }}>
+            <div style={{ marginBottom: "32px" }}>
               <h2
                 style={{
                   color: "#374151",
-                  fontSize: "1.5rem",
-                  marginBottom: "24px",
+                  fontSize: "1.25rem",
+                  marginBottom: "20px",
                   fontWeight: "600",
                 }}
               >
@@ -797,14 +688,15 @@ export default function IntakePage() {
                   rows={3}
                   style={{
                     width: "100%",
-                    padding: "12px 16px",
+                    padding: "16px 16px",
                     border: "1px solid #e5e7eb",
                     borderRadius: "8px",
-                    fontSize: "1rem",
+                    fontSize: "16px",
                     resize: "vertical",
                     backgroundColor: "#fafafa",
                     color: "#374151",
                     transition: "all 0.2s ease",
+                    minHeight: "80px",
                   }}
                   onFocus={(e) => {
                     e.target.style.borderColor = "#7a6990";
@@ -822,49 +714,21 @@ export default function IntakePage() {
             </div>
 
             {/* Submit Button */}
-            <div style={{ textAlign: "center" }}>
+            <div className="text-center">
               <button
                 type="submit"
                 disabled={isSubmitting || formData.services.length === 0}
-                style={{
-                  backgroundColor:
-                    isSubmitting || formData.services.length === 0
-                      ? "#9ca3af"
-                      : "#7a6990",
-                  color: "white",
-                  padding: "16px 32px",
-                  border: "none",
-                  borderRadius: "8px",
-                  fontSize: "1.1rem",
-                  fontWeight: "600",
-                  cursor:
-                    isSubmitting || formData.services.length === 0
-                      ? "not-allowed"
-                      : "pointer",
-                  transition: "background-color 0.2s",
-                }}
-                onMouseEnter={(e) => {
-                  if (!isSubmitting && formData.services.length > 0) {
-                    e.currentTarget.style.backgroundColor = "#6b5b7a";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isSubmitting && formData.services.length > 0) {
-                    e.currentTarget.style.backgroundColor = "#7a6990";
-                  }
-                }}
+                className={`w-full py-4 px-6 rounded-lg text-base font-semibold transition-all duration-200 min-h-[48px] ${
+                  isSubmitting || formData.services.length === 0
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-[#7a6990] hover:bg-[#6b5b7a] cursor-pointer"
+                } text-white`}
               >
                 {isSubmitting ? "Submitting..." : "Submit Service Request"}
               </button>
 
               {formData.services.length === 0 && (
-                <p
-                  style={{
-                    color: "#ef4444",
-                    marginTop: "12px",
-                    fontSize: "0.9rem",
-                  }}
-                >
+                <p className="text-red-500 mt-3 text-sm">
                   Please select at least one service
                 </p>
               )}

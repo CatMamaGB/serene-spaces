@@ -14,7 +14,7 @@ const fetcher = async (
 
 export function usePendingCount() {
   const { data, error, isLoading, mutate } = useSWR<number>(
-    "/api/service-requests?status=pending&select=count",
+    "/api/service-requests?status=new&select=count",
     async (url) => {
       // If your API returns an array, map to data.length instead
       const res = await fetcher(url);

@@ -110,22 +110,22 @@ export default function ViewCustomer() {
               {customer.name}
             </p>
           </div>
-          <div className={`flex gap-3 ${isMobile ? "flex-col" : "flex-row"}`}>
+          <div className="flex flex-col sm:flex-row gap-3">
             <Link
               href={`/admin/customers/${customer.id}/edit`}
-              className={`px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition-colors ${isMobile ? "w-full text-center" : "w-auto"}`}
+              className="inline-flex items-center justify-center px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition-colors w-full sm:w-auto min-h-[44px]"
             >
               Edit Customer
             </Link>
             <Link
               href="/admin/customers"
-              className={`px-5 py-3 bg-transparent text-gray-600 border-2 border-gray-600 rounded-lg font-semibold hover:bg-gray-50 transition-colors ${isMobile ? "w-full text-center" : "w-auto"}`}
+              className="inline-flex items-center justify-center px-5 py-3 bg-transparent text-gray-600 border-2 border-gray-600 rounded-lg font-semibold hover:bg-gray-50 transition-colors w-full sm:w-auto min-h-[44px]"
             >
               Back to Customers
             </Link>
             <button
               onClick={() => setShowDeleteModal(true)}
-              className={`px-5 py-3 bg-red-600 hover:bg-red-700 text-white border-none rounded-lg font-semibold cursor-pointer transition-colors ${isMobile ? "w-full text-center" : "w-auto"}`}
+              className="inline-flex items-center justify-center px-5 py-3 bg-red-600 hover:bg-red-700 text-white border-none rounded-lg font-semibold cursor-pointer transition-colors w-full sm:w-auto min-h-[44px]"
             >
               🗑️ Delete
             </button>

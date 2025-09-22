@@ -307,7 +307,7 @@ export default function EditCustomer() {
             <LoadingButton
               type="submit"
               isLoading={saving}
-              className={`px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white border-none rounded-lg font-semibold transition-colors ${isMobile ? "w-full min-w-[200px]" : "w-auto min-w-[150px]"}`}
+              className="inline-flex items-center justify-center px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white border-none rounded-lg font-semibold transition-colors w-full sm:w-auto min-h-[48px] min-w-[150px]"
             >
               Save Changes
             </LoadingButton>

@@ -96,7 +96,7 @@ export default function AboutPage() {
             </p>
             <div className="flex justify-center">
               <a
-                href="mailto:loveserenespaces@gmail.com"
+                href="/contact"
                 className="btn-primary w-full sm:w-auto text-sm sm:text-base lg:text-lg px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5"
               >
                 Get Started Today

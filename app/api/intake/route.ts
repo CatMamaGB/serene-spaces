@@ -75,8 +75,8 @@ export async function POST(req: Request) {
               })()
             : null,
         internalNotes: `Services: ${services.join(", ")}\nRepair Notes: ${repairNotes || "None"}\nWaterproofing Notes: ${waterproofingNotes || "None"}\nAllergies: ${allergies || "None"}`,
-        status: "draft",
-      },
+        status: "new",
+      } as any,
     });
 
     // Send confirmation email
@@ -143,7 +143,7 @@ export async function POST(req: Request) {
       data: {
         customerId: customer.id,
         serviceRequestId: serviceRequest.id,
-        status: "pending",
+        status: "new",
       },
     });
   } catch (error) {

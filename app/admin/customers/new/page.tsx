@@ -327,7 +327,7 @@ export default function NewCustomerPage() {
               <button
                 type="submit"
                 disabled={saving}
-                className={`px-8 py-4 ${saved ? "bg-green-600 hover:bg-green-700" : "bg-indigo-600 hover:bg-indigo-700"} text-white border-none rounded-lg font-semibold transition-colors ${saving ? "cursor-not-allowed opacity-60" : "cursor-pointer"} ${isMobile ? "w-full" : "w-auto"}`}
+                className={`inline-flex items-center justify-center px-8 py-4 ${saved ? "bg-green-600 hover:bg-green-700" : "bg-indigo-600 hover:bg-indigo-700"} text-white border-none rounded-lg font-semibold transition-colors ${saving ? "cursor-not-allowed opacity-60" : "cursor-pointer"} w-full sm:w-auto min-h-[48px]`}
               >
                 {saving ? (
                   <span className="flex items-center justify-center gap-2">

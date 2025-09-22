@@ -26,6 +26,7 @@ export default function ServiceRequestsPage() {
   );
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showHandled, setShowHandled] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<"all" | "new" | "pending" | "handled">("all");
   const [query, setQuery] = useState("");
   const toast = useToast();
 
@@ -84,9 +85,12 @@ export default function ServiceRequestsPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [showDetailsModal]);
 
-  // Filtered requests based on search and show handled
+  // Filtered requests based on search and status filter
   const filteredRequests = serviceRequests
-    .filter((r) => showHandled || r.status !== "handled")
+    .filter((r) => {
+      if (statusFilter === "all") return true;
+      return r.status === statusFilter;
+    })
     .filter((r) => {
       const searchQuery = query.trim().toLowerCase();
       if (!searchQuery) return true;
@@ -117,53 +121,51 @@ export default function ServiceRequestsPage() {
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8 p-6 lg:p-8 bg-white rounded-xl shadow-sm border border-gray-200">
-          <div
-            className={`flex justify-between items-center ${isMobile ? "flex-col gap-4" : "flex-row"}`}
-          >
+        <div className="mb-8 p-4 sm:p-6 lg:p-8 bg-white rounded-xl shadow-sm border border-gray-200">
+          <div className="flex flex-col gap-4 sm:gap-6">
             <div>
-              <h1
-                className={`${isMobile ? "text-3xl" : "text-4xl"} font-bold text-gray-900 mb-2`}
-              >
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
                 Service Requests
               </h1>
-              <p className="text-gray-800 text-sm lg:text-base">
+              <p className="text-gray-800 text-sm sm:text-base">
                 Manage incoming service requests from customers
               </p>
             </div>
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex flex-col sm:flex-row gap-3">
               <input
                 aria-label="Search service requests"
                 placeholder="Search name, email, service, address"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className={`px-3 py-2 border border-gray-300 rounded-lg text-sm ${isMobile ? "w-full" : "w-72"}`}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm w-full sm:w-72"
               />
-              <button
-                onClick={() => setShowHandled(!showHandled)}
-                className={`px-4 py-2 text-white border-none rounded-lg text-sm font-medium cursor-pointer transition-colors ${
-                  showHandled
-                    ? "bg-gray-600 hover:bg-gray-700"
-                    : "bg-indigo-600 hover:bg-indigo-700"
-                }`}
-              >
-                {showHandled ? "Hide Handled" : "Show Handled"}
-              </button>
-              <button
-                onClick={() => {
-                  setLoading(true);
-                  loadServiceRequests();
-                }}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white border-none rounded-lg text-sm font-medium cursor-pointer transition-colors"
-              >
-                Refresh
-              </button>
-              <Link
-                href="/admin"
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-decoration-none rounded-lg text-sm font-medium transition-colors"
-              >
-                Back to Dashboard
-              </Link>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value as "all" | "new" | "pending" | "handled")}
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white min-h-[44px] w-full sm:w-auto"
+                >
+                  <option value="all">All Requests</option>
+                  <option value="new">New Requests</option>
+                  <option value="pending">Pending</option>
+                  <option value="handled">Handled</option>
+                </select>
+                <button
+                  onClick={() => {
+                    setLoading(true);
+                    loadServiceRequests();
+                  }}
+                  className="inline-flex items-center justify-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white border-none rounded-lg text-sm font-medium cursor-pointer transition-colors min-h-[44px] w-full sm:w-auto"
+                >
+                  Refresh
+                </button>
+                <Link
+                  href="/admin"
+                  className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-decoration-none rounded-lg text-sm font-medium transition-colors min-h-[44px] w-full sm:w-auto"
+                >
+                  Back to Dashboard
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -191,8 +193,8 @@ export default function ServiceRequestsPage() {
           ) : (
             <>
               {/* Table Header */}
-              <div className="p-4 lg:p-6 border-b border-gray-200 bg-gray-50">
-                <h2 className="text-lg lg:text-xl font-semibold text-gray-900">
+              <div className="p-4 sm:p-6 border-b border-gray-200 bg-gray-50">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
                   Recent Requests ({filteredRequests.length})
                 </h2>
               </div>
@@ -204,27 +206,41 @@ export default function ServiceRequestsPage() {
                   {filteredRequests.map((request, index) => (
                     <div
                       key={request.id}
-                      className={`p-4 ${index < filteredRequests.length - 1 ? "border-b border-gray-200" : ""} bg-white`}
+                      className={`p-4 sm:p-6 ${index < filteredRequests.length - 1 ? "border-b border-gray-200" : ""} bg-white`}
                     >
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex-1">
-                          <div className="text-base font-semibold text-gray-900 mb-1">
-                            {request.customer.name}
+                      <div className="flex flex-col gap-3 mb-4">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="text-base sm:text-lg font-semibold text-gray-900 mb-1">
+                              {request.customer.name}
+                            </div>
+                            <div className="text-sm sm:text-base text-gray-800 mb-2">
+                              <a
+                                href={`mailto:${request.customer.email}`}
+                                className="text-indigo-600 hover:text-indigo-700"
+                              >
+                                {request.customer.email}
+                              </a>
+                            </div>
+                            <div className="text-sm sm:text-base text-gray-800">
+                              {request.address}
+                            </div>
                           </div>
-                          <div className="text-sm text-gray-800 mb-2">
-                            <a
-                              href={`mailto:${request.customer.email}`}
-                              className="text-indigo-600 hover:text-indigo-700"
-                            >
-                              {request.customer.email}
-                            </a>
-                          </div>
-                          <div className="text-sm text-gray-800">
-                            {request.address}
-                          </div>
-                        </div>
-                        <div className="flex flex-col items-end gap-2">
                           <StatusBadge value={request.status} />
+                        </div>
+                        
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {(request.services ?? []).map((service, idx) => (
+                            <span
+                              key={`${service}-${idx}`}
+                              className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium"
+                            >
+                              {service}
+                            </span>
+                          ))}
+                        </div>
+
+                        <div className="flex flex-col gap-2">
                           <ActionButtons
                             request={request}
                             onViewDetails={() => {
@@ -235,21 +251,10 @@ export default function ServiceRequestsPage() {
                             isMobile={true}
                           />
                         </div>
-                      </div>
 
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        {(request.services ?? []).map((service, idx) => (
-                          <span
-                            key={`${service}-${idx}`}
-                            className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium"
-                          >
-                            {service}
-                          </span>
-                        ))}
-                      </div>
-
-                      <div className="text-xs text-gray-500">
-                        Submitted: {formatDate(request.createdAt)}
+                        <div className="text-xs sm:text-sm text-gray-500">
+                          Submitted: {formatDate(request.createdAt)}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -445,7 +450,7 @@ export default function ServiceRequestsPage() {
                 Services Requested
               </h3>
               <div className="flex flex-wrap gap-2">
-                {selectedRequest.services.map((service, idx) => (
+                {(selectedRequest.services ?? []).map((service, idx) => (
                   <span
                     key={idx}
                     className="px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium"

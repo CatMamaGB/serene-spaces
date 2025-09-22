@@ -19,13 +19,13 @@ export function StatusBadge({ value }: { value?: string }) {
   const getStatusClasses = (status: string) => {
     switch (status) {
       case "new":
-        return "bg-indigo-50 border-indigo-200 text-indigo-800";
+        return "bg-blue-50 border-blue-200 text-blue-800";
       case "pending":
         return "bg-orange-50 border-orange-200 text-orange-800";
       case "handled":
         return "bg-green-50 border-green-200 text-green-800";
       default:
-        return "bg-orange-50 border-orange-200 text-orange-800";
+        return "bg-gray-50 border-gray-200 text-gray-800";
     }
   };
 
@@ -61,24 +61,24 @@ export function ActionButtons({
 }: ActionButtonsProps) {
   return (
     <div
-      className={`flex gap-2 ${isMobile ? "flex-row items-center" : "flex-col items-start"}`}
+      className={`flex gap-2 ${isMobile ? "flex-col" : "flex-col items-start"}`}
     >
       <button
         onClick={onViewDetails}
-        className={`px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white border-none rounded-md text-sm font-medium cursor-pointer transition-colors ${
-          isMobile ? "w-auto" : "w-full"
+        className={`inline-flex items-center justify-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white border-none rounded-lg text-sm font-medium cursor-pointer transition-colors min-h-[44px] ${
+          isMobile ? "w-full" : "w-full"
         }`}
       >
         View Details
       </button>
-      {request.status === "pending" && (
+      {(request.status === "new" || request.status === "pending") && (
         <button
           onClick={onMarkHandled}
-          className={`px-3 py-2 bg-green-600 hover:bg-green-700 text-white border-none rounded-md text-sm font-medium cursor-pointer transition-colors ${
-            isMobile ? "w-auto" : "w-full"
+          className={`inline-flex items-center justify-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white border-none rounded-lg text-sm font-medium cursor-pointer transition-colors min-h-[44px] ${
+            isMobile ? "w-full" : "w-full"
           }`}
         >
-          Mark Handled
+          Mark as Done
         </button>
       )}
     </div>

@@ -43,6 +43,7 @@ export async function GET(request: Request) {
             name: true,
             email: true,
             phone: true,
+            address: true,
           },
         },
       },
@@ -50,7 +51,48 @@ export async function GET(request: Request) {
       take: 100,
     });
 
-    return NextResponse.json(serviceRequests);
+    // Transform the data to match the frontend interface
+    const transformedRequests = serviceRequests.map((request) => {
+      // Parse services from internalNotes
+      let services: string[] = [];
+      let repairNotes = "";
+      let waterproofingNotes = "";
+      let allergies = "";
+
+      if ((request as any).internalNotes) {
+        const lines = (request as any).internalNotes.split('\n');
+        for (const line of lines) {
+          if (line.startsWith('Services: ')) {
+            const servicesStr = line.replace('Services: ', '');
+            services = servicesStr ? servicesStr.split(', ').filter((s: string) => s.trim()) : [];
+          } else if (line.startsWith('Repair Notes: ')) {
+            repairNotes = line.replace('Repair Notes: ', '');
+          } else if (line.startsWith('Waterproofing Notes: ')) {
+            waterproofingNotes = line.replace('Waterproofing Notes: ', '');
+          } else if (line.startsWith('Allergies: ')) {
+            allergies = line.replace('Allergies: ', '');
+          }
+        }
+      }
+
+      return {
+        id: request.id,
+        customerId: request.customerId,
+        customer: request.customer,
+        services,
+        address: request.customer.address || '',
+        status: request.status,
+        createdAt: request.createdAt.toISOString(),
+        pickupDate: request.pickupDate?.toISOString(),
+        scheduledPickupDate: request.scheduledPickupDate?.toISOString(),
+        repairNotes: repairNotes === 'None' ? '' : repairNotes,
+        waterproofingNotes: waterproofingNotes === 'None' ? '' : waterproofingNotes,
+        allergies: allergies === 'None' ? '' : allergies,
+        notes: (request as any).internalNotes,
+      };
+    });
+
+    return NextResponse.json(transformedRequests);
   } catch (error) {
     console.error("Error fetching service requests:", error);
     return NextResponse.json([]);

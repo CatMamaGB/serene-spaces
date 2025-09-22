@@ -350,19 +350,17 @@ export default function ViewInvoice() {
               </select>
             </div>
 
-            <div
-              className={`flex ${isMobile ? "gap-2 flex-col w-full" : "gap-4 flex-row"} ${isMobile ? "w-full" : "w-auto"}`}
-            >
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <button
                 onClick={() => setShowSendModal(true)}
-                className={`bg-green-600 hover:bg-green-700 text-white border-none ${isMobile ? "px-3 py-3 text-sm w-full" : "px-6 py-3 text-sm w-auto"} rounded-lg font-semibold cursor-pointer transition-all`}
+                className="inline-flex items-center justify-center bg-green-600 hover:bg-green-700 text-white border-none px-6 py-3 text-sm rounded-lg font-semibold cursor-pointer transition-all w-full sm:w-auto min-h-[44px]"
               >
                 📧 Send Invoice
               </button>
 
               <Link
                 href={`/admin/invoices/${invoice.id}/edit`}
-                className={`bg-indigo-600 hover:bg-indigo-700 text-white border-none ${isMobile ? "px-3 py-3 text-sm w-full" : "px-6 py-3 text-sm w-auto"} rounded-lg font-semibold no-underline transition-all text-center`}
+                className="inline-flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white border-none px-6 py-3 text-sm rounded-lg font-semibold no-underline transition-all w-full sm:w-auto min-h-[44px]"
               >
                 ✏️ Edit Invoice
               </Link>
@@ -370,7 +368,7 @@ export default function ViewInvoice() {
               {invoice?.status !== "paid" && (
                 <button
                   onClick={handleMarkAsPaid}
-                  className={`bg-green-600 hover:bg-green-700 text-white border-none ${isMobile ? "px-3 py-3 text-sm w-full" : "px-6 py-3 text-sm w-auto"} rounded-lg font-semibold cursor-pointer transition-all`}
+                  className="inline-flex items-center justify-center bg-green-600 hover:bg-green-700 text-white border-none px-6 py-3 text-sm rounded-lg font-semibold cursor-pointer transition-all w-full sm:w-auto min-h-[44px]"
                 >
                   ✅ Mark as Paid
                 </button>
@@ -378,7 +376,7 @@ export default function ViewInvoice() {
 
               <button
                 onClick={handleDeleteClick}
-                className={`bg-red-600 hover:bg-red-700 text-white border-none ${isMobile ? "px-3 py-3 text-sm w-full" : "px-6 py-3 text-sm w-auto"} rounded-lg font-semibold cursor-pointer transition-all`}
+                className="inline-flex items-center justify-center bg-red-600 hover:bg-red-700 text-white border-none px-6 py-3 text-sm rounded-lg font-semibold cursor-pointer transition-all w-full sm:w-auto min-h-[44px]"
               >
                 🗑️ Delete Invoice
               </button>

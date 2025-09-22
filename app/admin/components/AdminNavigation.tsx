@@ -17,7 +17,7 @@ const NavItem = ({
 }) => (
   <Link
     href={href}
-    className="block rounded-xl px-3 py-2 text-sm font-medium hover:bg-gray-100 transition-colors"
+    className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-gray-100 transition-colors min-h-[44px] flex items-center"
     onClick={onClick}
   >
     {label}
@@ -64,11 +64,11 @@ export default function AdminNavigation({ children }: { children: ReactNode }) {
               <div className="lg:hidden flex items-center gap-3">
                 <button
                   onClick={toggleMobileMenu}
-                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="p-3 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
                   aria-label="Toggle menu"
                 >
                   <svg
-                    className="w-5 h-5"
+                    className="w-6 h-6"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -81,7 +81,7 @@ export default function AdminNavigation({ children }: { children: ReactNode }) {
                     />
                   </svg>
                 </button>
-                <span className="text-sm font-medium text-gray-700">Admin</span>
+                <span className="text-base font-medium text-gray-700">Admin</span>
               </div>
               <div className="hidden lg:block font-medium">
                 Welcome, Serene Spaces Admin
@@ -89,13 +89,13 @@ export default function AdminNavigation({ children }: { children: ReactNode }) {
               <div className="flex items-center gap-2 sm:gap-3">
                 <Link
                   href="/"
-                  className="text-xs sm:text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                  className="text-sm sm:text-base font-medium text-gray-600 hover:text-gray-900 transition-colors px-3 py-2 rounded-lg hover:bg-gray-50 min-h-[40px] flex items-center"
                 >
                   View Site
                 </Link>
                 <form action="/api/auth/signout" method="post">
                   <button
-                    className="rounded-lg border px-2 sm:px-3 py-1.5 text-xs sm:text-sm hover:bg-gray-50 transition-colors"
+                    className="rounded-lg border px-3 sm:px-4 py-2 text-sm sm:text-base hover:bg-gray-50 transition-colors min-h-[40px] flex items-center justify-center"
                     type="submit"
                   >
                     Sign Out
@@ -115,7 +115,7 @@ export default function AdminNavigation({ children }: { children: ReactNode }) {
               />
 
               {/* Mobile Sidebar */}
-              <aside className="fixed top-0 left-0 h-full w-64 bg-white shadow-xl z-40">
+              <aside className="fixed top-0 left-0 h-full w-72 bg-white shadow-xl z-40">
                 <div className="p-4 border-b border-gray-200">
                   <div className="flex items-center justify-between">
                     <h1 className="text-lg font-semibold">
@@ -123,11 +123,11 @@ export default function AdminNavigation({ children }: { children: ReactNode }) {
                     </h1>
                     <button
                       onClick={closeMobileMenu}
-                      className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                      className="p-3 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
                       aria-label="Close menu"
                     >
                       <svg
-                        className="w-5 h-5"
+                        className="w-6 h-6"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -142,7 +142,7 @@ export default function AdminNavigation({ children }: { children: ReactNode }) {
                     </button>
                   </div>
                 </div>
-                <nav className="px-2 py-4 space-y-1">
+                <nav className="px-3 py-4 space-y-2">
                   <NavItem
                     href="/admin"
                     label="Dashboard"
@@ -158,14 +158,12 @@ export default function AdminNavigation({ children }: { children: ReactNode }) {
                     label="Invoices"
                     onClick={closeMobileMenu}
                   />
-                  <div className="flex items-center justify-between">
-                    <NavItem
-                      href="/admin/service-requests"
-                      label="Service Requests"
-                      onClick={closeMobileMenu}
-                    />
-                    {pendingCount > 0 && <PendingBadge count={pendingCount} isMobile />}
-                  </div>
+                  <NavItem
+                    href="/admin/service-requests"
+                    label="Service Requests"
+                    onClick={closeMobileMenu}
+                  />
+                  {pendingCount > 0 && <PendingBadge count={pendingCount} isMobile onClose={closeMobileMenu} />}
                   <NavItem
                     href="/admin/pricing"
                     label="Pricing"
