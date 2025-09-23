@@ -11,7 +11,8 @@ export const safeJson = async (response: Response) => {
 
 // Address formatting utility
 export const formatAddress = (customer: Customer): string => {
-  const parts = [
+  // First try the structured address fields
+  const structuredParts = [
     customer.addressLine1,
     customer.addressLine2,
     customer.city,
@@ -19,7 +20,16 @@ export const formatAddress = (customer: Customer): string => {
     customer.postalCode,
   ].filter((part) => part && String(part).trim().length > 0);
 
-  return parts.length > 0 ? parts.join(", ") : "No address provided";
+  if (structuredParts.length > 0) {
+    return structuredParts.join(", ");
+  }
+
+  // Fall back to the simple address field
+  if (customer.address && customer.address.trim().length > 0) {
+    return customer.address.trim();
+  }
+
+  return "No address provided";
 };
 
 // Convert empty strings to null for API payload
