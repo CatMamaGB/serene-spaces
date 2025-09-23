@@ -22,7 +22,10 @@ export async function GET(req: NextRequest) {
     const session = await auth();
     if (!session?.user?.email) {
       const base = process.env.NEXT_PUBLIC_APP_URL ?? req.nextUrl.origin;
-      return NextResponse.redirect(new URL("/auth/signin?return=/admin", base), { status: 303 });
+      return NextResponse.redirect(
+        new URL("/auth/signin?return=/admin", base),
+        { status: 303 },
+      );
     }
 
     const params = new URL(req.url).searchParams;
@@ -33,7 +36,7 @@ export async function GET(req: NextRequest) {
     if (!code) {
       return NextResponse.json({ error: "Missing code" }, { status: 400 });
     }
-    
+
     if (!state || !cookieState || state !== cookieState) {
       return NextResponse.json({ error: "Invalid state" }, { status: 400 });
     }
@@ -69,7 +72,10 @@ export async function GET(req: NextRequest) {
     await saveRefreshTokenToDB(userId, tokens.refresh_token);
 
     // Clear the state cookie with same attributes
-    const response = NextResponse.redirect(new URL("/admin?gmail-connected=1", base), { status: 303 });
+    const response = NextResponse.redirect(
+      new URL("/admin?gmail-connected=1", base),
+      { status: 303 },
+    );
     response.cookies.set("gmail_oauth_state", "", {
       httpOnly: true,
       secure: true,
@@ -80,13 +86,16 @@ export async function GET(req: NextRequest) {
     return response;
   } catch (e: any) {
     console.error("Gmail OAuth callback error", e);
-    
+
     // Handle invalid_grant errors gracefully (re-used/expired codes)
     if (e?.response?.data?.error === "invalid_grant") {
       const base = process.env.NEXT_PUBLIC_APP_URL ?? req.nextUrl.origin;
-      return NextResponse.redirect(new URL("/admin?gmail-error=invalid-grant", base), { status: 303 });
+      return NextResponse.redirect(
+        new URL("/admin?gmail-error=invalid-grant", base),
+        { status: 303 },
+      );
     }
-    
+
     // Fallback error handling
     const errorMessage = e instanceof Error ? e.message : "Unknown error";
     return NextResponse.json(

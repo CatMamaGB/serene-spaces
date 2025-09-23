@@ -272,12 +272,12 @@ export default function PricingPage() {
                     className="w-full p-2 border rounded text-sm"
                   />
                   <div className="flex gap-2">
-                      <button
-                        onClick={() => updatePriceListName(editingList)}
-                        className="inline-flex items-center justify-center px-3 py-2 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700 transition-colors min-h-[32px]"
-                      >
-                        Save
-                      </button>
+                    <button
+                      onClick={() => updatePriceListName(editingList)}
+                      className="inline-flex items-center justify-center px-3 py-2 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700 transition-colors min-h-[32px]"
+                    >
+                      Save
+                    </button>
                     <button
                       onClick={() => setEditingList(null)}
                       className="px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
@@ -367,13 +367,13 @@ export default function PricingPage() {
                       </span>
                     </p>
                   </div>
-                    <button
-                      onClick={() => setShowNewItemForm(true)}
-                      className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors min-h-[40px] w-full sm:w-auto"
-                    >
-                      <PlusIcon className="h-4 w-4" />
-                      Add Item
-                    </button>
+                  <button
+                    onClick={() => setShowNewItemForm(true)}
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors min-h-[40px] w-full sm:w-auto"
+                  >
+                    <PlusIcon className="h-4 w-4" />
+                    Add Item
+                  </button>
                 </div>
               </div>
 

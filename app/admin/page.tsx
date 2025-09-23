@@ -24,7 +24,8 @@ interface RecentInvoice {
 
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
-  const { pendingCount: pendingRequests, isLoading: pendingRequestsLoading } = usePendingCount();
+  const { pendingCount: pendingRequests, isLoading: pendingRequestsLoading } =
+    usePendingCount();
   const [stats, setStats] = useState<DashboardStats>({
     totalCustomers: 0,
     pendingInvoices: 0,

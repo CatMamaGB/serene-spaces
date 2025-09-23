@@ -6,7 +6,11 @@ interface PendingBadgeProps {
   onClose?: () => void;
 }
 
-export function PendingBadge({ count, isMobile = false, onClose }: PendingBadgeProps) {
+export function PendingBadge({
+  count,
+  isMobile = false,
+  onClose,
+}: PendingBadgeProps) {
   if (count <= 0) return null;
 
   if (isMobile) {

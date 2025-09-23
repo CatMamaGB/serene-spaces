@@ -60,17 +60,19 @@ export async function GET(request: Request) {
       let allergies = "";
 
       if ((request as any).internalNotes) {
-        const lines = (request as any).internalNotes.split('\n');
+        const lines = (request as any).internalNotes.split("\n");
         for (const line of lines) {
-          if (line.startsWith('Services: ')) {
-            const servicesStr = line.replace('Services: ', '');
-            services = servicesStr ? servicesStr.split(', ').filter((s: string) => s.trim()) : [];
-          } else if (line.startsWith('Repair Notes: ')) {
-            repairNotes = line.replace('Repair Notes: ', '');
-          } else if (line.startsWith('Waterproofing Notes: ')) {
-            waterproofingNotes = line.replace('Waterproofing Notes: ', '');
-          } else if (line.startsWith('Allergies: ')) {
-            allergies = line.replace('Allergies: ', '');
+          if (line.startsWith("Services: ")) {
+            const servicesStr = line.replace("Services: ", "");
+            services = servicesStr
+              ? servicesStr.split(", ").filter((s: string) => s.trim())
+              : [];
+          } else if (line.startsWith("Repair Notes: ")) {
+            repairNotes = line.replace("Repair Notes: ", "");
+          } else if (line.startsWith("Waterproofing Notes: ")) {
+            waterproofingNotes = line.replace("Waterproofing Notes: ", "");
+          } else if (line.startsWith("Allergies: ")) {
+            allergies = line.replace("Allergies: ", "");
           }
         }
       }
@@ -80,14 +82,15 @@ export async function GET(request: Request) {
         customerId: request.customerId,
         customer: request.customer,
         services,
-        address: request.customer.address || '',
+        address: request.customer.address || "",
         status: request.status,
         createdAt: request.createdAt.toISOString(),
         pickupDate: request.pickupDate?.toISOString(),
         scheduledPickupDate: request.scheduledPickupDate?.toISOString(),
-        repairNotes: repairNotes === 'None' ? '' : repairNotes,
-        waterproofingNotes: waterproofingNotes === 'None' ? '' : waterproofingNotes,
-        allergies: allergies === 'None' ? '' : allergies,
+        repairNotes: repairNotes === "None" ? "" : repairNotes,
+        waterproofingNotes:
+          waterproofingNotes === "None" ? "" : waterproofingNotes,
+        allergies: allergies === "None" ? "" : allergies,
         notes: (request as any).internalNotes,
       };
     });

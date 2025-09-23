@@ -1,7 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { FaInstagram, FaFacebook, FaEnvelope, FaPhone, FaHeart } from "react-icons/fa";
+import {
+  FaInstagram,
+  FaFacebook,
+  FaEnvelope,
+  FaHeart,
+} from "react-icons/fa";
 
 export default function Footer() {
   return (
@@ -18,7 +23,9 @@ export default function Footer() {
               Serene Spaces
             </div>
             <p className="text-white/85 mb-6 sm:mb-8 md:mb-10 leading-relaxed text-sm sm:text-base lg:text-lg max-w-md mx-auto sm:mx-0 px-4 sm:px-0">
-              Professional horse blanket cleaning, repairs, and waterproofing services. Serving the equestrian community with expertise and care over 10 years.
+              Professional horse blanket cleaning, repairs, and waterproofing
+              services. Serving the equestrian community with expertise and care
+              over 10 years.
             </p>
 
             {/* Social Media Section */}
@@ -34,7 +41,10 @@ export default function Footer() {
                   className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-white/8 border border-white/15 flex items-center justify-center text-xl transition-all duration-300 hover:text-pink-500 hover:bg-pink-500/15 hover:border-pink-500 hover:-translate-y-1 hover:shadow-lg hover:shadow-pink-500/30 active:scale-95"
                   aria-label="Follow us on Instagram @loveserenespaces"
                 >
-                  <FaInstagram className="w-6 h-6 sm:w-7 sm:h-7" aria-hidden="true" />
+                  <FaInstagram
+                    className="w-6 h-6 sm:w-7 sm:h-7"
+                    aria-hidden="true"
+                  />
                 </a>
 
                 <a
@@ -44,7 +54,10 @@ export default function Footer() {
                   className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-white/8 border border-white/15 flex items-center justify-center text-xl transition-all duration-300 hover:text-blue-500 hover:bg-blue-500/15 hover:border-blue-500 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/30 active:scale-95"
                   aria-label="Follow us on Facebook"
                 >
-                  <FaFacebook className="w-6 h-6 sm:w-7 sm:h-7" aria-hidden="true" />
+                  <FaFacebook
+                    className="w-6 h-6 sm:w-7 sm:h-7"
+                    aria-hidden="true"
+                  />
                 </a>
 
                 <a
@@ -52,7 +65,10 @@ export default function Footer() {
                   className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-white/8 border border-white/15 flex items-center justify-center text-xl transition-all duration-300 hover:text-red-500 hover:bg-red-500/15 hover:border-red-500 hover:-translate-y-1 hover:shadow-lg hover:shadow-red-500/30 active:scale-95"
                   aria-label="Email us at loveserenespaces@gmail.com"
                 >
-                  <FaEnvelope className="w-6 h-6 sm:w-7 sm:h-7" aria-hidden="true" />
+                  <FaEnvelope
+                    className="w-6 h-6 sm:w-7 sm:h-7"
+                    aria-hidden="true"
+                  />
                 </a>
               </div>
             </div>
@@ -113,7 +129,8 @@ export default function Footer() {
           <div className="flex flex-col gap-4 sm:gap-6">
             <div className="flex flex-col gap-2 sm:gap-3 items-center">
               <p className="text-xs sm:text-sm md:text-base text-white/85 font-medium">
-                © {new Date().getFullYear()} Serene Spaces. All rights reserved.
+                © {new Date().getFullYear()} Serene Spaces. All rights
+                reserved.
               </p>
               <p className="text-xs sm:text-sm text-white/60 leading-relaxed">
                 Professional horse equipment care services
@@ -122,7 +139,10 @@ export default function Footer() {
 
             <p className="text-center text-xs sm:text-sm text-white/60">
               Made with{" "}
-              <FaHeart className="inline w-4 h-4 align-[-0.15em] text-rose-400" aria-hidden="true" />{" "}
+              <FaHeart
+                className="inline w-4 h-4 align-[-0.15em] text-rose-400"
+                aria-hidden="true"
+              />{" "}
               by{" "}
               <a
                 href="https://codeandcosmos.com"

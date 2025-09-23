@@ -25,8 +25,9 @@ export default function ServiceRequestsPage() {
     null,
   );
   const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [showHandled, setShowHandled] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<"all" | "new" | "pending" | "handled">("all");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "new" | "pending" | "handled"
+  >("all");
   const [query, setQuery] = useState("");
   const toast = useToast();
 
@@ -142,7 +143,11 @@ export default function ServiceRequestsPage() {
               <div className="flex flex-col sm:flex-row gap-2">
                 <select
                   value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value as "all" | "new" | "pending" | "handled")}
+                  onChange={(e) =>
+                    setStatusFilter(
+                      e.target.value as "all" | "new" | "pending" | "handled",
+                    )
+                  }
                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white min-h-[44px] w-full sm:w-auto"
                 >
                   <option value="all">All Requests</option>
@@ -228,7 +233,7 @@ export default function ServiceRequestsPage() {
                           </div>
                           <StatusBadge value={request.status} />
                         </div>
-                        
+
                         <div className="flex flex-wrap gap-2 mb-3">
                           {(request.services ?? []).map((service, idx) => (
                             <span

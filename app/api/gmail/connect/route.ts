@@ -10,19 +10,19 @@ export async function GET(req: Request) {
   const session = await auth();
   if (!session?.user?.email) {
     const base = process.env.NEXT_PUBLIC_APP_URL ?? new URL(req.url).origin;
-    return NextResponse.redirect(new URL("/auth/signin?return=/admin", base), { status: 303 });
+    return NextResponse.redirect(new URL("/auth/signin?return=/admin", base), {
+      status: 303,
+    });
   }
 
-  const base =
-    process.env.NEXT_PUBLIC_APP_URL ??
-    new URL(req.url).origin; // e.g. https://www.loveserenespaces.com
+  const base = process.env.NEXT_PUBLIC_APP_URL ?? new URL(req.url).origin; // e.g. https://www.loveserenespaces.com
 
   const redirectUri = `${base}/api/gmail/callback/google`;
 
   const oauth2 = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID!,
     process.env.GOOGLE_CLIENT_SECRET!,
-    redirectUri
+    redirectUri,
   );
 
   const state = crypto.randomUUID(); // store this server-side or in a signed cookie

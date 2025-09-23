@@ -19,7 +19,6 @@ export default function IntakePage() {
     allergies: "",
   });
 
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [isDayDropdownOpen, setIsDayDropdownOpen] = useState(false);
@@ -74,11 +73,11 @@ export default function IntakePage() {
   ];
 
   const filteredDays = Array.from({ length: 31 }, (_, i) => i + 1)
-    .map((day) => day.toString().padStart(2, '0'))
+    .map((day) => day.toString().padStart(2, "0"))
     .filter((day) => day.includes(daySearchTerm));
 
   const filteredMonths = months.filter((month) =>
-    month.label.toLowerCase().includes(monthSearchTerm.toLowerCase())
+    month.label.toLowerCase().includes(monthSearchTerm.toLowerCase()),
   );
 
   const handleCheckboxChange = (service: string, checked: boolean) => {
@@ -326,14 +325,23 @@ export default function IntakePage() {
                     <div className="relative">
                       <button
                         type="button"
-                        onClick={() => setIsMonthDropdownOpen(!isMonthDropdownOpen)}
+                        onClick={() =>
+                          setIsMonthDropdownOpen(!isMonthDropdownOpen)
+                        }
                         className="w-full px-4 py-3 sm:py-3 border border-gray-300 rounded-lg text-base bg-white text-gray-800 transition-all duration-200 h-[48px] sm:min-h-[48px] focus:border-[#7a6990] focus:bg-white focus:ring-4 focus:ring-[#7a6990]/10 focus:outline-none text-left flex items-center justify-between hover:bg-gray-50 active:bg-gray-100 touch-manipulation"
                       >
-                        <span className={formData.pickupMonth ? "text-gray-800" : "text-gray-500"}>
-                          {formData.pickupMonth 
-                            ? months.find(m => m.value === formData.pickupMonth)?.label 
-                            : "Select Month"
+                        <span
+                          className={
+                            formData.pickupMonth
+                              ? "text-gray-800"
+                              : "text-gray-500"
                           }
+                        >
+                          {formData.pickupMonth
+                            ? months.find(
+                                (m) => m.value === formData.pickupMonth,
+                              )?.label
+                            : "Select Month"}
                         </span>
                         <svg
                           className={`w-5 h-5 transition-transform duration-200 ${
@@ -360,7 +368,9 @@ export default function IntakePage() {
                               type="text"
                               placeholder="Search months..."
                               value={monthSearchTerm}
-                              onChange={(e) => setMonthSearchTerm(e.target.value)}
+                              onChange={(e) =>
+                                setMonthSearchTerm(e.target.value)
+                              }
                               className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#7a6990]/20 focus:border-[#7a6990]"
                               autoFocus
                             />
@@ -409,7 +419,13 @@ export default function IntakePage() {
                         onClick={() => setIsDayDropdownOpen(!isDayDropdownOpen)}
                         className="w-full px-4 py-3 sm:py-3 border border-gray-300 rounded-lg text-base bg-white text-gray-800 transition-all duration-200 h-[48px] sm:min-h-[48px] focus:border-[#7a6990] focus:bg-white focus:ring-4 focus:ring-[#7a6990]/10 focus:outline-none text-left flex items-center justify-between hover:bg-gray-50 active:bg-gray-100 touch-manipulation"
                       >
-                        <span className={formData.pickupDay ? "text-gray-800" : "text-gray-500"}>
+                        <span
+                          className={
+                            formData.pickupDay
+                              ? "text-gray-800"
+                              : "text-gray-500"
+                          }
+                        >
                           {formData.pickupDay || "Select Day"}
                         </span>
                         <svg
@@ -498,26 +514,24 @@ export default function IntakePage() {
                     }
                     className="appearance-none h-5 w-5 rounded-[4px] border border-gray-300 grid place-content-center checked:bg-[#7a6990] checked:border-[#7a6990] focus:ring-2 focus:ring-[#7a6990]/20 focus:outline-none"
                     style={{
-                      WebkitAppearance: 'none',
-                      MozAppearance: 'none',
-                      appearance: 'none',
-                      width: '20px',
-                      height: '20px',
-                      minWidth: '20px',
-                      minHeight: '20px',
-                      maxWidth: '20px',
-                      maxHeight: '20px',
-                      backgroundSize: '12px 12px',
-                      backgroundPosition: 'center',
-                      backgroundRepeat: 'no-repeat',
-                      backgroundImage: formData.services.includes("cleaning") 
-                        ? "url(\"data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m13.854 3.646-7.5 7.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6 10.293l7.146-7.147a.5.5 0 0 1 .708.708z'/%3e%3c/svg%3e\")" 
-                        : "none"
+                      WebkitAppearance: "none",
+                      MozAppearance: "none",
+                      appearance: "none",
+                      width: "20px",
+                      height: "20px",
+                      minWidth: "20px",
+                      minHeight: "20px",
+                      maxWidth: "20px",
+                      maxHeight: "20px",
+                      backgroundSize: "12px 12px",
+                      backgroundPosition: "center",
+                      backgroundRepeat: "no-repeat",
+                      backgroundImage: formData.services.includes("cleaning")
+                        ? "url(\"data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m13.854 3.646-7.5 7.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6 10.293l7.146-7.147a.5.5 0 0 1 .708.708z'/%3e%3c/svg%3e\")"
+                        : "none",
                     }}
                   />
-                  <span className="font-medium text-gray-800">
-                    Cleaning
-                  </span>
+                  <span className="font-medium text-gray-800">Cleaning</span>
                 </label>
               </div>
 
@@ -531,26 +545,24 @@ export default function IntakePage() {
                     }
                     className="appearance-none h-5 w-5 rounded-[4px] border border-gray-300 grid place-content-center checked:bg-[#7a6990] checked:border-[#7a6990] focus:ring-2 focus:ring-[#7a6990]/20 focus:outline-none"
                     style={{
-                      WebkitAppearance: 'none',
-                      MozAppearance: 'none',
-                      appearance: 'none',
-                      width: '20px',
-                      height: '20px',
-                      minWidth: '20px',
-                      minHeight: '20px',
-                      maxWidth: '20px',
-                      maxHeight: '20px',
-                      backgroundSize: '12px 12px',
-                      backgroundPosition: 'center',
-                      backgroundRepeat: 'no-repeat',
-                      backgroundImage: formData.services.includes("repairs") 
-                        ? "url(\"data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m13.854 3.646-7.5 7.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6 10.293l7.146-7.147a.5.5 0 0 1 .708.708z'/%3e%3c/svg%3e\")" 
-                        : "none"
+                      WebkitAppearance: "none",
+                      MozAppearance: "none",
+                      appearance: "none",
+                      width: "20px",
+                      height: "20px",
+                      minWidth: "20px",
+                      minHeight: "20px",
+                      maxWidth: "20px",
+                      maxHeight: "20px",
+                      backgroundSize: "12px 12px",
+                      backgroundPosition: "center",
+                      backgroundRepeat: "no-repeat",
+                      backgroundImage: formData.services.includes("repairs")
+                        ? "url(\"data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m13.854 3.646-7.5 7.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6 10.293l7.146-7.147a.5.5 0 0 1 .708.708z'/%3e%3c/svg%3e\")"
+                        : "none",
                     }}
                   />
-                  <span className="font-medium text-gray-800">
-                    Repairs
-                  </span>
+                  <span className="font-medium text-gray-800">Repairs</span>
                 </label>
 
                 {formData.services.includes("repairs") && (
@@ -598,21 +610,23 @@ export default function IntakePage() {
                     }
                     className="appearance-none h-5 w-5 rounded-[4px] border border-gray-300 grid place-content-center checked:bg-[#7a6990] checked:border-[#7a6990] focus:ring-2 focus:ring-[#7a6990]/20 focus:outline-none"
                     style={{
-                      WebkitAppearance: 'none',
-                      MozAppearance: 'none',
-                      appearance: 'none',
-                      width: '20px',
-                      height: '20px',
-                      minWidth: '20px',
-                      minHeight: '20px',
-                      maxWidth: '20px',
-                      maxHeight: '20px',
-                      backgroundSize: '12px 12px',
-                      backgroundPosition: 'center',
-                      backgroundRepeat: 'no-repeat',
-                      backgroundImage: formData.services.includes("waterproofing") 
-                        ? "url(\"data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m13.854 3.646-7.5 7.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6 10.293l7.146-7.147a.5.5 0 0 1 .708.708z'/%3e%3c/svg%3e\")" 
-                        : "none"
+                      WebkitAppearance: "none",
+                      MozAppearance: "none",
+                      appearance: "none",
+                      width: "20px",
+                      height: "20px",
+                      minWidth: "20px",
+                      minHeight: "20px",
+                      maxWidth: "20px",
+                      maxHeight: "20px",
+                      backgroundSize: "12px 12px",
+                      backgroundPosition: "center",
+                      backgroundRepeat: "no-repeat",
+                      backgroundImage: formData.services.includes(
+                        "waterproofing",
+                      )
+                        ? "url(\"data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m13.854 3.646-7.5 7.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6 10.293l7.146-7.147a.5.5 0 0 1 .708.708z'/%3e%3c/svg%3e\")"
+                        : "none",
                     }}
                   />
                   <span className="font-medium text-gray-800">

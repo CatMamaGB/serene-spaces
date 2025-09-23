@@ -49,7 +49,10 @@ export default function AdminNavigation({ children }: { children: ReactNode }) {
             <NavItem href="/admin/customers" label="Customers" />
             <NavItem href="/admin/invoices" label="Invoices" />
             <div className="flex items-center justify-between">
-              <NavItem href="/admin/service-requests" label="Service Requests" />
+              <NavItem
+                href="/admin/service-requests"
+                label="Service Requests"
+              />
               {pendingCount > 0 && <PendingBadge count={pendingCount} />}
             </div>
             <NavItem href="/admin/pricing" label="Pricing" />
@@ -81,7 +84,9 @@ export default function AdminNavigation({ children }: { children: ReactNode }) {
                     />
                   </svg>
                 </button>
-                <span className="text-base font-medium text-gray-700">Admin</span>
+                <span className="text-base font-medium text-gray-700">
+                  Admin
+                </span>
               </div>
               <div className="hidden lg:block font-medium">
                 Welcome, Serene Spaces Admin
@@ -163,7 +168,13 @@ export default function AdminNavigation({ children }: { children: ReactNode }) {
                     label="Service Requests"
                     onClick={closeMobileMenu}
                   />
-                  {pendingCount > 0 && <PendingBadge count={pendingCount} isMobile onClose={closeMobileMenu} />}
+                  {pendingCount > 0 && (
+                    <PendingBadge
+                      count={pendingCount}
+                      isMobile
+                      onClose={closeMobileMenu}
+                    />
+                  )}
                   <NavItem
                     href="/admin/pricing"
                     label="Pricing"

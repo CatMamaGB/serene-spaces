@@ -9,11 +9,14 @@ export async function middleware(req: NextRequest) {
   console.log("🕐 TIMESTAMP:", new Date().toISOString());
   console.log("📍 PATH:", req.nextUrl.pathname);
   console.log("=".repeat(50));
-  
+
   // Enforce www host to prevent cookie domain mismatches
   const host = req.headers.get("host");
-  console.log("🌐 Host check:", { host, isApex: host === "loveserenespaces.com" });
-  
+  console.log("🌐 Host check:", {
+    host,
+    isApex: host === "loveserenespaces.com",
+  });
+
   if (host === "loveserenespaces.com") {
     const url = new URL(req.url);
     url.host = "www.loveserenespaces.com";
@@ -29,14 +32,18 @@ export async function middleware(req: NextRequest) {
 
   if (req.nextUrl.pathname.startsWith("/admin")) {
     console.log("🔍 ADMIN ROUTE - Starting authentication check...");
-    
+
     // Get all cookies for debugging
     const allCookies = req.cookies.getAll();
-    console.log("🍪 All cookies received:", allCookies.map(c => ({ name: c.name, hasValue: !!c.value })));
-    
+    console.log(
+      "🍪 All cookies received:",
+      allCookies.map((c) => ({ name: c.name, hasValue: !!c.value })),
+    );
+
     // Check for session cookies
-    const secureCookie = req.cookies.get("__Secure-authjs.session-token")?.value
-                      ?? req.cookies.get("_Secure-authjs.session-token")?.value;
+    const secureCookie =
+      req.cookies.get("__Secure-authjs.session-token")?.value ??
+      req.cookies.get("_Secure-authjs.session-token")?.value;
     const plainCookie = req.cookies.get("authjs.session-token")?.value;
 
     console.log("🔍 Cookie Analysis:", {
@@ -47,24 +54,27 @@ export async function middleware(req: NextRequest) {
     });
 
     console.log("🔑 Attempting session validation with auth()...");
-    
+
     try {
       const session = await auth();
-      
+
       console.log("🔒 Session validation result:", {
         hasSession: !!session,
         sessionUser: session?.user?.email,
         sessionUserId: session?.user?.id,
         sessionUserRole: session?.user?.role,
       });
-      
+
       if (!session || !session.user) {
         const url = new URL("/auth/signin", req.url);
         url.searchParams.set("callbackUrl", req.url);
-        console.log("❌ NO VALID SESSION - Redirecting to signin:", url.toString());
+        console.log(
+          "❌ NO VALID SESSION - Redirecting to signin:",
+          url.toString(),
+        );
         return NextResponse.redirect(url);
       }
-      
+
       console.log("✅ SESSION VALID - Allowing access to admin");
     } catch (error) {
       console.error("❌ Session validation error:", error);
@@ -74,7 +84,7 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(url);
     }
   }
-  
+
   console.log("➡️ Middleware complete - proceeding to next");
   return NextResponse.next();
 }
