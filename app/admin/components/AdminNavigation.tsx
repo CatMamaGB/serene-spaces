@@ -40,7 +40,7 @@ export default function AdminNavigation({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-gray-50 text-gray-900">
       <div className="flex">
         {/* Desktop Sidebar */}
-        <aside className="hidden lg:block w-64 shrink-0 border-r border-gray-200 bg-white">
+        <aside className="hidden sm:flex w-64 shrink-0 border-r border-gray-200 bg-white flex-col">
           <div className="p-4">
             <h1 className="text-xl font-semibold">Serene Spaces Admin</h1>
           </div>
@@ -64,7 +64,7 @@ export default function AdminNavigation({ children }: { children: ReactNode }) {
           {/* Topbar */}
           <header className="sticky top-0 z-20 bg-white border-b border-gray-200">
             <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
-              <div className="lg:hidden flex items-center gap-3">
+              <div className="sm:hidden flex items-center gap-3">
                 <button
                   onClick={toggleMobileMenu}
                   className="p-3 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
@@ -88,7 +88,7 @@ export default function AdminNavigation({ children }: { children: ReactNode }) {
                   Admin
                 </span>
               </div>
-              <div className="hidden lg:block font-medium">
+              <div className="hidden sm:block font-medium">
                 Welcome, Serene Spaces Admin
               </div>
               <div className="flex items-center gap-2 sm:gap-3">
@@ -112,7 +112,7 @@ export default function AdminNavigation({ children }: { children: ReactNode }) {
 
           {/* Mobile Sidebar Overlay */}
           {isMobileMenuOpen && (
-            <div className="lg:hidden">
+            <div className="sm:hidden">
               {/* Backdrop */}
               <div
                 className="fixed inset-0 bg-black bg-opacity-50 z-30"
