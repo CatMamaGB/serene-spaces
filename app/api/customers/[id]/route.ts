@@ -133,7 +133,7 @@ export async function DELETE(
 
     // Check if customer has associated invoices or service requests
     const [invoices, serviceRequests] = await Promise.all([
-      prisma.invoice.findMany({
+      prisma.invoiceMirror.findMany({
         where: { customerId: id },
         take: 1,
       }),
