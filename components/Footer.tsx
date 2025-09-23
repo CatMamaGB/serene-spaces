@@ -43,7 +43,7 @@ export default function Footer() {
                 </a>
 
                 <a
-                  href="https://facebook.com/loveserenespaces"
+                  href="https://www.facebook.com/profile.php?id=61573653646816"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-white/8 border border-white/15 flex items-center justify-center text-xl transition-all duration-300 hover:text-blue-500 hover:bg-blue-500/15 hover:border-blue-500 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/30 active:scale-95"
