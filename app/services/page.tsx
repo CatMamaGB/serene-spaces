@@ -1,5 +1,33 @@
 import Link from "next/link";
 import Footer from "../../components/Footer";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Horse Equipment Services - Serene Spaces",
+  description:
+    "Professional horse equipment services including blanket cleaning, repairs, waterproofing, and barn organization. Expert care for all your horse's essential gear in Crystal Lake, IL.",
+  keywords: [
+    "horse equipment services",
+    "blanket cleaning service",
+    "equipment repair service",
+    "barn organization",
+    "horse gear maintenance",
+    "professional horse care",
+    "Crystal Lake services",
+    "equipment waterproofing",
+  ],
+  openGraph: {
+    title: "Horse Equipment Services - Serene Spaces",
+    description:
+      "Professional horse equipment services including blanket cleaning, repairs, waterproofing, and barn organization.",
+    url: "https://loveserenespaces.com/services",
+  },
+  twitter: {
+    title: "Horse Equipment Services - Serene Spaces",
+    description:
+      "Professional horse equipment services including blanket cleaning, repairs, waterproofing, and barn organization.",
+  },
+};
 
 export default function ServicesPage() {
   return (

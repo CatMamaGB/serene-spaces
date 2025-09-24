@@ -1,4 +1,31 @@
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Horse Strategy Consulting Service - Serene Spaces",
+  description:
+    "Professional horse strategy consulting and advisory services. Expert guidance for horse care, equipment management, and facility optimization in Crystal Lake, IL area.",
+  keywords: [
+    "horse strategy consulting",
+    "horse care consulting",
+    "equipment management advice",
+    "horse facility consulting",
+    "equine advisory services",
+    "Crystal Lake horse consulting",
+    "professional horse guidance",
+  ],
+  openGraph: {
+    title: "Horse Strategy Consulting Service - Serene Spaces",
+    description:
+      "Professional horse strategy consulting and advisory services. Expert guidance for horse care and equipment management.",
+    url: "https://loveserenespaces.com/services/consulting",
+  },
+  twitter: {
+    title: "Horse Strategy Consulting Service - Serene Spaces",
+    description:
+      "Professional horse strategy consulting and advisory services.",
+  },
+};
 
 export default function ConsultingPage() {
   return (

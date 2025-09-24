@@ -1,4 +1,32 @@
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Horse Blanket Cleaning & Repair Service - Serene Spaces",
+  description:
+    "Professional horse blanket cleaning, repair, and waterproofing services. Expert care for turnout blankets, sheets, saddle pads, and all horse equipment. Serving Crystal Lake, IL area.",
+  keywords: [
+    "horse blanket cleaning",
+    "blanket repair service",
+    "turnout blanket cleaning",
+    "blanket waterproofing",
+    "saddle pad cleaning",
+    "horse gear repair",
+    "Crystal Lake blanket service",
+    "professional cleaning",
+  ],
+  openGraph: {
+    title: "Horse Blanket Cleaning & Repair Service - Serene Spaces",
+    description:
+      "Professional horse blanket cleaning, repair, and waterproofing services. Expert care for turnout blankets, sheets, and saddle pads.",
+    url: "https://loveserenespaces.com/services/blanket-cleaning",
+  },
+  twitter: {
+    title: "Horse Blanket Cleaning & Repair Service - Serene Spaces",
+    description:
+      "Professional horse blanket cleaning, repair, and waterproofing services.",
+  },
+};
 
 export default function BlanketCleaningPage() {
   return (

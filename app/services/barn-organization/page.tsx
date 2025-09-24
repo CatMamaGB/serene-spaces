@@ -1,4 +1,31 @@
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Barn Organization Service - Serene Spaces",
+  description:
+    "Professional barn organization services to optimize your horse facility. Expert organization solutions for tack rooms, feed storage, and equipment management in Crystal Lake, IL.",
+  keywords: [
+    "barn organization service",
+    "tack room organization",
+    "horse facility organization",
+    "equipment storage solutions",
+    "barn management",
+    "Crystal Lake barn services",
+    "professional organization",
+  ],
+  openGraph: {
+    title: "Barn Organization Service - Serene Spaces",
+    description:
+      "Professional barn organization services to optimize your horse facility. Expert organization solutions for tack rooms and equipment management.",
+    url: "https://loveserenespaces.com/services/barn-organization",
+  },
+  twitter: {
+    title: "Barn Organization Service - Serene Spaces",
+    description:
+      "Professional barn organization services to optimize your horse facility.",
+  },
+};
 
 export default function BarnOrganizationPage() {
   return (

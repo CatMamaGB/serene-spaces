@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { auth } from "@/lib/auth";
+import { getToken } from "next-auth/jwt";
 
 export async function middleware(req: NextRequest) {
   // Force immediate logging to ensure we see this
   console.log("=".repeat(50));
-  console.log("🚀 NEW MIDDLEWARE VERSION 5.0 - USING AUTH FUNCTION");
+  console.log("🚀 MIDDLEWARE VERSION 6.0 - USING EDGE RUNTIME WITH JWT");
   console.log("🕐 TIMESTAMP:", new Date().toISOString());
   console.log("📍 PATH:", req.nextUrl.pathname);
   console.log("=".repeat(50));
@@ -53,34 +53,38 @@ export async function middleware(req: NextRequest) {
       plainCookieLength: plainCookie?.length || 0,
     });
 
-    console.log("🔑 Attempting session validation with auth()...");
+    console.log("🔑 Attempting JWT token validation...");
 
     try {
-      const session = await auth();
-
-      console.log("🔒 Session validation result:", {
-        hasSession: !!session,
-        sessionUser: session?.user?.email,
-        sessionUserId: session?.user?.id,
-        sessionUserRole: session?.user?.role,
+      // Use getToken which works with Edge Runtime
+      const token = await getToken({ 
+        req, 
+        secret: process.env.NEXTAUTH_SECRET 
       });
 
-      if (!session || !session.user) {
+      console.log("🔒 JWT token validation result:", {
+        hasToken: !!token,
+        tokenEmail: token?.email,
+        tokenUserId: token?.sub,
+        tokenRole: token?.role,
+      });
+
+      if (!token) {
         const url = new URL("/auth/signin", req.url);
         url.searchParams.set("callbackUrl", req.url);
         console.log(
-          "❌ NO VALID SESSION - Redirecting to signin:",
+          "❌ NO VALID TOKEN - Redirecting to signin:",
           url.toString(),
         );
         return NextResponse.redirect(url);
       }
 
-      console.log("✅ SESSION VALID - Allowing access to admin");
+      console.log("✅ TOKEN VALID - Allowing access to admin");
     } catch (error) {
-      console.error("❌ Session validation error:", error);
+      console.error("❌ Token validation error:", error);
       const url = new URL("/auth/signin", req.url);
       url.searchParams.set("callbackUrl", req.url);
-      console.log("❌ SESSION ERROR - Redirecting to signin:", url.toString());
+      console.log("❌ TOKEN ERROR - Redirecting to signin:", url.toString());
       return NextResponse.redirect(url);
     }
   }
