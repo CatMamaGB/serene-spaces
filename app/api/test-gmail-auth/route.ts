@@ -10,7 +10,7 @@ export async function GET() {
     const session = await auth();
     
     // Check for stored tokens
-    let tokenInfo = {
+    const tokenInfo = {
       hasSession: !!session?.user,
       userId: session?.user?.id,
       userEmail: session?.user?.email,
