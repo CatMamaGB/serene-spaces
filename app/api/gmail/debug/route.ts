@@ -23,7 +23,7 @@ export async function GET() {
       success: true,
       database: {
         credentialCount: credentials.length,
-        credentials: credentials.map(c => ({
+        credentials: credentials.map((c: any) => ({
           id: c.id,
           userId: c.userId,
           createdAt: c.createdAt,
