@@ -1507,43 +1507,6 @@ How to pay:
                   >
                     Save as Draft
                   </button>
-
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      const testEmail = prompt(
-                        "Enter email address for test email:",
-                      );
-                      if (testEmail) {
-                        try {
-                          const response = await fetch(
-                            `/api/invoices/send?email=${encodeURIComponent(testEmail)}`,
-                          );
-                          const result = await response.json();
-                          if (response.ok) {
-                            toast.success(
-                              "Test Email Sent",
-                              `Test email sent successfully to ${testEmail}!`,
-                            );
-                          } else {
-                            toast.error(
-                              "Test Email Failed",
-                              `Failed to send test email: ${result.error}`,
-                            );
-                          }
-                        } catch (error) {
-                          console.error("Error sending test email:", error);
-                          toast.error(
-                            "Test Email Failed",
-                            "Failed to send test email. Please try again.",
-                          );
-                        }
-                      }
-                    }}
-                    className="px-6 py-3 bg-yellow-600 hover:bg-yellow-700 text-white border-none rounded-lg text-sm font-medium cursor-pointer transition-all"
-                  >
-                    🧪 Test Email
-                  </button>
                 </div>
               </div>
             </div>
