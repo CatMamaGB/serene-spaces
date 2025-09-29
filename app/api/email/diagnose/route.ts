@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { google } from "googleapis";
 import nodemailer from "nodemailer";
+import { prisma } from "@/lib/prisma";
 
 interface DiagnosticReport {
   env: {
@@ -35,12 +36,27 @@ interface DiagnosticReport {
 }
 
 export async function GET() {
+  // Check for refresh token in both environment and database
+  const envRefreshToken = process.env.GMAIL_REFRESH_TOKEN;
+  let dbRefreshToken = null;
+  
+  try {
+    const credential = await (prisma as any).gmailCredential.findFirst({
+      orderBy: { updatedAt: 'desc' }
+    });
+    dbRefreshToken = credential?.refreshToken;
+  } catch (dbError) {
+    console.log("Could not check database for refresh token:", dbError);
+  }
+
+  const activeRefreshToken = dbRefreshToken || envRefreshToken;
+
   const report: DiagnosticReport = {
     env: {
       hasClientId: !!process.env.GOOGLE_CLIENT_ID,
       hasClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
       hasRedirectUri: !!process.env.GOOGLE_REDIRECT_URI,
-      hasRefreshToken: !!process.env.GMAIL_REFRESH_TOKEN,
+      hasRefreshToken: !!activeRefreshToken,
       gmailUser: process.env.GMAIL_USER || "loveserenespaces@gmail.com",
     },
   };
@@ -52,7 +68,7 @@ export async function GET() {
       process.env.GOOGLE_CLIENT_SECRET!,
       process.env.GOOGLE_REDIRECT_URI!,
     );
-    oauth2.setCredentials({ refresh_token: process.env.GMAIL_REFRESH_TOKEN! });
+    oauth2.setCredentials({ refresh_token: activeRefreshToken! });
 
     const { token } = await oauth2.getAccessToken();
     report.oauth = {
@@ -82,7 +98,7 @@ export async function GET() {
         user: process.env.GMAIL_USER || "loveserenespaces@gmail.com",
         clientId: process.env.GOOGLE_CLIENT_ID!,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-        refreshToken: process.env.GMAIL_REFRESH_TOKEN!,
+        refreshToken: activeRefreshToken!,
         accessToken: token || undefined,
       },
     });

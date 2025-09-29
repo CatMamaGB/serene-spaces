@@ -22,8 +22,22 @@ export const createGmailTransporter = async () => {
     throw new Error("Google OAuth2 credentials not configured");
   }
 
-  // Prefer loading refresh token from DB/secret store in prod
-  const refreshToken = process.env.GMAIL_REFRESH_TOKEN;
+  // Try to get refresh token from database first, then fallback to env var
+  let refreshToken = process.env.GMAIL_REFRESH_TOKEN;
+  
+  if (!refreshToken) {
+    // Load from database if available
+    try {
+      const { prisma } = await import("./prisma");
+      const credential = await (prisma as any).gmailCredential.findFirst({
+        orderBy: { updatedAt: 'desc' }
+      });
+      refreshToken = credential?.refreshToken;
+    } catch (dbError) {
+      console.log("Could not load refresh token from database:", dbError);
+    }
+  }
+
   if (!refreshToken) {
     throw new Error(
       "Gmail refresh token not configured. Complete OAuth2 setup first.",
