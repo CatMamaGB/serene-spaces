@@ -17,6 +17,12 @@ export default auth((req) => {
     return NextResponse.next();
   }
 
+  // Skip middleware for Gmail OAuth API routes 
+  if (req.nextUrl.pathname.startsWith("/api/gmail/")) {
+    console.log("⏭️ Skipping Gmail OAuth API routes");
+    return NextResponse.next();
+  }
+
   // Enforce www host to prevent cookie domain mismatches
   const host = req.headers.get("host");
   console.log("🌐 Host check:", {
