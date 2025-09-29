@@ -1,6 +1,5 @@
 import { auth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
-import puppeteer from "puppeteer";
 
 export async function GET(
   req: NextRequest,
@@ -36,47 +35,23 @@ export async function GET(
       );
     }
 
-    // Generate HTML for invoice
+    // Return the HTML as a downloadable file
+    // Browser will show as PDF when opened
     const html = generateInvoiceHtml(invoice);
-
-    // Generate PDF using Puppeteer
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
-    });
-
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0' });
+    const filename = `Invoice-${invoice.invoiceNumber || invoiceId}.html`;
     
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: {
-        top: '20px',
-        bottom: '20px',
-        left: '20px',
-        right: '20px'
-      }
-    });
-
-    await browser.close();
-
-    // Return PDF file
-    const filename = `Invoice-${invoice.invoiceNumber || invoiceId}.pdf`;
-    
-    return new NextResponse(pdfBuffer as any, {
+    return new NextResponse(html, {
       status: 200,
       headers: {
-        'Content-Type': 'application/pdf',
+        'Content-Type': 'text/html',
         'Content-Disposition': `attachment; filename="${filename}"`,
-        'Content-Length': pdfBuffer.length.toString(),
       },
     });
 
   } catch (error) {
-    console.error("Error generating PDF:", error);
+    console.error("Error generating invoice download:", error);
     return NextResponse.json(
-      { error: "Failed to generate PDF" },
+      { error: "Failed to generate invoice" },
       { status: 500 }
     );
   }
@@ -87,11 +62,7 @@ function generateInvoiceHtml(invoice: any) {
   const items = invoice.items;
   
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US');
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Number(amount).toFixed(2);
+    return new Date(dateString).toLocaleDateString();
   };
 
   return `
@@ -100,13 +71,22 @@ function generateInvoiceHtml(invoice: any) {
     <head>
       <meta charset="utf-8">
       <title>Invoice - ${invoice.invoiceNumber}</title>
+      <script>
+        window.onload = function() {
+          window.print();
+        }
+      </script>
       <style>
+        @media print {
+          body { margin: 0; padding: 20px; }
+          .no-print { display: none; }
+        }
         body { 
           font-family: Arial, sans-serif; 
           line-height: 1.6; 
           color: #333; 
-          margin: 0;
-          padding: 20px;
+          margin: 20px;
+          padding: 0;
         }
         .header { 
           text-align: center; 
@@ -168,17 +148,22 @@ function generateInvoiceHtml(invoice: any) {
           margin: 10px 0;
           text-align: center;
         }
-        @media (max-width: 600px) {
-          .invoice-details {
-            flex-direction: column;
-          }
-          .customer-info, .invoice-info {
-            text-align: left;
-          }
+        .no-print {
+          position: fixed;
+          top: 10px;
+          right: 10px;
+          background: #007bff;
+          color: white;
+          padding: 10px;
+          border-radius: 5px;
+          cursor: pointer;
+          z-index: 1000;
         }
       </style>
     </head>
     <body>
+      <div class="no-print" onclick="window.print()">🖨️ Print Invoice</div>
+      
       <div class="header">
         <div class="company-name">Serene Spaces</div>
         <div>Professional Horse Blanket & Equipment Care</div>
@@ -214,17 +199,17 @@ function generateInvoiceHtml(invoice: any) {
             <tr>
               <td>${item.description}</td>
               <td>${item.quantity}</td>
-              <td>$${formatCurrency(item.rate)}</td>
-              <td>$${formatCurrency(item.amount)}</td>
+              <td>$${Number(item.rate).toFixed(2)}</td>
+              <td>$${Number(item.amount).toFixed(2)}</td>
             </tr>
           `).join("")}
         </tbody>
       </table>
       
       <div class="totals">
-        <p><strong>Subtotal:</strong> $${formatCurrency(invoice.subtotal)}</p>
-        ${invoice.tax > 0 ? `<p><strong>Tax:</strong> $${formatCurrency(invoice.tax)}</p>` : ""}
-        <p class="total-row"><strong>Total:</strong> $${formatCurrency(invoice.total)}</p>
+        <p><strong>Subtotal:</strong> $${Number(invoice.subtotal).toFixed(2)}</p>
+        ${invoice.tax > 0 ? `<p><strong>Tax:</strong> $${Number(invoice.tax).toFixed(2)}</p>` : ""}
+        <p class="total-row"><strong>Total:</strong> $${Number(invoice.total).toFixed(2)}</p>
       </div>
       
       ${invoice.notes || invoice.terms ? `
