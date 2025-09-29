@@ -73,7 +73,7 @@ export const createGmailTransporter = async (userId?: string) => {
     service: "gmail",
     auth: {
       type: "OAuth2",
-      user: process.env.GMAIL_USER || "loveserenespaces@gmail.com",
+      user: process.env.GMAIL_USER || "loveserenespaces@gmail.com", // Must match OAuth-authorized account
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       refreshToken,
