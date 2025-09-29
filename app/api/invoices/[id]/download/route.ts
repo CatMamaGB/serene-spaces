@@ -62,7 +62,12 @@ function generateInvoiceHtml(invoice: any) {
   const items = invoice.items;
   
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US');
+    } catch (error) {
+      return dateString;
+    }
   };
 
   return `
@@ -172,10 +177,10 @@ function generateInvoiceHtml(invoice: any) {
       <div class="invoice-details">
         <div class="customer-info">
           <h3>Bill To:</h3>
-          <p><strong>${customer.name}</strong></p>
-          ${customer.email ? `<p>${customer.email}</p>` : ""}
-          ${customer.phone ? `<p>${customer.phone}</p>` : ""}
-          ${customer.address ? `<p>${customer.address}</p>` : ""}
+          <p><strong>${invoice.customerName || customer?.name || "N/A"}</strong></p>
+          ${invoice.customerEmail || customer?.email ? `<p>${invoice.customerEmail || customer?.email}</p>` : ""}
+          ${invoice.customerPhone || customer?.phone ? `<p>${invoice.customerPhone || customer?.phone}</p>` : ""}
+          ${invoice.customerAddress || customer?.address ? `<p>${invoice.customerAddress || customer?.address}</p>` : ""}
         </div>
         <div class="invoice-info">
           <h3>Invoice Details:</h3>
@@ -199,17 +204,17 @@ function generateInvoiceHtml(invoice: any) {
             <tr>
               <td>${item.description}</td>
               <td>${item.quantity}</td>
-              <td>$${Number(item.rate).toFixed(2)}</td>
-              <td>$${Number(item.amount).toFixed(2)}</td>
+            <td>$${parseFloat(item.rate || 0).toFixed(2)}</td>
+            <td>$${parseFloat(item.amount || 0).toFixed(2)}</td>
             </tr>
           `).join("")}
         </tbody>
       </table>
       
       <div class="totals">
-        <p><strong>Subtotal:</strong> $${Number(invoice.subtotal).toFixed(2)}</p>
-        ${invoice.tax > 0 ? `<p><strong>Tax:</strong> $${Number(invoice.tax).toFixed(2)}</p>` : ""}
-        <p class="total-row"><strong>Total:</strong> $${Number(invoice.total).toFixed(2)}</p>
+        <p><strong>Subtotal:</strong> $${parseFloat(invoice.subtotal || 0).toFixed(2)}</p>
+        ${invoice.tax && invoice.tax > 0 ? `<p><strong>Tax:</strong> $${parseFloat(invoice.tax).toFixed(2)}</p>` : ""}
+        <p class="total-row"><strong>Total:</strong> $${parseFloat(invoice.total || 0).toFixed(2)}</p>
       </div>
       
       ${invoice.notes || invoice.terms ? `
