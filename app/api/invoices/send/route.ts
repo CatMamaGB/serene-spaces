@@ -145,7 +145,7 @@ export async function POST(req: NextRequest) {
     // Send email via Gmail OAuth2
     console.log("Attempting to send email via Gmail OAuth2...");
 
-    const transporter = await createGmailTransporter();
+    const transporter = await createGmailTransporter(session.user.id);
     const fromAddr = process.env.GMAIL_USER || "loveserenespaces@gmail.com";
 
     console.log("From:", `Serene Spaces <${fromAddr}>`);

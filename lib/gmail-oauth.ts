@@ -17,7 +17,7 @@ const createOAuth2Client = () => {
 };
 
 // Create Gmail transporter using OAuth2
-export const createGmailTransporter = async () => {
+export const createGmailTransporter = async (userId?: string) => {
   if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
     throw new Error("Google OAuth2 credentials not configured");
   }
@@ -27,14 +27,27 @@ export const createGmailTransporter = async () => {
   
   if (!refreshToken) {
     // Load from database if available
-    try {
-      const { prisma } = await import("./prisma");
-      const credential = await (prisma as any).gmailCredential.findFirst({
-        orderBy: { updatedAt: 'desc' }
-      });
-      refreshToken = credential?.refreshToken;
-    } catch (dbError) {
-      console.log("Could not load refresh token from database:", dbError);
+    if (userId) {
+      try {
+        const { prisma } = await import("./prisma");
+        const credential = await (prisma as any).gmailCredential.findFirst({
+          where: { userId }
+        });
+        refreshToken = credential?.refreshToken;
+      } catch (dbError) {
+        console.log("Could not load refresh token from database:", dbError);
+      }
+    } else {
+      // Fallback to latest token if no userId provided
+      try {
+        const { prisma } = await import("./prisma");
+        const credential = await (prisma as any).gmailCredential.findFirst({
+          orderBy: { updatedAt: 'desc' }
+        });
+        refreshToken = credential?.refreshToken;
+      } catch (dbError) {
+        console.log("Could not load refresh token from database:", dbError);
+      }
     }
   }
 
