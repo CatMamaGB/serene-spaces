@@ -450,8 +450,8 @@ function generateInvoiceHtml(invoiceData: any) {
               <tr>
                 <td>${item.description}</td>
                 <td>${item.quantity}</td>
-                <td>$${item.rate.toFixed(2)}</td>
-                <td>$${item.amount.toFixed(2)}</td>
+                <td>$${Number(item.rate).toFixed(2)}</td>
+                <td>$${Number(item.amount).toFixed(2)}</td>
               </tr>
             `,
               )
@@ -460,9 +460,9 @@ function generateInvoiceHtml(invoiceData: any) {
         </table>
         
         <div class="totals">
-          <p><strong>Subtotal:</strong> $${subtotal.toFixed(2)}</p>
-          <p><strong>Tax:</strong> $${tax.toFixed(2)}</p>
-          <p class="total-row"><strong>Total:</strong> $${total.toFixed(2)}</p>
+          <p><strong>Subtotal:</strong> $${Number(subtotal).toFixed(2)}</p>
+          <p><strong>Tax:</strong> $${Number(tax).toFixed(2)}</p>
+          <p class="total-row"><strong>Total:</strong> $${Number(total).toFixed(2)}</p>
         </div>
         
         ${
