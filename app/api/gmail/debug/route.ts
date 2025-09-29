@@ -14,7 +14,6 @@ export async function GET() {
         userId: true,
         createdAt: true,
         updatedAt: true,
-        hasToken: true,
         refreshToken: true, // Include actual token length info
       }
     });
