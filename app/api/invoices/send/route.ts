@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createGmailTransporter } from "@/lib/gmail-oauth";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -44,6 +45,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Validate financial fields
+    if (typeof subtotal !== 'number' || typeof tax !== 'number' || typeof total !== 'number') {
+      console.error("Missing or invalid financial fields:", {
+        subtotal: typeof subtotal,
+        tax: typeof tax,
+        total: typeof total,
+      });
+      return NextResponse.json(
+        {
+          error: "Missing required financial fields: subtotal, tax, and total must be numbers",
+        },
+        { status: 400 },
+      );
+    }
+
     // Validate Gmail OAuth2 configuration
     if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
       console.error("Google OAuth2 configuration missing:", {
@@ -59,14 +75,47 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!process.env.GMAIL_REFRESH_TOKEN) {
-      console.error("Gmail refresh token missing");
+    // Check for refresh token in database first, then fall back to environment
+    try {
+      const session = await auth();
+      if (!session?.user?.id) {
+        console.error("No authenticated user found");
+        return NextResponse.json(
+          {
+            error:
+              "Authentication required - Please log in to send invoices.",
+          },
+          { status: 401 },
+        );
+      }
+
+      // Look for refresh token in GmailCredential table
+      const gmailCredential = await (prisma as any).gmailCredential.findFirst({
+        where: { userId: session.user.id },
+      });
+
+      if (!gmailCredential?.refreshToken && !process.env.GMAIL_REFRESH_TOKEN) {
+        console.error("Gmail refresh token missing from database and environment");
+        return NextResponse.json(
+          {
+            error:
+              "Email service configuration error - Gmail OAuth not set up. Please complete Gmail authorization first.",
+          },
+          { status: 500 },
+        );
+      }
+
+      console.log("Gmail OAuth credential found:", {
+        hasDatabaseToken: !!gmailCredential?.refreshToken,
+        hasEnvToken: !!process.env.GMAIL_REFRESH_TOKEN,
+      });
+    } catch (authError) {
+      console.error("Authentication check failed:", authError);
       return NextResponse.json(
         {
-          error:
-            "Email service configuration error - Gmail refresh token not set. Complete OAuth2 setup first.",
+          error: "Authentication error - Please log in and try again.",
         },
-        { status: 500 },
+        { status: 401 },
       );
     }
 

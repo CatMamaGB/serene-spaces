@@ -98,10 +98,17 @@ export default function AdminNavigation({ children }: { children: ReactNode }) {
                 >
                   View Site
                 </Link>
-                <form action="/api/auth/signout" method="post">
+                <form action="/api/auth/signout" method="post" className="inline">
+                  <input type="hidden" name="callbackUrl" value="/auth/signin" />
                   <button
                     className="rounded-lg border px-3 sm:px-4 py-2 text-sm sm:text-base hover:bg-gray-50 transition-colors min-h-[40px] flex items-center justify-center"
                     type="submit"
+                    onClick={(e) => {
+                      // Force clear session and redirect
+                      setTimeout(() => {
+                        window.location.href = "/auth/signin";
+                      }, 100);
+                    }}
                   >
                     Sign Out
                   </button>
