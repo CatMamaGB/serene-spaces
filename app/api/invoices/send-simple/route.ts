@@ -19,9 +19,9 @@ export async function POST(req: NextRequest) {
     } = body;
 
     // For now, just log the email content instead of actually sending
-    console.log("=" * 50);
+    console.log("=".repeat(50));
     console.log("📧 SIMPLE EMAIL LOG (TO SEND MANUALLY)");
-    console.log("=" * 50);
+    console.log("=".repeat(50));
     console.log("TO:", customerEmail);
     console.log("SUBJECT: Invoice from Serene Spaces -", invoiceDate);
     console.log("");
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     console.log("- Zelle: loveserenespaces@gmail.com");
     console.log("- Venmo: @beth-contos");
     console.log("- Cash: Due at delivery");
-    console.log("=" * 50);
+    console.log("=".repeat(50));
 
     // For now, return success but note that email wasn't actually sent
     return NextResponse.json({
