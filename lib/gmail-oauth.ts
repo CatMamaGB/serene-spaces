@@ -22,8 +22,8 @@ export const createGmailTransporter = async (userId?: string) => {
     throw new Error("Google OAuth2 credentials not configured");
   }
 
-  // Try to get refresh token from database first, then fallback to env var
-  let refreshToken = process.env.GMAIL_REFRESH_TOKEN;
+  // Prioritize database token over environment variable
+  let refreshToken = null;
   
   if (!refreshToken) {
     // Load from database if available
@@ -49,6 +49,11 @@ export const createGmailTransporter = async (userId?: string) => {
         console.log("Could not load refresh token from database:", dbError);
       }
     }
+  }
+
+  // Fallback to environment variable only if no database token found
+  if (!refreshToken) {
+    refreshToken = process.env.GMAIL_REFRESH_TOKEN;
   }
 
   if (!refreshToken) {
