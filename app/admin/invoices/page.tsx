@@ -568,19 +568,44 @@ export default function InvoicesPage() {
                       </div>
                     </div>
 
-                    <div className="flex gap-2 justify-center">
+                    <div className="grid grid-cols-2 gap-2 mb-3">
                       <Link
                         href={`/admin/invoices/${invoice.id}`}
-                        className="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white no-underline rounded-md text-sm font-medium flex-1 min-h-[40px]"
+                        className="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white no-underline rounded-md text-sm font-medium min-h-[40px]"
                       >
                         View
                       </Link>
+                      <a
+                        href={`/api/invoices/${invoice.id}/download`}
+                        download
+                        className="inline-flex items-center justify-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white no-underline rounded-md text-sm font-medium min-h-[40px]"
+                      >
+                        📄 PDF
+                      </a>
+                    </div>
+                    <div className="flex gap-2 justify-center">
                       <Link
                         href={`/admin/invoices/${invoice.id}/edit`}
                         className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white no-underline rounded-md text-sm font-medium flex-1 min-h-[40px]"
                       >
                         Edit
                       </Link>
+                      <button
+                        onClick={() =>
+                          handleDeleteInvoice(
+                            invoice.id,
+                            invoice.customerName || "Unknown Customer",
+                          )
+                        }
+                        disabled={deletingInvoiceId === invoice.id}
+                        className={`px-4 py-2 text-white rounded-md text-sm font-medium transition-colors flex-1 min-h-[40px] ${
+                          deletingInvoiceId === invoice.id
+                            ? "bg-gray-400 cursor-not-allowed opacity-60"
+                            : "bg-red-600 hover:bg-red-700 cursor-pointer"
+                        }`}
+                      >
+                        {deletingInvoiceId === invoice.id ? "Deleting..." : "Delete"}
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -652,16 +677,23 @@ export default function InvoicesPage() {
                           </select>
                         </td>
                         <td className="p-4 text-center">
-                          <div className="flex gap-2 justify-center">
+                          <div className="flex gap-1 justify-center">
                             <Link
                               href={`/admin/invoices/${invoice.id}`}
-                              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white no-underline rounded text-sm font-medium"
+                              className="px-2 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white no-underline rounded text-sm font-medium"
                             >
                               View
                             </Link>
+                            <a
+                              href={`/api/invoices/${invoice.id}/download`}
+                              download
+                              className="px-2 py-1.5 bg-green-600 hover:bg-green-700 text-white no-underline rounded text-sm font-medium"
+                            >
+                              📄
+                            </a>
                             <Link
                               href={`/admin/invoices/${invoice.id}/edit`}
-                              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white no-underline rounded text-sm font-medium"
+                              className="px-2 py-1.5 bg-blue-600 hover:bg-blue-700 text-white no-underline rounded text-sm font-medium"
                             >
                               Edit
                             </Link>
@@ -675,15 +707,15 @@ export default function InvoicesPage() {
                                 )
                               }
                               disabled={deletingInvoiceId === invoice.id}
-                              className={`px-3 py-1.5 text-white rounded text-sm font-medium transition-colors ${
+                              className={`px-2 py-1.5 text-white rounded text-sm font-medium transition-colors ${
                                 deletingInvoiceId === invoice.id
                                   ? "bg-gray-400 cursor-not-allowed opacity-60"
                                   : "bg-red-600 hover:bg-red-700 cursor-pointer"
                               }`}
                             >
                               {deletingInvoiceId === invoice.id
-                                ? "Deleting..."
-                                : "Delete"}
+                                ? "⌛"
+                                : "🗑️"}
                             </button>
                           </div>
                         </td>

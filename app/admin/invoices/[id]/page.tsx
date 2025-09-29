@@ -358,6 +358,14 @@ export default function ViewInvoice() {
                 📧 Send Invoice
               </button>
 
+              <a
+                href={`/api/invoices/${invoice.id}/download`}
+                download
+                className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white border-none px-6 py-3 text-sm rounded-lg font-semibold no-underline transition-all w-full sm:w-auto min-h-[44px]"
+              >
+                📄 Download PDF
+              </a>
+
               <Link
                 href={`/admin/invoices/${invoice.id}/edit`}
                 className="inline-flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white border-none px-6 py-3 text-sm rounded-lg font-semibold no-underline transition-all w-full sm:w-auto min-h-[44px]"
