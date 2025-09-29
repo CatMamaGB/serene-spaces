@@ -23,8 +23,30 @@ export async function GET(
     const invoice = await (prisma as any).invoice.findUnique({
       where: { id: invoiceId },
       include: {
-        customer: true,
-        items: true,
+        customer: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            address: true,
+            addressLine1: true,
+            addressLine2: true,
+            city: true,
+            state: true,
+            postalCode: true,
+          },
+        },
+        items: {
+          select: {
+            id: true,
+            description: true,
+            quantity: true,
+            unitPrice: true,
+            taxable: true,
+            lineTotal: true,
+          },
+        },
       },
     });
 
@@ -38,7 +60,7 @@ export async function GET(
     // Return the HTML as a downloadable file
     // Browser will show as PDF when opened
     const html = generateInvoiceHtml(invoice);
-    const filename = `Invoice-${invoice.invoiceNumber || invoiceId}.html`;
+    const filename = `Invoice-${invoice.number || invoice.invoiceNumber || invoiceId}.html`;
     
     return new NextResponse(html, {
       status: 200,
@@ -65,7 +87,7 @@ function generateInvoiceHtml(invoice: any) {
     try {
       const date = new Date(dateString);
       return date.toLocaleDateString('en-US');
-    } catch (error) {
+    } catch {
       return dateString;
     }
   };
@@ -75,7 +97,7 @@ function generateInvoiceHtml(invoice: any) {
     <html>
     <head>
       <meta charset="utf-8">
-      <title>Invoice - ${invoice.invoiceNumber}</title>
+      <title>Invoice - ${invoice.number || invoice.invoiceNumber || invoice.id}</title>
       <script>
         window.onload = function() {
           window.print();
@@ -184,8 +206,8 @@ function generateInvoiceHtml(invoice: any) {
         </div>
         <div class="invoice-info">
           <h3>Invoice Details:</h3>
-          <p><strong>Invoice #:</strong> ${invoice.invoiceNumber || invoice.id}</p>
-          <p><strong>Date:</strong> ${formatDate(invoice.invoiceDate)}</p>
+          <p><strong>Invoice #:</strong> ${invoice.number || invoice.invoiceNumber || invoice.id}</p>
+          <p><strong>Date:</strong> ${formatDate(invoice.issueDate || invoice.invoiceDate)}</p>
           ${invoice.dueDate ? `<p><strong>Due:</strong> ${formatDate(invoice.dueDate)}</p>` : ""}
         </div>
       </div>
@@ -204,8 +226,8 @@ function generateInvoiceHtml(invoice: any) {
             <tr>
               <td>${item.description}</td>
               <td>${item.quantity}</td>
-            <td>$${parseFloat(item.rate || 0).toFixed(2)}</td>
-            <td>$${parseFloat(item.amount || 0).toFixed(2)}</td>
+            <td>$${parseFloat(item.unitPrice || 0).toFixed(2)}</td>
+            <td>$${parseFloat(item.lineTotal || 0).toFixed(2)}</td>
             </tr>
           `).join("")}
         </tbody>
