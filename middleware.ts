@@ -25,12 +25,7 @@ export default auth((req) => {
     return NextResponse.redirect(url);
   }
 
-  console.log("🔒 Processing request:", {
-    pathname: req.nextUrl.pathname,
-    host: host,
-    isAdminRoute: req.nextUrl.pathname.startsWith("/admin"),
-  });
-
+  // Only run auth check on admin routes
   if (req.nextUrl.pathname.startsWith("/admin")) {
     console.log("🔍 ADMIN ROUTE - Authentication check");
     console.log("🔐 Auth object:", {
@@ -55,8 +50,4 @@ export default auth((req) => {
 
   console.log("➡️ Middleware complete - proceeding to next");
   return NextResponse.next();
-}
-
-export const config = { 
-  matcher: ["/admin/:path*"],
-};
+});
