@@ -28,7 +28,7 @@
     "bcryptjs": "^3.0.2",
     "chromium": "^3.0.3",
     "googleapis": "^156.0.0",
-    "next": "15.4.6",
+    "next": "15.4.10",
     "next-auth": "^5.0.0-beta.29",
     "nodemailer": "^6.10.1",
     "prisma": "^6.14.0",
