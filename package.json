@@ -15,9 +15,6 @@
     "hash-admin-password": "node scripts/hash-admin-password.mjs",
     "postinstall": "npx prisma generate --no-engine"
   },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
-  },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
     "@heroicons/react": "^2.2.0",
@@ -53,6 +50,7 @@
     "copy-webpack-plugin": "^13.0.1",
     "eslint": "^9",
     "baseline-browser-mapping": "^2.8.32",
+    "dotenv": "^16.4.7",
     "eslint-config-next": "15.4.10",
     "null-loader": "^4.0.1",
     "postcss": "^8.5.6",

@@ -1,7 +1,6 @@
-// Prisma 7+: move `seed` from package.json to prisma.config.ts; see https://pris.ly/d/major-version-upgrade
+// Seed command lives in prisma.config.ts (migrations.seed).
 generator client {
   provider = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
