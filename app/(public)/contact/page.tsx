@@ -3,9 +3,12 @@ import Footer from "../../../components/Footer";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Contact Serene Spaces - Professional Horse Equipment Care",
+  title: "Contact Serene Spaces | Schedule Pickup",
   description:
-    "Contact Serene Spaces for professional horse blanket cleaning, repairs, and waterproofing services in Crystal Lake, IL. Get in touch for pickup and delivery scheduling.",
+    "Schedule horse blanket cleaning, repairs, and pickup in Crystal Lake, Cary, McHenry, and nearby areas.",
+  alternates: {
+    canonical: "/contact",
+  },
   keywords: [
     "contact serene spaces",
     "horse equipment service contact",
@@ -15,15 +18,15 @@ export const metadata: Metadata = {
     "equipment repair service",
   ],
   openGraph: {
-    title: "Contact Serene Spaces - Professional Horse Equipment Care",
+    title: "Contact Serene Spaces | Schedule Pickup",
     description:
-      "Contact Serene Spaces for professional horse blanket cleaning, repairs, and waterproofing services in Crystal Lake, IL.",
+      "Schedule horse blanket cleaning, repairs, and pickup in Crystal Lake, Cary, McHenry, and nearby areas.",
     url: "https://loveserenespaces.com/contact",
   },
   twitter: {
-    title: "Contact Serene Spaces - Professional Horse Equipment Care",
+    title: "Contact Serene Spaces | Schedule Pickup",
     description:
-      "Contact Serene Spaces for professional horse blanket cleaning, repairs, and waterproofing services in Crystal Lake, IL.",
+      "Schedule horse blanket cleaning, repairs, and pickup in Crystal Lake, Cary, McHenry, and nearby areas.",
   },
 };
 

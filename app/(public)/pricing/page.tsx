@@ -3,9 +3,12 @@ import SEOStructuredData from "../../../components/SEOStructuredData";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Service Pricing - Serene Spaces Horse Equipment Care",
+  title: "Horse Blanket Cleaning Pricing | Serene Spaces",
   description:
-    "Transparent pricing for professional horse blanket cleaning, repairs, and waterproofing services. Turnout blankets $25, sheets $20, waterproofing $20. Serving Crystal Lake, IL area.",
+    "View pricing for horse blanket cleaning, waterproofing, and repairs in Crystal Lake and surrounding areas. Pickup and delivery available.",
+  alternates: {
+    canonical: "/pricing",
+  },
   keywords: [
     "horse blanket cleaning prices",
     "equipment repair pricing",
@@ -17,15 +20,15 @@ export const metadata: Metadata = {
     "transparent service costs",
   ],
   openGraph: {
-    title: "Service Pricing - Serene Spaces Horse Equipment Care",
+    title: "Horse Blanket Cleaning Pricing | Serene Spaces",
     description:
-      "Transparent pricing for professional horse blanket cleaning, repairs, and waterproofing services. Serving Crystal Lake, IL area.",
+      "View pricing for horse blanket cleaning, waterproofing, and repairs in Crystal Lake and surrounding areas. Pickup and delivery available.",
     url: "https://loveserenespaces.com/pricing",
   },
   twitter: {
-    title: "Service Pricing - Serene Spaces Horse Equipment Care",
+    title: "Horse Blanket Cleaning Pricing | Serene Spaces",
     description:
-      "Transparent pricing for professional horse blanket cleaning, repairs, and waterproofing services.",
+      "View pricing for horse blanket cleaning, waterproofing, and repairs in Crystal Lake and surrounding areas.",
   },
 };
 

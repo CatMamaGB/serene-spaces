@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 import { NextAuthProvider } from "../components/NextAuthProvider";
 import { ToastProvider } from "../components/ToastProvider";
@@ -33,10 +34,7 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL("https://loveserenespaces.com"), // Replace with your actual domain
-  alternates: {
-    canonical: "/",
-  },
+  metadataBase: new URL("https://loveserenespaces.com"),
   openGraph: {
     type: "website",
     locale: "en_US",
@@ -47,10 +45,10 @@ export const metadata: Metadata = {
       "Professional horse blanket cleaning, repairs, and waterproofing services in Crystal Lake, IL. Local pickup and delivery available.",
     images: [
       {
-        url: "/white background Barn Organization Specialists.png",
+        url: "/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "Serene Spaces - Professional Horse Equipment Care",
+        alt: "Horse blanket cleaning and repair — Serene Spaces, Crystal Lake IL",
       },
     ],
   },
@@ -59,7 +57,7 @@ export const metadata: Metadata = {
     title: "Serene Spaces - Professional Horse Equipment Care",
     description:
       "Professional horse blanket cleaning, repairs, and waterproofing services in Crystal Lake, IL.",
-    images: ["/white background Barn Organization Specialists.png"],
+    images: ["/og-image.jpg"],
   },
   robots: {
     index: true,
@@ -94,7 +92,7 @@ export default function RootLayout({
     description:
       "Professional horse blanket cleaning, repairs, and waterproofing services in Crystal Lake, IL. Local pickup and delivery available.",
     url: "https://loveserenespaces.com",
-    telephone: "+1-815-621-3509", // Replace with actual phone number
+    telephone: "+1-815-621-3509",
     email: "loveserenespaces@gmail.com",
     address: {
       "@type": "PostalAddress",
@@ -105,10 +103,21 @@ export default function RootLayout({
     },
     geo: {
       "@type": "GeoCoordinates",
-      latitude: "42.2411", // Replace with actual coordinates
+      latitude: "42.2411",
       longitude: "-88.3162",
     },
     openingHours: "Mo-Fr 09:00-17:00",
+    areaServed: [
+      { "@type": "City", name: "Crystal Lake", addressRegion: "IL" },
+      { "@type": "City", name: "Cary", addressRegion: "IL" },
+      { "@type": "City", name: "McHenry", addressRegion: "IL" },
+      { "@type": "City", name: "Algonquin", addressRegion: "IL" },
+      { "@type": "City", name: "Lake in the Hills", addressRegion: "IL" },
+      { "@type": "City", name: "Woodstock", addressRegion: "IL" },
+      { "@type": "City", name: "Huntley", addressRegion: "IL" },
+      { "@type": "City", name: "Barrington", addressRegion: "IL" },
+      { "@type": "City", name: "Lake Zurich", addressRegion: "IL" },
+    ],
     serviceArea: {
       "@type": "GeoCircle",
       geoMidpoint: {
@@ -116,7 +125,7 @@ export default function RootLayout({
         latitude: "42.2411",
         longitude: "-88.3162",
       },
-      geoRadius: "50000",
+      geoRadius: "40000",
     },
     services: [
       {
@@ -161,6 +170,9 @@ export default function RootLayout({
         <NextAuthProvider>
           <ToastProvider>{children}</ToastProvider>
         </NextAuthProvider>
+        {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ? (
+          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
+        ) : null}
       </body>
     </html>
   );

@@ -61,6 +61,12 @@ export default function Navigation() {
               Pricing
             </Link>
             <Link
+              href="/service-area"
+              className="px-4 py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded-lg font-medium transition-all duration-200"
+            >
+              Service Area
+            </Link>
+            <Link
               href="/intake"
               className="px-4 py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded-lg font-medium transition-all duration-200"
             >
@@ -132,6 +138,13 @@ export default function Navigation() {
                 onClick={closeMenu}
               >
                 Pricing
+              </Link>
+              <Link
+                href="/service-area"
+                className="block px-4 py-3 text-gray-700 hover:text-primary hover:bg-gray-50 rounded-lg font-medium transition-all duration-200"
+                onClick={closeMenu}
+              >
+                Service Area
               </Link>
               <Link
                 href="/intake"

@@ -78,6 +78,7 @@ export default function Footer() {
               {[
                 { href: "/", label: "Home" },
                 { href: "/pricing", label: "Pricing" },
+                { href: "/service-area", label: "Service Area" },
                 { href: "/intake", label: "Schedule Service" },
                 { href: "/contact", label: "Contact" },
                 { href: "/about", label: "About Us" },
