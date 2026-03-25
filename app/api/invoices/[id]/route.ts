@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/api-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,7 +18,7 @@ export async function GET(
     }
 
     const { id } = await params;
-    const invoice = await (prisma as any).invoice.findUnique({
+    const invoice = await prisma.invoice.findUnique({
       where: { id },
       include: {
         customer: {
@@ -71,7 +72,7 @@ export async function GET(
         invoice.issueDate?.toISOString() || invoice.createdAt.toISOString(),
       dueDate: invoice.dueDate?.toISOString(),
       status: invoice.status,
-      items: invoice.items.map((item: any) => ({
+      items: invoice.items.map((item) => ({
         id: item.id,
         description: item.description,
         quantity: item.quantity,
@@ -113,7 +114,7 @@ export async function PATCH(
 
     // Handle status-only updates (for status changes)
     if (body.status && Object.keys(body).length === 1) {
-      const updatedInvoice = await (prisma as any).invoice.update({
+      const updatedInvoice = await prisma.invoice.update({
         where: { id },
         data: { status: body.status },
         include: {
@@ -148,51 +149,52 @@ export async function PATCH(
       );
     }
 
-    // Find or create customer
-    let customer = await prisma.customer.findFirst({
-      where: {
-        OR: [{ email: customerEmail }, { name: customerName }],
+    const existing = await prisma.invoice.findUnique({
+      where: { id },
+      include: { customer: true },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
+    }
+
+    // Keep invoice linked to the same customer; update that customer's fields in place.
+    await prisma.customer.update({
+      where: { id: existing.customerId },
+      data: {
+        name: customerName.trim(),
+        email: customerEmail?.trim() || null,
+        phone: customerPhone?.trim() || null,
+        address: customerAddress?.trim() || null,
+        addressLine1: customerAddress?.split(",")[0]?.trim() || null,
+        city:
+          customerAddress
+            ?.split(",")
+            .find((part: string) => part.trim().match(/^[A-Za-z\s]+$/))
+            ?.trim() || null,
+        state:
+          customerAddress
+            ?.split(",")
+            .find((part: string) => part.trim().match(/^[A-Z]{2}$/))
+            ?.trim() || null,
+        postalCode:
+          customerAddress
+            ?.split(",")
+            .find((part: string) => part.trim().match(/^\d{5}(-\d{4})?$/))
+            ?.trim() || null,
       },
     });
 
-    if (!customer) {
-      // Create new customer
-      customer = await prisma.customer.create({
-        data: {
-          name: customerName,
-          email: customerEmail || null,
-          phone: customerPhone || null,
-          address: customerAddress || null,
-          addressLine1: customerAddress?.split(",")[0]?.trim() || null,
-          city:
-            customerAddress
-              ?.split(",")
-              .find((part: string) => part.trim().match(/^[A-Za-z\s]+$/))
-              ?.trim() || null,
-          state:
-            customerAddress
-              ?.split(",")
-              .find((part: string) => part.trim().match(/^[A-Z]{2}$/))
-              ?.trim() || null,
-          postalCode:
-            customerAddress
-              ?.split(",")
-              .find((part: string) => part.trim().match(/^\d{5}(-\d{4})?$/))
-              ?.trim() || null,
-        },
-      });
-    }
-
     // Update invoice items first (delete existing and create new)
-    await (prisma as any).invoiceItem.deleteMany({
+    await prisma.invoiceItem.deleteMany({
       where: { invoiceId: id },
     });
 
     // Update the invoice
-    const updatedInvoice = await (prisma as any).invoice.update({
+    const updatedInvoice = await prisma.invoice.update({
       where: { id },
       data: {
-        customerId: customer.id,
+        customerId: existing.customerId,
         status: status || "draft",
         subtotal: subtotal,
         tax: tax,
@@ -239,19 +241,18 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const denied = await requireAdmin();
+    if (denied.response) return denied.response;
 
     const { id } = await params;
-    // Delete invoice items first (due to foreign key constraints)
-    await (prisma as any).invoiceItem.deleteMany({
+    await prisma.payment.deleteMany({
+      where: { invoiceId: id },
+    });
+    await prisma.invoiceItem.deleteMany({
       where: { invoiceId: id },
     });
 
-    // Delete the invoice
-    await (prisma as any).invoice.delete({
+    await prisma.invoice.delete({
       where: { id },
     });
 

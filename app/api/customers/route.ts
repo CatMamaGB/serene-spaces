@@ -7,27 +7,50 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const session = await auth();
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check if DATABASE_URL is set
     if (!process.env.DATABASE_URL) {
-      return NextResponse.json([]);
+      return NextResponse.json(
+        { error: "Database not configured" },
+        { status: 503 },
+      );
     }
 
-    const list = await prisma.customer.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 100,
+    const { searchParams } = new URL(req.url);
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1);
+    const pageSize = Math.min(
+      500,
+      Math.max(1, parseInt(searchParams.get("pageSize") || "100", 10) || 100),
+    );
+    const skip = (page - 1) * pageSize;
+
+    const [customers, total] = await Promise.all([
+      prisma.customer.findMany({
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: pageSize,
+      }),
+      prisma.customer.count(),
+    ]);
+
+    return NextResponse.json({
+      customers,
+      total,
+      page,
+      pageSize,
+      hasMore: skip + customers.length < total,
     });
-    return NextResponse.json(list);
   } catch (error) {
     console.error("Error fetching customers:", error);
-    // Return empty array instead of error to prevent JSON parsing issues
-    return NextResponse.json([]);
+    return NextResponse.json(
+      { error: "Failed to fetch customers" },
+      { status: 500 },
+    );
   }
 }
 
@@ -130,58 +153,6 @@ export async function POST(req: Request) {
         details: errorDetails,
         timestamp: new Date().toISOString(),
       },
-      { status: 500 },
-    );
-  }
-}
-
-export async function DELETE(req: Request) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get("id");
-
-    if (!id) {
-      return NextResponse.json(
-        { error: "Missing customer ID" },
-        { status: 400 },
-      );
-    }
-
-    // Check if DATABASE_URL is set
-    if (!process.env.DATABASE_URL) {
-      return NextResponse.json(
-        { error: "Database not configured" },
-        { status: 500 },
-      );
-    }
-
-    // Delete the customer from the database
-    await prisma.customer.delete({
-      where: { id },
-    });
-
-    return NextResponse.json({
-      success: true,
-      message: "Customer deleted successfully",
-    });
-  } catch (error) {
-    console.error("Error deleting customer:", error);
-
-    // Handle specific Prisma errors
-    if (
-      error &&
-      typeof error === "object" &&
-      "code" in error &&
-      error.code === "P2025"
-    ) {
-      return NextResponse.json(
-        { error: "Customer not found" },
-        { status: 404 },
-      );
-    }
-
-    return NextResponse.json(
-      { error: "Failed to delete customer" },
       { status: 500 },
     );
   }

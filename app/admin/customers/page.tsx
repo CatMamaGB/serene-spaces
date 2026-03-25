@@ -158,8 +158,12 @@ const DesktopTableLayout = ({
   </div>
 );
 
+const PAGE_SIZE = 50;
+
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [deletingCustomerId, setDeletingCustomerId] = useState<string | null>(
     null,
@@ -171,12 +175,27 @@ export default function CustomersPage() {
   const toast = useToast();
 
   useEffect(() => {
-    fetch("/api/customers")
+    setLoading(true);
+    fetch(`/api/customers?page=${page}&pageSize=${PAGE_SIZE}`)
       .then((r) => (r.ok ? r.json() : Promise.reject("Failed to fetch")))
-      .then((data) => setCustomers(Array.isArray(data) ? data : []))
-      .catch(() => setCustomers([]))
+      .then((data) => {
+        if (data?.customers && Array.isArray(data.customers)) {
+          setCustomers(data.customers);
+          setTotal(typeof data.total === "number" ? data.total : 0);
+        } else if (Array.isArray(data)) {
+          setCustomers(data);
+          setTotal(data.length);
+        } else {
+          setCustomers([]);
+          setTotal(0);
+        }
+      })
+      .catch(() => {
+        setCustomers([]);
+        setTotal(0);
+      })
       .finally(() => setLoading(false));
-  }, []);
+  }, [page]);
 
   const handleDeleteCustomer = async (customerId: string) => {
     const customer = customers.find((c) => c.id === customerId);
@@ -266,7 +285,7 @@ export default function CustomersPage() {
           </div>
         </div>
 
-        {customers.length === 0 ? (
+        {customers.length === 0 && !loading ? (
           <div className="rounded-2xl border bg-white p-8 text-center shadow-sm">
             <div className="text-gray-500 mb-4">
               <svg
@@ -308,6 +327,35 @@ export default function CustomersPage() {
               onDelete={handleDeleteCustomer}
               deletingCustomerId={deletingCustomerId}
             />
+            {total > PAGE_SIZE && (
+              <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border bg-white px-4 py-3 shadow-sm">
+                <p className="text-sm text-gray-600">
+                  Showing {(page - 1) * PAGE_SIZE + 1}–
+                  {Math.min(page * PAGE_SIZE, total)} of {total} customers
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page <= 1}
+                    className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-sm text-gray-500">
+                    Page {page} of {Math.max(1, Math.ceil(total / PAGE_SIZE))}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setPage((p) => p + 1)}
+                    disabled={page * PAGE_SIZE >= total}
+                    className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>
@@ -346,8 +394,9 @@ export default function CustomersPage() {
                 undone.
               </p>
               <p className="text-sm text-gray-500 mt-2">
-                If this customer has associated invoices or service requests,
-                you&apos;ll need to delete those first.
+                Deletion is blocked if this customer has invoices (internal or
+                Stripe-linked), service requests, or jobs. Remove or reassign
+                those first.
               </p>
             </div>
 

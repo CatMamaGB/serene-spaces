@@ -39,140 +39,51 @@ export default function PricingPage() {
         url="https://loveserenespaces.com/pricing"
         serviceType="Horse Equipment Care"
       />
-      <div
-        style={{
-          minHeight: "100vh",
-          backgroundColor: "#f5f5f5",
-          fontFamily: "system-ui, -apple-system, sans-serif",
-        }}
-      >
+      <div className="min-h-screen bg-gray-50">
         {/* Hero Section */}
-        <section
-          style={{
-            background: "linear-gradient(135deg, #2e2434 0%, #5f4b6a 100%)",
-            color: "white",
-            padding: "80px 24px",
-            textAlign: "center",
-          }}
-        >
-          <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-            <h1
-              style={{
-                fontSize: "3.5rem",
-                marginBottom: "24px",
-                fontWeight: "700",
-              }}
-            >
-              Service Pricing
-            </h1>
-            <p
-              style={{
-                fontSize: "1.2rem",
-                opacity: "0.9",
-                lineHeight: "1.6",
-              }}
-            >
-              Clear, transparent pricing for professional horse equipment care
-            </p>
+        <section className="bg-gradient-to-br from-gray-800 via-primary-dark to-primary text-white padding-responsive">
+          <div className="container-responsive">
+            <div className="max-w-4xl mx-auto text-center">
+              <h1 className="text-responsive-xl font-bold mb-4 sm:mb-6 tracking-tight">
+                Service Pricing
+              </h1>
+              <p className="text-sm sm:text-base lg:text-lg mb-6 sm:mb-8 lg:mb-10 opacity-90 leading-relaxed">
+                Clear, transparent pricing for professional horse equipment care
+              </p>
+            </div>
           </div>
         </section>
 
         {/* Standard Service Pricing */}
-        <section
-          style={{
-            padding: "80px 24px",
-            backgroundColor: "white",
-          }}
-        >
-          <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-            <div
-              style={{
-                backgroundColor: "white",
-                borderRadius: "16px",
-                boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
-                border: "1px solid #e9ecef",
-                overflow: "hidden",
-              }}
-            >
-              <div
-                style={{
-                  backgroundColor: "#7a6990",
-                  color: "white",
-                  padding: "24px",
-                  textAlign: "center",
-                }}
-              >
-                <h3
-                  style={{ fontSize: "1.5rem", margin: "0", fontWeight: "600" }}
-                >
-                  Cleaning Services
-                </h3>
-              </div>
+        <section className="padding-responsive bg-white">
+          <div className="container-responsive">
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                <div className="bg-primary text-white p-6 text-center">
+                  <h3 className="text-lg sm:text-xl font-semibold">
+                    Cleaning Services
+                  </h3>
+                </div>
 
-              <div style={{ padding: "32px" }}>
-                <div
-                  style={{
-                    display: "grid",
-                    gap: "20px",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      padding: "16px 0",
-                      borderBottom: "1px solid #f0f0f0",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: "1.1rem",
-                        color: "#333",
-                        fontWeight: "500",
-                      }}
-                    >
-                      Turnout Blanket
-                    </span>
-                    <span
-                      style={{
-                        fontSize: "1.5rem",
-                        fontWeight: "700",
-                        color: "#7a6990",
-                      }}
-                    >
-                      $25
-                    </span>
-                  </div>
+                <div className="p-6 sm:p-8">
+                  <div className="space-y-4 sm:space-y-6">
+                    <div className="flex justify-between items-center py-4 border-b border-gray-200">
+                      <span className="text-sm sm:text-base font-medium text-gray-900">
+                        Turnout Blanket
+                      </span>
+                      <span className="text-lg sm:text-xl font-bold text-primary">
+                        $25
+                      </span>
+                    </div>
 
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      padding: "16px 0",
-                      borderBottom: "1px solid #f0f0f0",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: "1.1rem",
-                        color: "#333",
-                        fontWeight: "500",
-                      }}
-                    >
-                      Blanket (with fill)
-                    </span>
-                    <span
-                      style={{
-                        fontSize: "1.5rem",
-                        fontWeight: "700",
-                        color: "#7a6990",
-                      }}
-                    >
-                      $25
-                    </span>
-                  </div>
+                    <div className="flex justify-between items-center py-4 border-b border-gray-200">
+                      <span className="text-sm sm:text-base font-medium text-gray-900">
+                        Blanket (with fill)
+                      </span>
+                      <span className="text-lg sm:text-xl font-bold text-primary">
+                        $25
+                      </span>
+                    </div>
 
                   <div
                     style={{
@@ -374,6 +285,7 @@ export default function PricingPage() {
                     >
                       $15
                     </span>
+                  </div>
                   </div>
                 </div>
               </div>

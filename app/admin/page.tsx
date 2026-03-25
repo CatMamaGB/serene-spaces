@@ -64,11 +64,14 @@ export default function AdminDashboard() {
     const fetchStats = async () => {
       try {
         // Fetch customers count
-        const customersResponse = await fetch("/api/customers");
+        const customersResponse = await fetch("/api/customers?page=1&pageSize=1");
         const customersData = await safeJson(customersResponse);
-        const totalCustomers = Array.isArray(customersData)
-          ? customersData.length
-          : 0;
+        const totalCustomers =
+          typeof customersData?.total === "number"
+            ? customersData.total
+            : Array.isArray(customersData)
+              ? customersData.length
+              : 0;
 
         // Fetch invoices count
         const invoicesResponse = await fetch("/api/invoices/list");

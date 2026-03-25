@@ -1,3 +1,4 @@
+// Prisma 7+: move `seed` from package.json to prisma.config.ts; see https://pris.ly/d/major-version-upgrade
 generator client {
   provider = "prisma-client-js"
   previewFeatures = ["driverAdapters"]

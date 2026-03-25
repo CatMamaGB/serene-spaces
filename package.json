@@ -12,6 +12,7 @@
     "lint": "next lint",
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "npx prisma migrate reset --force",
+    "hash-admin-password": "node scripts/hash-admin-password.mjs",
     "postinstall": "npx prisma generate --no-engine"
   },
   "prisma": {
@@ -28,7 +29,7 @@
     "bcryptjs": "^3.0.2",
     "chromium": "^3.0.3",
     "googleapis": "^156.0.0",
-    "next": "15.4.6",
+    "next": "15.4.10",
     "next-auth": "^5.0.0-beta.29",
     "nodemailer": "^6.10.1",
     "prisma": "^6.14.0",
@@ -51,7 +52,8 @@
     "autoprefixer": "^10.4.21",
     "copy-webpack-plugin": "^13.0.1",
     "eslint": "^9",
-    "eslint-config-next": "15.4.6",
+    "baseline-browser-mapping": "^2.8.32",
+    "eslint-config-next": "15.4.10",
     "null-loader": "^4.0.1",
     "postcss": "^8.5.6",
     "prettier": "^3.6.2",

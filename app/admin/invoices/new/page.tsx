@@ -89,10 +89,13 @@ export default function CreateInvoice() {
 
     (async () => {
       try {
-        const r = await fetch("/api/customers", { signal: ctrl.signal });
+        const r = await fetch("/api/customers?page=1&pageSize=500", {
+          signal: ctrl.signal,
+        });
         if (r.ok) {
           const data = await r.json();
-          if (Array.isArray(data)) setCustomers(data);
+          const list = Array.isArray(data) ? data : data.customers;
+          if (Array.isArray(list)) setCustomers(list);
         }
       } catch (e: unknown) {
         if ((e as Error).name !== "AbortError")

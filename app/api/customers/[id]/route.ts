@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/api-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -117,10 +118,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const denied = await requireAdmin();
+    if (denied.response) return denied.response;
 
     const { id } = await params;
 
@@ -131,26 +130,41 @@ export async function DELETE(
       );
     }
 
-    // Check if customer has associated invoices or service requests
-    const [invoices, serviceRequests] = await Promise.all([
-      prisma.invoiceMirror.findMany({
-        where: { customerId: id },
-        take: 1,
-      }),
-      prisma.serviceRequest.findMany({
-        where: { customerId: id },
-        take: 1,
-      }),
-    ]);
+    const [mirrorInvoices, internalInvoices, serviceRequests, jobs] =
+      await Promise.all([
+        prisma.invoiceMirror.findMany({
+          where: { customerId: id },
+          take: 1,
+        }),
+        prisma.invoice.findMany({
+          where: { customerId: id },
+          take: 1,
+        }),
+        prisma.serviceRequest.findMany({
+          where: { customerId: id },
+          take: 1,
+        }),
+        prisma.job.findMany({
+          where: { customerId: id },
+          take: 1,
+        }),
+      ]);
 
-    if (invoices.length > 0 || serviceRequests.length > 0) {
-      const issues = [];
-      if (invoices.length > 0) issues.push("invoices");
-      if (serviceRequests.length > 0) issues.push("service requests");
+    if (
+      mirrorInvoices.length > 0 ||
+      internalInvoices.length > 0 ||
+      serviceRequests.length > 0 ||
+      jobs.length > 0
+    ) {
+      const parts: string[] = [];
+      if (mirrorInvoices.length > 0) parts.push("Stripe-linked invoices");
+      if (internalInvoices.length > 0) parts.push("invoices");
+      if (serviceRequests.length > 0) parts.push("service requests");
+      if (jobs.length > 0) parts.push("jobs");
 
       return NextResponse.json(
         {
-          error: `Cannot delete customer with associated ${issues.join(" and ")}. Please delete those first.`,
+          error: `Cannot delete customer with associated ${parts.join(", ")}. Remove or reassign those records first.`,
         },
         { status: 400 },
       );

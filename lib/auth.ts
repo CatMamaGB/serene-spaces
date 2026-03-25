@@ -2,7 +2,12 @@ import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
+import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
+
+/** Email allowed for credentials sign-in (default: production admin inbox). */
+const adminEmail =
+  process.env.ADMIN_EMAIL?.trim() || "loveserenespaces@gmail.com";
 
 // Test database connection
 async function testDatabaseConnection() {
@@ -125,40 +130,53 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         }
 
         try {
-          // Admin account for loveserenespaces@gmail.com
-          const adminEmail = "loveserenespaces@gmail.com";
-          const adminPassword = "Spaces123"; // Updated password
-
-          if (credentials.email === adminEmail) {
-            // For demo purposes, we'll accept the password directly
-            // In production, you'd hash the password and compare
-            if (credentials.password === adminPassword) {
-              // Check if admin user exists in database, create if not
-              let user = await prisma.user.findUnique({
-                where: { email: adminEmail },
-              });
-
-              if (!user) {
-                user = await prisma.user.create({
-                  data: {
-                    email: adminEmail,
-                    name: "Serene Spaces Admin",
-                    role: "admin",
-                  } as any,
-                });
-              }
-
-              return {
-                id: user.id,
-                email: user.email,
-                name: user.name,
-                image: user.image,
-                role: (user as any).role,
-              };
-            }
+          if (String(credentials.email).trim() !== adminEmail) {
+            return null;
           }
 
-          return null;
+          const hash = process.env.ADMIN_PASSWORD_HASH?.trim();
+          if (!hash) {
+            if (process.env.NODE_ENV === "production") {
+              console.error(
+                "ADMIN_PASSWORD_HASH is not set; credentials login is disabled. Set a bcrypt hash in env or use Google sign-in.",
+              );
+            } else {
+              console.warn(
+                "ADMIN_PASSWORD_HASH not set; credentials login disabled. Generate: node scripts/hash-admin-password.mjs",
+              );
+            }
+            return null;
+          }
+
+          const passwordOk = await bcrypt.compare(
+            String(credentials.password),
+            hash,
+          );
+          if (!passwordOk) {
+            return null;
+          }
+
+          let user = await prisma.user.findUnique({
+            where: { email: adminEmail },
+          });
+
+          if (!user) {
+            user = await prisma.user.create({
+              data: {
+                email: adminEmail,
+                name: "Serene Spaces Admin",
+                role: "admin",
+              } as any,
+            });
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            image: user.image,
+            role: (user as any).role,
+          };
         } catch (error) {
           console.error("Authorization error:", error);
           return null;
@@ -183,7 +201,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           return false;
         }
 
-        const isAuthorized = user.email === "loveserenespaces@gmail.com";
+        const isAuthorized = user.email === adminEmail;
         console.log("Google OAuth authorization:", {
           email: user.email,
           authorized: isAuthorized,
@@ -246,6 +264,12 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         token.id = user.id;
         token.role = user.role || "staff";
         token.email = user.email;
+      }
+
+      // Primary admin inbox always gets admin role (matches Google OAuth allowlist)
+      const tokenEmail = (user?.email || token.email) as string | undefined;
+      if (tokenEmail === adminEmail) {
+        token.role = "admin";
       }
 
       console.log("🎫 JWT callback result:", {

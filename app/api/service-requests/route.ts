@@ -13,9 +13,11 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check if DATABASE_URL is set
     if (!process.env.DATABASE_URL) {
-      return NextResponse.json([]);
+      return NextResponse.json(
+        { error: "Database not configured" },
+        { status: 503 },
+      );
     }
 
     const { searchParams } = new URL(request.url);
@@ -31,25 +33,35 @@ export async function GET(request: Request) {
       return NextResponse.json({ count });
     }
 
-    // Handle status filtering
     const whereClause = status ? { status } : {};
 
-    const serviceRequests = await prisma.serviceRequest.findMany({
-      where: whereClause,
-      include: {
-        customer: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
-            address: true,
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1);
+    const pageSize = Math.min(
+      500,
+      Math.max(1, parseInt(searchParams.get("pageSize") || "100", 10) || 100),
+    );
+    const skip = (page - 1) * pageSize;
+
+    const [serviceRequests, total] = await Promise.all([
+      prisma.serviceRequest.findMany({
+        where: whereClause,
+        include: {
+          customer: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+              address: true,
+            },
           },
         },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 100,
-    });
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: pageSize,
+      }),
+      prisma.serviceRequest.count({ where: whereClause }),
+    ]);
 
     // Transform the data to match the frontend interface
     const transformedRequests = serviceRequests.map((request) => {
@@ -95,10 +107,19 @@ export async function GET(request: Request) {
       };
     });
 
-    return NextResponse.json(transformedRequests);
+    return NextResponse.json({
+      serviceRequests: transformedRequests,
+      total,
+      page,
+      pageSize,
+      hasMore: skip + transformedRequests.length < total,
+    });
   } catch (error) {
     console.error("Error fetching service requests:", error);
-    return NextResponse.json([]);
+    return NextResponse.json(
+      { error: "Failed to fetch service requests" },
+      { status: 500 },
+    );
   }
 }
 

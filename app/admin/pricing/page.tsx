@@ -208,12 +208,12 @@ export default function PricingPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+    <div className="container-responsive">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
           Pricing Management
         </h1>
-        <p className="text-gray-600">
+        <p className="text-gray-600 text-sm sm:text-base">
           Manage price lists and items with taxable toggles
         </p>
       </div>
@@ -509,22 +509,22 @@ export default function PricingPage() {
                       <table className="w-full border-collapse border border-gray-200">
                         <thead>
                           <tr className="bg-gray-50">
-                            <th className="border border-gray-200 p-3 text-left font-semibold">
+                            <th className="border border-gray-200 p-2 sm:p-3 text-left font-semibold text-xs sm:text-sm">
                               Item
                             </th>
-                            <th className="border border-gray-200 p-3 text-right font-semibold">
+                            <th className="border border-gray-200 p-2 sm:p-3 text-right font-semibold text-xs sm:text-sm">
                               Price
                             </th>
-                            <th className="border border-gray-200 p-3 text-center font-semibold">
+                            <th className="border border-gray-200 p-2 sm:p-3 text-center font-semibold text-xs sm:text-sm hidden sm:table-cell">
                               Scope
                             </th>
-                            <th className="border border-gray-200 p-3 text-center font-semibold">
+                            <th className="border border-gray-200 p-2 sm:p-3 text-center font-semibold text-xs sm:text-sm hidden md:table-cell">
                               Taxable
                             </th>
-                            <th className="border border-gray-200 p-3 text-center font-semibold">
+                            <th className="border border-gray-200 p-2 sm:p-3 text-center font-semibold text-xs sm:text-sm">
                               Status
                             </th>
-                            <th className="border border-gray-200 p-3 text-center font-semibold">
+                            <th className="border border-gray-200 p-2 sm:p-3 text-center font-semibold text-xs sm:text-sm">
                               Actions
                             </th>
                           </tr>
@@ -532,7 +532,7 @@ export default function PricingPage() {
                         <tbody>
                           {items.map((item) => (
                             <tr key={item.id} className="hover:bg-gray-50">
-                              <td className="border border-gray-200 p-3">
+                              <td className="border border-gray-200 p-2 sm:p-3">
                                 {editingItem?.id === item.id ? (
                                   <input
                                     type="text"
@@ -543,15 +543,15 @@ export default function PricingPage() {
                                         name: e.target.value,
                                       })
                                     }
-                                    className="w-full p-1 border rounded"
+                                    className="w-full p-1 border rounded text-sm"
                                   />
                                 ) : (
-                                  <span className="font-medium">
+                                  <span className="font-medium text-xs sm:text-sm">
                                     {item.name}
                                   </span>
                                 )}
                               </td>
-                              <td className="border border-gray-200 p-3 text-right">
+                              <td className="border border-gray-200 p-2 sm:p-3 text-right">
                                 {editingItem?.id === item.id ? (
                                   <input
                                     type="number"
@@ -564,15 +564,15 @@ export default function PricingPage() {
                                           parseFloat(e.target.value) || 0,
                                       })
                                     }
-                                    className="w-full p-1 border rounded text-right"
+                                    className="w-full p-1 border rounded text-right text-sm"
                                   />
                                 ) : (
-                                  <span className="font-medium">
+                                  <span className="font-medium text-xs sm:text-sm">
                                     {formatCurrency(item.unitPrice)}
                                   </span>
                                 )}
                               </td>
-                              <td className="border border-gray-200 p-3 text-center">
+                              <td className="border border-gray-200 p-2 sm:p-3 text-center hidden sm:table-cell">
                                 {editingItem?.id === item.id ? (
                                   <select
                                     value={editingItem.scope}
@@ -582,18 +582,18 @@ export default function PricingPage() {
                                         scope: e.target.value as any,
                                       })
                                     }
-                                    className="p-1 border rounded"
+                                    className="p-1 border rounded text-xs"
                                   >
                                     <option value="ITEM">Per Item</option>
                                     <option value="ORDER">Order Level</option>
                                   </select>
                                 ) : (
-                                  <span className="text-sm text-gray-600">
+                                  <span className="text-xs text-gray-600">
                                     {SCOPE_LABELS[item.scope]}
                                   </span>
                                 )}
                               </td>
-                              <td className="border border-gray-200 p-3 text-center">
+                              <td className="border border-gray-200 p-2 sm:p-3 text-center hidden md:table-cell">
                                 {editingItem?.id === item.id ? (
                                   <input
                                     type="checkbox"
@@ -608,7 +608,7 @@ export default function PricingPage() {
                                   />
                                 ) : (
                                   <span
-                                    className={`text-sm font-medium ${
+                                    className={`text-xs font-medium ${
                                       item.taxable
                                         ? "text-green-600"
                                         : "text-gray-500"
@@ -618,9 +618,9 @@ export default function PricingPage() {
                                   </span>
                                 )}
                               </td>
-                              <td className="border border-gray-200 p-3 text-center">
+                              <td className="border border-gray-200 p-2 sm:p-3 text-center">
                                 <span
-                                  className={`text-xs px-2 py-1 rounded-full ${
+                                  className={`text-xs px-1 sm:px-2 py-1 rounded-full ${
                                     item.active
                                       ? "bg-green-100 text-green-800"
                                       : "bg-gray-100 text-gray-600"
@@ -629,7 +629,7 @@ export default function PricingPage() {
                                   {item.active ? "Active" : "Inactive"}
                                 </span>
                               </td>
-                              <td className="border border-gray-200 p-3 text-center">
+                              <td className="border border-gray-200 p-2 sm:p-3 text-center">
                                 {editingItem?.id === item.id ? (
                                   <div className="flex gap-1 justify-center">
                                     <button

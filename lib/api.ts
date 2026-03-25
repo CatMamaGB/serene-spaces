@@ -23,11 +23,29 @@ export interface ServiceRequest {
 }
 
 export async function fetchServiceRequests(): Promise<ServiceRequest[]> {
-  const response = await fetch("/api/service-requests", { cache: "no-store" });
-  if (!response.ok) {
-    throw new Error(`Failed to fetch service requests: ${response.status}`);
+  const all: ServiceRequest[] = [];
+  let page = 1;
+  const pageSize = 500;
+  for (;;) {
+    const response = await fetch(
+      `/api/service-requests?page=${page}&pageSize=${pageSize}`,
+      { cache: "no-store" },
+    );
+    if (!response.ok) {
+      throw new Error(`Failed to fetch service requests: ${response.status}`);
+    }
+    const data = await response.json();
+    const chunk = data.serviceRequests as ServiceRequest[] | undefined;
+    if (!chunk || !Array.isArray(chunk)) {
+      break;
+    }
+    all.push(...chunk);
+    if (!data.hasMore || chunk.length < pageSize) {
+      break;
+    }
+    page += 1;
   }
-  return response.json();
+  return all;
 }
 
 export async function markServiceRequestHandled(id: string): Promise<void> {
