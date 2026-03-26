@@ -4,7 +4,10 @@ import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-import { createGmailTransporter } from "@/lib/gmail-oauth";
+import {
+  createGmailTransporter,
+  logGmailEmailFailure,
+} from "@/lib/gmail-oauth";
 import { logger } from "@/lib/logger";
 import { getClientIpFromHeaders } from "@/lib/client-ip";
 import { checkIntakeRateLimit } from "@/lib/intake-rate-limit";
@@ -159,7 +162,7 @@ export async function POST(req: Request) {
         replyTo: email, // So you can reply directly to the customer
       });
     } catch (emailError) {
-      logger.errorFrom("Intake confirmation email", emailError);
+      logGmailEmailFailure("Intake confirmation email", emailError);
       // Don't fail the whole request if email fails
     }
 

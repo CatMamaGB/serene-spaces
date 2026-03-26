@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { createGmailTransporter } from "@/lib/gmail-oauth";
+import {
+  createGmailTransporter,
+  logGmailEmailFailure,
+} from "@/lib/gmail-oauth";
 import { logger } from "@/lib/logger";
 import { getClientIpFromHeaders } from "@/lib/client-ip";
 import { checkContactRateLimit } from "@/lib/contact-rate-limit";
@@ -104,7 +107,7 @@ export async function POST(req: Request) {
         text: `Hi ${nameStr},\n\nThanks for contacting Serene Spaces. We've received your message and will get back to you soon.\n\n— Serene Spaces`,
       });
     } catch (emailErr) {
-      logger.errorFrom("Contact form email", emailErr);
+      logGmailEmailFailure("Contact form email", emailErr);
     }
 
     return NextResponse.json({

@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createGmailTransporter } from "@/lib/gmail-oauth";
+import {
+  createGmailTransporter,
+  logGmailEmailFailure,
+} from "@/lib/gmail-oauth";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { logger } from "@/lib/logger";
@@ -168,7 +171,7 @@ export async function POST(req: NextRequest) {
       message: "Invoice sent successfully via Gmail OAuth2",
     });
   } catch (error) {
-    logger.errorFrom("Send invoice", error);
+    logGmailEmailFailure("Send invoice", error);
 
     // Provide more specific error information
     let errorMessage = "Internal server error";
@@ -243,7 +246,7 @@ export async function GET(req: NextRequest) {
       message: "Test email sent successfully via Gmail OAuth2",
     });
   } catch (error) {
-    logger.errorFrom("Send test email", error);
+    logGmailEmailFailure("Send test email", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

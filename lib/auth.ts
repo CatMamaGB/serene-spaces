@@ -5,6 +5,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
 import { logger } from "./logger";
+import { getResolvedDatabaseUrl } from "./env-server";
 
 /** Email allowed for credentials sign-in (default: production admin inbox). */
 const adminEmail =
@@ -27,7 +28,8 @@ const requiredEnvVars = {
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
   NEXTAUTH_URL: process.env.NEXTAUTH_URL,
   NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
-  DATABASE_URL: process.env.DATABASE_URL,
+  /** Any of PRISMA_DATABASE_URL | DATABASE_URL | POSTGRES_URL (see lib/env-server.ts) */
+  DATABASE_URL: getResolvedDatabaseUrl(),
 };
 
 // For local development, override NEXTAUTH_URL if it's pointing to production
@@ -61,7 +63,10 @@ if (missingVars.length > 0) {
     ),
   );
   logger.debug("NEXTAUTH_URL set:", !!process.env.NEXTAUTH_URL);
-  logger.debug("DATABASE_URL set:", !!process.env.DATABASE_URL);
+  logger.debug(
+    "Database URL set (PRISMA_DATABASE_URL | DATABASE_URL | POSTGRES_URL):",
+    !!getResolvedDatabaseUrl(),
+  );
   logger.debug("NODE_ENV:", process.env.NODE_ENV);
 
   // In production, throw an error to prevent startup with missing auth

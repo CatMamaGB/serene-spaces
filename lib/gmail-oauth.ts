@@ -1,5 +1,6 @@
 import { google } from "googleapis";
 import nodemailer from "nodemailer";
+import { getGmailOAuthRedirectUri, getPublicSiteOrigin } from "./env-server";
 import { logger } from "./logger";
 
 /** Google OAuth refresh failed — token revoked, expired, or client config changed. */
@@ -11,10 +12,7 @@ export function isGmailInvalidGrantError(err: unknown): boolean {
 }
 
 export function gmailInvalidGrantHelp(baseUrl?: string): string {
-  const origin =
-    baseUrl?.replace(/\/$/, "") ||
-    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
-    "https://www.loveserenespaces.com";
+  const origin = getPublicSiteOrigin(baseUrl);
   return (
     `Gmail OAuth refresh token is invalid or revoked (${origin}/api/gmail/connect while signed in as admin, ` +
     `or revoke the app at https://myaccount.google.com/permissions and connect again). ` +
@@ -22,14 +20,15 @@ export function gmailInvalidGrantHelp(baseUrl?: string): string {
   );
 }
 
-// Create OAuth2 client
+/** Use in API route catch blocks after createGmailTransporter/sendMail — avoids duplicate logs for invalid_grant. */
+export function logGmailEmailFailure(context: string, err: unknown): void {
+  if (isGmailInvalidGrantError(err)) return;
+  logger.errorFrom(context, err);
+}
+
+// Create OAuth2 client (redirect URI must match connect/callback routes — see getGmailOAuthRedirectUri)
 const createOAuth2Client = () => {
-  const redirectUri =
-    process.env.GMAIL_REDIRECT_URI ||
-    process.env.GOOGLE_REDIRECT_URI ||
-    (process.env.NODE_ENV === "production"
-      ? "https://www.loveserenespaces.com/api/gmail/callback/google"
-      : "http://localhost:3000/api/gmail/callback/google");
+  const redirectUri = getGmailOAuthRedirectUri();
 
   return new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID!,
@@ -94,7 +93,7 @@ export const createGmailTransporter = async (userId?: string) => {
     accessToken = res.token;
   } catch (e) {
     if (isGmailInvalidGrantError(e)) {
-      logger.error(`[gmail-oauth] ${gmailInvalidGrantHelp()}`);
+      logger.error(`Gmail OAuth invalid_grant — ${gmailInvalidGrantHelp()}`);
     } else {
       logger.errorFrom("Gmail getAccessToken", e);
     }

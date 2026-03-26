@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { google } from "googleapis";
 import { auth } from "@/lib/auth";
+import { getGmailOAuthRedirectUri, getPublicSiteOrigin } from "@/lib/env-server";
 
 // Force Node.js runtime
 export const runtime = "nodejs";
@@ -8,16 +9,16 @@ export const runtime = "nodejs";
 export async function GET(req: Request) {
   // Check authentication
   const session = await auth();
+  const reqOrigin = new URL(req.url).origin;
+
   if (!session?.user?.email) {
-    const base = process.env.NEXT_PUBLIC_APP_URL ?? new URL(req.url).origin;
+    const base = getPublicSiteOrigin(reqOrigin);
     return NextResponse.redirect(new URL("/auth/signin?return=/admin", base), {
       status: 303,
     });
   }
 
-  const base = process.env.NEXT_PUBLIC_APP_URL ?? new URL(req.url).origin; // e.g. https://www.loveserenespaces.com
-
-  const redirectUri = `${base}/api/gmail/callback/google`;
+  const redirectUri = getGmailOAuthRedirectUri(reqOrigin);
 
   const oauth2 = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID!,
@@ -42,7 +43,7 @@ export async function GET(req: Request) {
   res.cookies.set("gmail_oauth_state", state, {
     httpOnly: true,
     sameSite: "lax",
-    secure: true,
+    secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 10 * 60, // 10 minutes
   });

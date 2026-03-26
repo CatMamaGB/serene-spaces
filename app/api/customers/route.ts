@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { isDatabaseConfigured } from "@/lib/env-server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,7 +15,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    if (!process.env.DATABASE_URL) {
+    if (!isDatabaseConfigured()) {
       return NextResponse.json(
         { error: "Database not configured" },
         { status: 503 },
@@ -61,13 +62,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check if DATABASE_URL is set
-    if (!process.env.DATABASE_URL) {
-      logger.error("POST /api/customers: DATABASE_URL not set");
+    if (!isDatabaseConfigured()) {
+      logger.error(
+        "POST /api/customers: no database URL (PRISMA_DATABASE_URL | DATABASE_URL | POSTGRES_URL)",
+      );
       return NextResponse.json(
         {
           error: "Database not configured",
-          details: "DATABASE_URL environment variable is missing",
+          details:
+            "Set PRISMA_DATABASE_URL, DATABASE_URL, or POSTGRES_URL on the server",
         },
         { status: 500 },
       );

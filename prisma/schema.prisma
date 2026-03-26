@@ -3,6 +3,7 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// Migrations & prisma CLI use DATABASE_URL (also set PRISMA_DATABASE_URL / POSTGRES_URL in Vercel — runtime: lib/env-server.ts)
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")

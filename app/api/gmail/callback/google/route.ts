@@ -3,6 +3,7 @@ import { google } from "googleapis";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { getGmailOAuthRedirectUri, getPublicSiteOrigin } from "@/lib/env-server";
 
 // Force Node.js runtime and disable caching
 export const runtime = "nodejs";
@@ -22,7 +23,7 @@ export async function GET(req: NextRequest) {
     // Check authentication
     const session = await auth();
     if (!session?.user?.email) {
-      const base = process.env.NEXT_PUBLIC_APP_URL ?? req.nextUrl.origin;
+      const base = getPublicSiteOrigin(req.nextUrl.origin);
       return NextResponse.redirect(
         new URL("/auth/signin?return=/admin", base),
         { status: 303 },
@@ -42,9 +43,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Invalid state" }, { status: 400 });
     }
 
-    // Build redirect URI from request origin
-    const base = process.env.NEXT_PUBLIC_APP_URL ?? req.nextUrl.origin;
-    const redirectUri = `${base}/api/gmail/callback/google`;
+    const redirectUri = getGmailOAuthRedirectUri(req.nextUrl.origin);
 
     const oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID!,
@@ -72,6 +71,8 @@ export async function GET(req: NextRequest) {
 
     await saveRefreshTokenToDB(userId, tokens.refresh_token);
 
+    const base = getPublicSiteOrigin(req.nextUrl.origin);
+
     // Clear the state cookie with same attributes
     const response = NextResponse.redirect(
       new URL("/admin?gmail-connected=1", base),
@@ -79,7 +80,7 @@ export async function GET(req: NextRequest) {
     );
     response.cookies.set("gmail_oauth_state", "", {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
       maxAge: 0, // Expire immediately
@@ -90,7 +91,7 @@ export async function GET(req: NextRequest) {
 
     // Handle invalid_grant errors gracefully (re-used/expired codes)
     if (e?.response?.data?.error === "invalid_grant") {
-      const base = process.env.NEXT_PUBLIC_APP_URL ?? req.nextUrl.origin;
+      const base = getPublicSiteOrigin(req.nextUrl.origin);
       return NextResponse.redirect(
         new URL("/admin?gmail-error=invalid-grant", base),
         { status: 303 },

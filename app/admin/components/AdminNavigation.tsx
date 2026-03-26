@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { useState } from "react";
 import { useAdminSummary } from "@/hooks/useAdminSummary";
-import { PendingBadge } from "@/components/PendingBadge";
+import { AdminSidebarAlert } from "@/components/AdminSidebarAlert";
 
 const NavItem = ({
   href,
@@ -48,27 +48,31 @@ export default function AdminNavigation({ children }: { children: ReactNode }) {
             <NavItem href="/admin" label="Dashboard" />
             <NavItem href="/admin/customers" label="Customers" />
             <NavItem href="/admin/invoices" label="Invoices" />
-            <div className="flex items-center justify-between gap-2">
+            <div>
               <NavItem
                 href="/admin/service-requests"
                 label="Service Requests"
               />
-              {pendingServiceRequests > 0 && (
-                <PendingBadge count={pendingServiceRequests} />
-              )}
+              {pendingServiceRequests > 0 ? (
+                <AdminSidebarAlert
+                  href="/admin/service-requests"
+                  label={`${pendingServiceRequests} pending request${pendingServiceRequests !== 1 ? "s" : ""}`}
+                  title={`${pendingServiceRequests} pending service request(s)`}
+                />
+              ) : null}
             </div>
-            <div className="flex items-center justify-between gap-2">
+            <div>
               <NavItem
                 href="/admin/contact-inquiries"
                 label="Contact messages"
               />
-              {unreadContactInquiries > 0 && (
-                <PendingBadge
-                  count={unreadContactInquiries}
+              {unreadContactInquiries > 0 ? (
+                <AdminSidebarAlert
                   href="/admin/contact-inquiries"
-                  title={`${unreadContactInquiries} unread message${unreadContactInquiries !== 1 ? "s" : ""}`}
+                  label={`${unreadContactInquiries} unread message${unreadContactInquiries !== 1 ? "s" : ""}`}
+                  title={`${unreadContactInquiries} unread contact message(s)`}
                 />
-              )}
+              ) : null}
             </div>
             <NavItem href="/admin/pricing" label="Pricing" />
             <NavItem
@@ -194,27 +198,29 @@ export default function AdminNavigation({ children }: { children: ReactNode }) {
                     label="Service Requests"
                     onClick={closeMobileMenu}
                   />
-                  {pendingServiceRequests > 0 && (
-                    <PendingBadge
-                      count={pendingServiceRequests}
+                  {pendingServiceRequests > 0 ? (
+                    <AdminSidebarAlert
+                      href="/admin/service-requests"
+                      label={`${pendingServiceRequests} pending request${pendingServiceRequests !== 1 ? "s" : ""}`}
+                      title={`${pendingServiceRequests} pending service request(s)`}
                       isMobile
                       onClose={closeMobileMenu}
                     />
-                  )}
+                  ) : null}
                   <NavItem
                     href="/admin/contact-inquiries"
                     label="Contact messages"
                     onClick={closeMobileMenu}
                   />
-                  {unreadContactInquiries > 0 && (
-                    <PendingBadge
-                      count={unreadContactInquiries}
+                  {unreadContactInquiries > 0 ? (
+                    <AdminSidebarAlert
                       href="/admin/contact-inquiries"
-                      title={`${unreadContactInquiries} unread message${unreadContactInquiries !== 1 ? "s" : ""}`}
+                      label={`${unreadContactInquiries} unread message${unreadContactInquiries !== 1 ? "s" : ""}`}
+                      title={`${unreadContactInquiries} unread contact message(s)`}
                       isMobile
                       onClose={closeMobileMenu}
                     />
-                  )}
+                  ) : null}
                   <NavItem
                     href="/admin/pricing"
                     label="Pricing"
