@@ -1,9 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import {
-  createGmailTransporter,
+  logGmailApiFailure,
+  sendGmailApiMessage,
+} from "@/lib/gmail-api-send";
+import {
+  getGmailOAuth2Client,
   getGmailSmtpUser,
-  logGmailEmailFailure,
+  isGmailInvalidGrantError,
 } from "@/lib/gmail-oauth";
 import { logger } from "@/lib/logger";
 import { getClientIpFromHeaders } from "@/lib/client-ip";
@@ -76,7 +80,7 @@ export async function POST(req: Request) {
     const fromAddr = getGmailSmtpUser();
 
     try {
-      const transporter = await createGmailTransporter();
+      const oauth2Client = await getGmailOAuth2Client();
       const subject = `Contact form: ${nameStr}`;
       const html = `
         <p><strong>New message</strong> from the website contact form.</p>
@@ -89,18 +93,21 @@ export async function POST(req: Request) {
         <p style="white-space:pre-wrap;border:1px solid #e5e7eb;padding:12px;border-radius:8px">${escapeHtml(messageStr)}</p>
         <p style="color:#6b7280;font-size:12px;margin-top:16px;">Inquiry id: ${escapeHtml(inquiry.id)}</p>
       `;
+      const textPlain = `Name: ${nameStr}\nEmail: ${emailStr}\nPhone: ${phoneStr ?? ""}\n\n${messageStr}\n\nId: ${inquiry.id}`;
 
-      await transporter.sendMail({
-        from: `Serene Spaces <${fromAddr}>`,
+      await sendGmailApiMessage(oauth2Client, {
+        fromDisplay: "Serene Spaces",
+        fromEmail: fromAddr,
         to: notifyTo,
-        replyTo: emailStr,
         subject,
         html,
-        text: `Name: ${nameStr}\nEmail: ${emailStr}\nPhone: ${phoneStr ?? ""}\n\n${messageStr}\n\nId: ${inquiry.id}`,
+        text: textPlain,
+        replyTo: emailStr,
       });
 
-      await transporter.sendMail({
-        from: `Serene Spaces <${fromAddr}>`,
+      await sendGmailApiMessage(oauth2Client, {
+        fromDisplay: "Serene Spaces",
+        fromEmail: fromAddr,
         to: emailStr,
         subject: "We received your message — Serene Spaces",
         html: `<p>Hi ${escapeHtml(nameStr.split(" ")[0] ?? nameStr)},</p>
@@ -109,7 +116,9 @@ export async function POST(req: Request) {
         text: `Hi ${nameStr},\n\nThanks for contacting Serene Spaces. We've received your message and will get back to you soon.\n\n— Serene Spaces`,
       });
     } catch (emailErr) {
-      logGmailEmailFailure("Contact form email", emailErr);
+      if (!isGmailInvalidGrantError(emailErr)) {
+        logGmailApiFailure("Contact form email", emailErr);
+      }
     }
 
     return NextResponse.json({

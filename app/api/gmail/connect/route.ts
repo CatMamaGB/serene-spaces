@@ -32,9 +32,8 @@ export async function GET(req: Request) {
     prompt: "consent",
     scope: [
       "https://www.googleapis.com/auth/gmail.send",
-      // add others only if needed:
-      // "https://www.googleapis.com/auth/gmail.modify",
-      // "https://www.googleapis.com/auth/userinfo.email",
+      /** Lets admin /gmail-health call users.getProfile (gmail.send alone does not). */
+      "https://www.googleapis.com/auth/gmail.metadata.readonly",
     ],
     state,
   });

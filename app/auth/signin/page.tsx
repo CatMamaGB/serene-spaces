@@ -88,7 +88,7 @@ function SignInContent() {
       case "OAuthCallback":
         return "There was an issue with the authentication process. Please try again.";
       case "Configuration":
-        return "There is a problem with the server configuration. Please contact support.";
+        return "Server configuration issue (often missing NEXTAUTH_SECRET or AUTH_SECRET in production). Check Vercel env and redeploy.";
       case "AccessDenied":
         return "You do not have permission to sign in.";
       case "Verification":

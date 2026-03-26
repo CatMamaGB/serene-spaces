@@ -25,6 +25,11 @@ export async function GET() {
         GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ? "SET" : "NOT SET",
         NEXTAUTH_URL: process.env.NEXTAUTH_URL ? "SET" : "NOT SET",
         NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET ? "SET" : "NOT SET",
+        AUTH_SECRET: process.env.AUTH_SECRET ? "SET" : "NOT SET",
+        authSecretResolved:
+          process.env.NEXTAUTH_SECRET?.trim() || process.env.AUTH_SECRET?.trim()
+            ? "SET"
+            : "NOT SET",
       },
       database: {
         connection: "UNKNOWN",

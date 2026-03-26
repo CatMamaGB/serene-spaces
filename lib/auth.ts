@@ -11,6 +11,13 @@ import { getResolvedDatabaseUrl } from "./env-server";
 const adminEmail =
   process.env.ADMIN_EMAIL?.trim() || "loveserenespaces@gmail.com";
 
+/** Auth.js accepts NEXTAUTH_SECRET or AUTH_SECRET; Vercel often only sets AUTH_SECRET. */
+function getAuthSecret(): string | undefined {
+  const s =
+    process.env.NEXTAUTH_SECRET?.trim() || process.env.AUTH_SECRET?.trim();
+  return s || undefined;
+}
+
 // Test database connection
 async function testDatabaseConnection() {
   try {
@@ -27,7 +34,7 @@ const requiredEnvVars = {
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
   NEXTAUTH_URL: process.env.NEXTAUTH_URL,
-  NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
+  NEXTAUTH_OR_AUTH_SECRET: getAuthSecret(),
   /** Any of PRISMA_DATABASE_URL | DATABASE_URL | POSTGRES_URL (see lib/env-server.ts) */
   DATABASE_URL: getResolvedDatabaseUrl(),
 };
@@ -49,7 +56,7 @@ const missingVars = Object.entries(requiredEnvVars)
 
 if (missingVars.length > 0) {
   logger.error(
-    "Missing required environment variables for NextAuth:",
+    "Missing required environment variables for NextAuth (set NEXTAUTH_SECRET or AUTH_SECRET, plus the others below):",
     missingVars.join(", "),
   );
   missingVars.forEach((key) => logger.error(`  ${key}: NOT SET`));
@@ -89,7 +96,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
   trustHost: true,
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: getAuthSecret(),
   events: {
     async signIn(message) {
       logger.debug("SignIn event:", {

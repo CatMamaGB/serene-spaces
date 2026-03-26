@@ -5,9 +5,13 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 import {
-  createGmailTransporter,
+  logGmailApiFailure,
+  sendGmailApiMessage,
+} from "@/lib/gmail-api-send";
+import {
+  getGmailOAuth2Client,
   getGmailSmtpUser,
-  logGmailEmailFailure,
+  isGmailInvalidGrantError,
 } from "@/lib/gmail-oauth";
 import { logger } from "@/lib/logger";
 import { getClientIpFromHeaders } from "@/lib/client-ip";
@@ -110,7 +114,7 @@ export async function POST(req: Request) {
       } as any,
     });
 
-    // Send confirmation email
+    // Send confirmation email (Gmail API — avoids SMTP XOAUTH2 / 535 on some hosts)
     try {
       const confirmationHtml = generateConfirmationEmail({
         fullName,
@@ -126,12 +130,12 @@ export async function POST(req: Request) {
         serviceRequestId: serviceRequest.id,
       });
 
-      const transporter = await createGmailTransporter();
+      const oauth2Client = await getGmailOAuth2Client();
       const fromAddr = getGmailSmtpUser();
 
-      // Send confirmation email to customer
-      await transporter.sendMail({
-        from: `Serene Spaces <${fromAddr}>`,
+      await sendGmailApiMessage(oauth2Client, {
+        fromDisplay: "Serene Spaces",
+        fromEmail: fromAddr,
         to: email,
         subject: "Service Request Confirmation - Serene Spaces",
         html: confirmationHtml,
@@ -139,7 +143,6 @@ export async function POST(req: Request) {
         replyTo: fromAddr,
       });
 
-      // Send notification email to Serene Spaces
       const notificationHtml = generateNotificationEmail({
         fullName,
         email,
@@ -154,17 +157,19 @@ export async function POST(req: Request) {
         serviceRequestId: serviceRequest.id,
       });
 
-      await transporter.sendMail({
-        from: `Serene Spaces <${fromAddr}>`,
+      await sendGmailApiMessage(oauth2Client, {
+        fromDisplay: "Serene Spaces",
+        fromEmail: fromAddr,
         to: fromAddr,
         subject: `New Service Request: ${fullName} - ${services.join(", ")}`,
         html: notificationHtml,
         text: stripHtml(notificationHtml),
-        replyTo: email, // So you can reply directly to the customer
+        replyTo: email,
       });
     } catch (emailError) {
-      logGmailEmailFailure("Intake confirmation email", emailError);
-      // Don't fail the whole request if email fails
+      if (!isGmailInvalidGrantError(emailError)) {
+        logGmailApiFailure("Intake confirmation email", emailError);
+      }
     }
 
     // Return success response

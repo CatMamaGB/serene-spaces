@@ -9,7 +9,7 @@
  * Auth (NextAuth / Auth.js):
  * - GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET — Google provider + Gmail API
  * - NEXTAUTH_URL — canonical site URL for callbacks
- * - NEXTAUTH_SECRET — required in production (set in Vercel if not listed in UI snapshot)
+ * - NEXTAUTH_SECRET or AUTH_SECRET — required in production (either name; Vercel may only set AUTH_SECRET)
  *
  * App URLs:
  * - NEXT_PUBLIC_APP_URL — canonical origin (e.g. https://www.loveserenespaces.com)

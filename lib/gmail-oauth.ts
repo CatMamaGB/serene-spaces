@@ -59,44 +59,38 @@ const createOAuth2Client = () => {
   );
 };
 
-// Create Gmail transporter using OAuth2
-export const createGmailTransporter = async (userId?: string) => {
+/** Load refresh token + return OAuth2 client with a valid access token (Gmail API + SMTP). */
+export async function getGmailOAuth2Client(userId?: string) {
   if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
     throw new Error("Google OAuth2 credentials not configured");
   }
 
-  // Prioritize database token over environment variable
-  let refreshToken = null;
-  
-  if (!refreshToken) {
-    // Load from database if available
-    if (userId) {
-      try {
-        const { prisma } = await import("./prisma");
-        const credential = await (prisma as any).gmailCredential.findFirst({
-          where: { userId }
-        });
-        refreshToken = credential?.refreshToken;
-      } catch (dbError) {
-        logger.debug("Could not load refresh token from database:", dbError);
-      }
-    } else {
-      // Fallback to latest token if no userId provided
-      try {
-        const { prisma } = await import("./prisma");
-        const credential = await (prisma as any).gmailCredential.findFirst({
-          orderBy: { updatedAt: 'desc' }
-        });
-        refreshToken = credential?.refreshToken;
-      } catch (dbError) {
-        logger.debug("Could not load refresh token from database:", dbError);
-      }
+  let refreshToken: string | null = null;
+
+  if (userId) {
+    try {
+      const { prisma } = await import("./prisma");
+      const credential = await (prisma as any).gmailCredential.findFirst({
+        where: { userId },
+      });
+      refreshToken = credential?.refreshToken ?? null;
+    } catch (dbError) {
+      logger.debug("Could not load refresh token from database:", dbError);
+    }
+  } else {
+    try {
+      const { prisma } = await import("./prisma");
+      const credential = await (prisma as any).gmailCredential.findFirst({
+        orderBy: { updatedAt: "desc" },
+      });
+      refreshToken = credential?.refreshToken ?? null;
+    } catch (dbError) {
+      logger.debug("Could not load refresh token from database:", dbError);
     }
   }
 
-  // Fallback to environment variable only if no database token found
   if (!refreshToken) {
-    refreshToken = process.env.GMAIL_REFRESH_TOKEN;
+    refreshToken = process.env.GMAIL_REFRESH_TOKEN ?? null;
   }
 
   if (!refreshToken) {
@@ -108,11 +102,9 @@ export const createGmailTransporter = async (userId?: string) => {
   const oauth2Client = createOAuth2Client();
   oauth2Client.setCredentials({ refresh_token: refreshToken });
 
-  // Get a short-lived access token from Google (Nodemailer will not refresh by itself)
-  let accessToken: string | null | undefined;
   try {
     const res = await oauth2Client.getAccessToken();
-    accessToken = res.token;
+    if (!res.token) throw new Error("Failed to get access token");
   } catch (e) {
     if (isGmailInvalidGrantError(e)) {
       logger.error(`Gmail OAuth invalid_grant — ${gmailInvalidGrantHelp()}`);
@@ -121,12 +113,22 @@ export const createGmailTransporter = async (userId?: string) => {
     }
     throw e;
   }
-  if (!accessToken) throw new Error("Failed to get access token");
+
+  return oauth2Client;
+}
+
+/** Legacy SMTP path (invoice send, etc.). Prefer Gmail API where possible. */
+export const createGmailTransporter = async (userId?: string) => {
+  const oauth2Client = await getGmailOAuth2Client(userId);
+  const refreshToken = oauth2Client.credentials.refresh_token;
+  const accessToken = oauth2Client.credentials.access_token;
+  if (!refreshToken || !accessToken) {
+    throw new Error("Missing OAuth credentials after refresh");
+  }
 
   const smtpUser = getGmailSmtpUser();
   const expiresAt = oauth2Client.credentials.expiry_date ?? undefined;
 
-  // Explicit smtp.gmail.com + OAuth2 avoids 535 "BadCredentials" from service:'gmail' + XOAUTH2 quirks in some environments
   return nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 465,

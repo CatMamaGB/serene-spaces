@@ -11,7 +11,7 @@ function AuthErrorContent() {
   const getErrorMessage = (errorCode: string | null) => {
     switch (errorCode) {
       case "Configuration":
-        return "There is a problem with the server configuration. Please contact support.";
+        return "There is a problem with the server configuration (for example a missing NEXTAUTH_SECRET or AUTH_SECRET in production). If you manage the site, check Vercel Environment Variables and redeploy.";
       case "AccessDenied":
         return "You do not have permission to sign in.";
       case "Verification":

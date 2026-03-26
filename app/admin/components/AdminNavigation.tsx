@@ -75,6 +75,7 @@ export default function AdminNavigation({ children }: { children: ReactNode }) {
               ) : null}
             </div>
             <NavItem href="/admin/pricing" label="Pricing" />
+            <NavItem href="/api/admin/gmail-health" label="Gmail status (debug)" />
             <NavItem
               href="/api/gmail/connect"
               label="Reconnect Gmail"
@@ -224,6 +225,11 @@ export default function AdminNavigation({ children }: { children: ReactNode }) {
                   <NavItem
                     href="/admin/pricing"
                     label="Pricing"
+                    onClick={closeMobileMenu}
+                  />
+                  <NavItem
+                    href="/api/admin/gmail-health"
+                    label="Gmail status (debug)"
                     onClick={closeMobileMenu}
                   />
                   <NavItem
