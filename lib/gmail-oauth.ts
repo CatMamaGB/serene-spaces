@@ -2,6 +2,26 @@ import { google } from "googleapis";
 import nodemailer from "nodemailer";
 import { logger } from "./logger";
 
+/** Google OAuth refresh failed — token revoked, expired, or client config changed. */
+export function isGmailInvalidGrantError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  if (/invalid_grant/i.test(msg)) return true;
+  const any = err as { response?: { data?: { error?: string } } };
+  return any?.response?.data?.error === "invalid_grant";
+}
+
+export function gmailInvalidGrantHelp(baseUrl?: string): string {
+  const origin =
+    baseUrl?.replace(/\/$/, "") ||
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
+    "https://www.loveserenespaces.com";
+  return (
+    `Gmail OAuth refresh token is invalid or revoked (${origin}/api/gmail/connect while signed in as admin, ` +
+    `or revoke the app at https://myaccount.google.com/permissions and connect again). ` +
+    `If you use GMAIL_REFRESH_TOKEN in Vercel, replace it after re-authorizing.`
+  );
+}
+
 // Create OAuth2 client
 const createOAuth2Client = () => {
   const redirectUri =
@@ -68,7 +88,18 @@ export const createGmailTransporter = async (userId?: string) => {
   oauth2Client.setCredentials({ refresh_token: refreshToken });
 
   // Get a short-lived access token from Google (Nodemailer will not refresh by itself)
-  const { token: accessToken } = await oauth2Client.getAccessToken();
+  let accessToken: string | null | undefined;
+  try {
+    const res = await oauth2Client.getAccessToken();
+    accessToken = res.token;
+  } catch (e) {
+    if (isGmailInvalidGrantError(e)) {
+      logger.error(`[gmail-oauth] ${gmailInvalidGrantHelp()}`);
+    } else {
+      logger.errorFrom("Gmail getAccessToken", e);
+    }
+    throw e;
+  }
   if (!accessToken) throw new Error("Failed to get access token");
 
   return nodemailer.createTransport({
