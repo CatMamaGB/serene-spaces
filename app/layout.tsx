@@ -5,7 +5,13 @@ import "./globals.css";
 import { NextAuthProvider } from "../components/NextAuthProvider";
 import { ToastProvider } from "../components/ToastProvider";
 
-const inter = Inter({ subsets: ["latin"] });
+// Avoid Chrome "preloaded but not used within a few seconds" for extra Inter .woff2
+// chunks; Next still self-hosts the font via @font-face (no layout shift with swap).
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  preload: false,
+});
 
 export const metadata: Metadata = {
   title: {

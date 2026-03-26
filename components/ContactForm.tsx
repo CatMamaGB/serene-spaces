@@ -128,16 +128,20 @@ export default function ContactForm() {
 
               {/* Contact Form */}
               <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
-                <input
-                  type="text"
-                  name="website"
-                  value={formData.website}
-                  onChange={handleInputChange}
-                  tabIndex={-1}
-                  autoComplete="off"
-                  aria-hidden="true"
-                  className="absolute left-[-9999px] top-0 h-px w-px overflow-hidden opacity-0"
-                />
+                <div className="absolute left-[-9999px] top-0 h-px w-px overflow-hidden opacity-0">
+                  <label htmlFor="contact-website-honeypot">
+                    Leave this field empty (spam check)
+                  </label>
+                  <input
+                    type="text"
+                    id="contact-website-honeypot"
+                    name="website"
+                    value={formData.website}
+                    onChange={handleInputChange}
+                    tabIndex={-1}
+                    autoComplete="off"
+                  />
+                </div>
                 {/* Name Field */}
                 <div>
                   <label htmlFor="name" className="form-label">
@@ -147,6 +151,7 @@ export default function ContactForm() {
                     type="text"
                     id="name"
                     name="name"
+                    autoComplete="name"
                     value={formData.name}
                     onChange={handleInputChange}
                     required
@@ -164,6 +169,7 @@ export default function ContactForm() {
                     type="email"
                     id="email"
                     name="email"
+                    autoComplete="email"
                     value={formData.email}
                     onChange={handleInputChange}
                     required
@@ -181,6 +187,7 @@ export default function ContactForm() {
                     type="tel"
                     id="phone"
                     name="phone"
+                    autoComplete="tel"
                     value={formData.phone}
                     onChange={handleInputChange}
                     className="input-field"
@@ -196,6 +203,7 @@ export default function ContactForm() {
                   <textarea
                     id="message"
                     name="message"
+                    autoComplete="off"
                     value={formData.message}
                     onChange={handleInputChange}
                     required
