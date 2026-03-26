@@ -6,6 +6,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 import {
   createGmailTransporter,
+  getGmailSmtpUser,
   logGmailEmailFailure,
 } from "@/lib/gmail-oauth";
 import { logger } from "@/lib/logger";
@@ -126,7 +127,7 @@ export async function POST(req: Request) {
       });
 
       const transporter = await createGmailTransporter();
-      const fromAddr = process.env.GMAIL_USER || "loveserenespaces@gmail.com";
+      const fromAddr = getGmailSmtpUser();
 
       // Send confirmation email to customer
       await transporter.sendMail({

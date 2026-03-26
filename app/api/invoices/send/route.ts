@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   createGmailTransporter,
+  getGmailSmtpUser,
   logGmailEmailFailure,
 } from "@/lib/gmail-oauth";
 import { prisma } from "@/lib/prisma";
@@ -130,7 +131,7 @@ export async function POST(req: NextRequest) {
     });
 
     const transporter = await createGmailTransporter(session.user.id);
-    const fromAddr = process.env.GMAIL_USER || "loveserenespaces@gmail.com";
+    const fromAddr = getGmailSmtpUser();
 
     logger.debug("Sending invoice email via Gmail OAuth2");
 
@@ -213,7 +214,7 @@ export async function GET(req: NextRequest) {
 
     // Send test email via Gmail OAuth2
     const transporter = await createGmailTransporter();
-    const fromAddr = process.env.GMAIL_USER || "loveserenespaces@gmail.com";
+    const fromAddr = getGmailSmtpUser();
 
     const testHtml = `
       <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">

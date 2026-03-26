@@ -20,10 +20,32 @@ export function gmailInvalidGrantHelp(baseUrl?: string): string {
   );
 }
 
+/** Gmail SMTP rejected credentials (not the same as OAuth invalid_grant). */
+export function isGmailSmtp535Error(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return (
+    /535[\s-]/i.test(msg) ||
+    /BadCredentials/i.test(msg) ||
+    /Username and Password not accepted/i.test(msg)
+  );
+}
+
 /** Use in API route catch blocks after createGmailTransporter/sendMail — avoids duplicate logs for invalid_grant. */
 export function logGmailEmailFailure(context: string, err: unknown): void {
   if (isGmailInvalidGrantError(err)) return;
   logger.errorFrom(context, err);
+  if (isGmailSmtp535Error(err)) {
+    logger.error(
+      "[gmail-oauth] SMTP 535 — GMAIL_USER must be the exact Google address that authorized /api/gmail/connect (same inbox). Recheck Vercel GMAIL_USER and reconnect Gmail.",
+    );
+  }
+}
+
+/** SMTP / OAuth2 envelope username — must match authorized Google account. */
+export function getGmailSmtpUser(): string {
+  return (
+    process.env.GMAIL_USER?.trim().toLowerCase() || "loveserenespaces@gmail.com"
+  );
 }
 
 // Create OAuth2 client (redirect URI must match connect/callback routes — see getGmailOAuthRedirectUri)
@@ -101,15 +123,22 @@ export const createGmailTransporter = async (userId?: string) => {
   }
   if (!accessToken) throw new Error("Failed to get access token");
 
+  const smtpUser = getGmailSmtpUser();
+  const expiresAt = oauth2Client.credentials.expiry_date ?? undefined;
+
+  // Explicit smtp.gmail.com + OAuth2 avoids 535 "BadCredentials" from service:'gmail' + XOAUTH2 quirks in some environments
   return nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
     auth: {
       type: "OAuth2",
-      user: process.env.GMAIL_USER || "loveserenespaces@gmail.com", // Must match OAuth-authorized account
+      user: smtpUser,
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       refreshToken,
-      accessToken, // include so first send succeeds immediately
+      accessToken,
+      ...(typeof expiresAt === "number" ? { expires: expiresAt } : {}),
     },
   });
 };

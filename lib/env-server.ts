@@ -15,7 +15,7 @@
  * - NEXT_PUBLIC_APP_URL — canonical origin (e.g. https://www.loveserenespaces.com)
  *
  * Gmail send (OAuth):
- * - GMAIL_USER — mailbox that sends mail (must match authorized Google account)
+ * - GMAIL_USER — mailbox for OAuth SMTP + From: header (must match the Google account used at /api/gmail/connect)
  * - GMAIL_REFRESH_TOKEN — optional fallback when DB has no GmailCredential row
  * - GOOGLE_REDIRECT_URI — optional; full callback URL. Same as GMAIL_REDIRECT_URI if set.
  *   Must match Google Cloud Console "Authorized redirect URIs" exactly.

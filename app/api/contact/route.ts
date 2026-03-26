@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import {
   createGmailTransporter,
+  getGmailSmtpUser,
   logGmailEmailFailure,
 } from "@/lib/gmail-oauth";
 import { logger } from "@/lib/logger";
@@ -71,7 +72,8 @@ export async function POST(req: Request) {
     });
 
     const notifyTo = getBusinessNotifyEmail();
-    const fromAddr = process.env.GMAIL_USER || notifyTo;
+    // From must match OAuth SMTP user (GMAIL_USER); a different CONTACT_NOTIFY_EMAIL would cause 535
+    const fromAddr = getGmailSmtpUser();
 
     try {
       const transporter = await createGmailTransporter();
