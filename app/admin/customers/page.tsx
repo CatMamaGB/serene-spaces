@@ -395,9 +395,8 @@ export default function CustomersPage() {
                 undone.
               </p>
               <p className="text-sm text-gray-500 mt-2">
-                Deletion is blocked if this customer has invoices (internal or
-                Stripe-linked), service requests, or jobs. Remove or reassign
-                those first.
+                Deletion is blocked if this customer has invoices, service
+                requests, or jobs. Remove or reassign those first.
               </p>
             </div>
 

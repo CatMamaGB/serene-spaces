@@ -158,7 +158,7 @@ export async function DELETE(
       jobs.length > 0
     ) {
       const parts: string[] = [];
-      if (mirrorInvoices.length > 0) parts.push("Stripe-linked invoices");
+      if (mirrorInvoices.length > 0) parts.push("legacy imported invoices");
       if (internalInvoices.length > 0) parts.push("invoices");
       if (serviceRequests.length > 0) parts.push("service requests");
       if (jobs.length > 0) parts.push("jobs");

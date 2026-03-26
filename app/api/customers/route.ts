@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { stripe } from "@/lib/stripe";
 import { auth } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 
@@ -95,26 +94,6 @@ export async function POST(req: Request) {
       );
     }
 
-    let stripeId = null;
-
-    // create Stripe customer only if Stripe is configured
-    if (process.env.STRIPE_SECRET_KEY && stripe) {
-      try {
-        const sc = await stripe.customers.create({
-          name,
-          email: email || undefined,
-          phone: phone || undefined,
-        });
-        stripeId = sc.id;
-        logger.debug("Created Stripe customer", { stripeId });
-      } catch (stripeError) {
-        logger.warn("Failed to create Stripe customer:", stripeError);
-        // Continue without Stripe customer
-      }
-    } else {
-      logger.debug("Stripe not configured; skipping Stripe customer creation");
-    }
-
     logger.debug("Creating customer in database");
     const customer = await prisma.customer.create({
       data: {
@@ -126,7 +105,6 @@ export async function POST(req: Request) {
         city: city || null,
         state: state || null,
         postalCode: postalCode || null,
-        stripeId,
       },
     });
 

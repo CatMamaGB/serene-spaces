@@ -6,6 +6,7 @@ import { logger } from "./logger";
 const createOAuth2Client = () => {
   const redirectUri =
     process.env.GMAIL_REDIRECT_URI ||
+    process.env.GOOGLE_REDIRECT_URI ||
     (process.env.NODE_ENV === "production"
       ? "https://www.loveserenespaces.com/api/gmail/callback/google"
       : "http://localhost:3000/api/gmail/callback/google");
