@@ -33,7 +33,7 @@ export async function GET(req: Request) {
     scope: [
       "https://www.googleapis.com/auth/gmail.send",
       /** Lets admin /gmail-health call users.getProfile (gmail.send alone does not). */
-      "https://www.googleapis.com/auth/gmail.metadata.readonly",
+      "https://www.googleapis.com/auth/gmail.metadata",
     ],
     state,
   });
