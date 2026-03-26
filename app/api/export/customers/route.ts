@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -87,7 +88,7 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error("Error exporting customers:", error);
+    logger.errorFrom("GET /api/export/customers", error);
     return NextResponse.json(
       { error: "Failed to export customers" },
       { status: 500 },

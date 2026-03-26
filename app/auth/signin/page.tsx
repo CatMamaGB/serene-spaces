@@ -3,6 +3,7 @@
 import { signIn } from "next-auth/react";
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { logger } from "@/lib/logger";
 
 function SignInContent() {
   const [isLoading, setIsLoading] = useState(false);
@@ -61,7 +62,7 @@ function SignInContent() {
         redirect: true, // Let NextAuth handle the redirect
       });
     } catch (error) {
-      console.error("Sign in error:", error);
+      logger.errorFrom("Sign in (credentials)", error);
       setError("An unexpected error occurred. Please try again.");
       setIsLoading(false);
     }

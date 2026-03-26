@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,7 +36,7 @@ export async function GET(
 
     return NextResponse.json({ item });
   } catch (error) {
-    console.error("Error fetching price item:", error);
+    logger.errorFrom("GET /api/pricing/items/[id]", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },
@@ -73,7 +74,7 @@ export async function PUT(
 
     return NextResponse.json({ item });
   } catch (error) {
-    console.error("Error updating price item:", error);
+    logger.errorFrom("PATCH /api/pricing/items/[id]", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },
@@ -100,7 +101,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting price item:", error);
+    logger.errorFrom("DELETE /api/pricing/items/[id]", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

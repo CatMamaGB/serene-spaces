@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { google } from "googleapis";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 // Force Node.js runtime and disable caching
 export const runtime = "nodejs";
@@ -85,7 +86,7 @@ export async function GET(req: NextRequest) {
     });
     return response;
   } catch (e: any) {
-    console.error("Gmail OAuth callback error", e);
+    logger.errorFrom("Gmail OAuth callback", e);
 
     // Handle invalid_grant errors gracefully (re-used/expired codes)
     if (e?.response?.data?.error === "invalid_grant") {

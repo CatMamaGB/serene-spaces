@@ -4,6 +4,7 @@ import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
+import { logger } from "./logger";
 
 /** Email allowed for credentials sign-in (default: production admin inbox). */
 const adminEmail =
@@ -13,9 +14,9 @@ const adminEmail =
 async function testDatabaseConnection() {
   try {
     await prisma.$connect();
-    console.log("✅ Database connection successful");
+    logger.debug("Database connection successful");
   } catch (error) {
-    console.error("❌ Database connection failed:", error);
+    logger.errorFrom("Database connection test", error);
     throw new Error("Database connection failed");
   }
 }
@@ -35,10 +36,8 @@ const isLocalDevelopment =
   process.env.NEXTAUTH_URL?.includes("loveserenespaces.com");
 
 if (isLocalDevelopment) {
-  console.warn("⚠️  NEXTAUTH_URL is set to production URL in development mode");
-  console.warn("   This will cause OAuth configuration errors");
-  console.warn(
-    "   Please set NEXTAUTH_URL=http://localhost:3000 for local development",
+  logger.warn(
+    "NEXTAUTH_URL points at production in development; set NEXTAUTH_URL=http://localhost:3000 for local OAuth",
   );
 }
 
@@ -47,12 +46,13 @@ const missingVars = Object.entries(requiredEnvVars)
   .map(([key]) => key);
 
 if (missingVars.length > 0) {
-  console.error("❌ Missing required environment variables for NextAuth:");
-  missingVars.forEach((key) => {
-    console.error(`  ${key}: NOT SET`);
-  });
-  console.error(
-    "Available variables:",
+  logger.error(
+    "Missing required environment variables for NextAuth:",
+    missingVars.join(", "),
+  );
+  missingVars.forEach((key) => logger.error(`  ${key}: NOT SET`));
+  logger.debug(
+    "Auth-related env key names present:",
     Object.keys(process.env).filter(
       (key) =>
         key.includes("AUTH") ||
@@ -60,13 +60,9 @@ if (missingVars.length > 0) {
         key.includes("DATABASE"),
     ),
   );
-  console.error("Current NEXTAUTH_URL:", process.env.NEXTAUTH_URL);
-  console.error(
-    "Current DATABASE_URL:",
-    process.env.DATABASE_URL ? "SET" : "NOT SET",
-  );
-  console.error("Environment check - NODE_ENV:", process.env.NODE_ENV);
-  console.error("All environment keys:", Object.keys(process.env));
+  logger.debug("NEXTAUTH_URL set:", !!process.env.NEXTAUTH_URL);
+  logger.debug("DATABASE_URL set:", !!process.env.DATABASE_URL);
+  logger.debug("NODE_ENV:", process.env.NODE_ENV);
 
   // In production, throw an error to prevent startup with missing auth
   if (process.env.NODE_ENV === "production") {
@@ -91,7 +87,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   secret: process.env.NEXTAUTH_SECRET,
   events: {
     async signIn(message) {
-      console.log("✅ SignIn event:", {
+      logger.debug("SignIn event:", {
         user: message.user?.email,
         account: message.account?.provider,
         isNewUser: message.isNewUser,
@@ -99,7 +95,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       await testDatabaseConnection();
     },
     async signOut(message) {
-      console.log("🚪 SignOut event:", {
+      logger.debug("SignOut event:", {
         session: (message as any).session?.user?.email,
         token: (message as any).token?.email,
       });
@@ -137,11 +133,11 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           const hash = process.env.ADMIN_PASSWORD_HASH?.trim();
           if (!hash) {
             if (process.env.NODE_ENV === "production") {
-              console.error(
+              logger.error(
                 "ADMIN_PASSWORD_HASH is not set; credentials login is disabled. Set a bcrypt hash in env or use Google sign-in.",
               );
             } else {
-              console.warn(
+              logger.warn(
                 "ADMIN_PASSWORD_HASH not set; credentials login disabled. Generate: node scripts/hash-admin-password.mjs",
               );
             }
@@ -178,7 +174,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             role: (user as any).role,
           };
         } catch (error) {
-          console.error("Authorization error:", error);
+          logger.errorFrom("Credentials authorize", error);
           return null;
         }
       },
@@ -186,30 +182,27 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     async signIn({ user, account }) {
-      console.log("SignIn callback triggered:", {
+      logger.debug("SignIn callback:", {
         userEmail: user?.email,
         provider: account?.provider,
         userId: user?.id,
-        accountType: account?.type,
-        accountProvider: account?.provider,
       });
 
       // Only allow sign in for loveserenespaces@gmail.com
       if (account?.provider === "google") {
         if (!user?.email) {
-          console.error("No email found in Google OAuth user object");
+          logger.error("No email found in Google OAuth user object");
           return false;
         }
 
         const isAuthorized = user.email === adminEmail;
-        console.log("Google OAuth authorization:", {
+        logger.debug("Google OAuth authorization:", {
           email: user.email,
           authorized: isAuthorized,
-          userObject: user,
         });
 
         if (!isAuthorized) {
-          console.log("Access denied for email:", user.email);
+          logger.debug("Access denied for email:", user.email);
         }
 
         return isAuthorized;
@@ -217,21 +210,17 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 
       // Allow credentials provider (email/password) for admin
       if (account?.provider === "credentials") {
-        console.log("Credentials provider authorization:", {
-          email: user?.email,
-          authorized: true,
-        });
+        logger.debug("Credentials provider authorized:", user?.email);
         return true;
       }
 
-      console.log("Sign in denied for provider:", account?.provider);
+      logger.debug("Sign in denied for provider:", account?.provider);
       return false;
     },
     async session({ session, token }) {
-      console.log("🔑 Session callback:", {
+      logger.debug("Session callback:", {
         sessionUser: session.user?.email,
         tokenSub: token.sub,
-        tokenEmail: token.email,
         tokenRole: token.role,
       });
 
@@ -241,8 +230,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         session.user.role = (token.role as string) || "staff";
       }
 
-      console.log("🔑 Session callback result:", {
-        sessionUser: session.user?.email,
+      logger.debug("Session callback result:", {
         sessionUserId: session.user?.id,
         sessionUserRole: session.user?.role,
       });
@@ -250,13 +238,9 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       return session;
     },
     async jwt({ token, user }) {
-      console.log("🎫 JWT callback:", {
+      logger.debug("JWT callback:", {
         tokenSub: token.sub,
-        tokenEmail: token.email,
-        tokenRole: token.role,
-        userEmail: user?.email,
         userId: user?.id,
-        userRole: user?.role,
       });
 
       // Persist the user ID to the token right after signin
@@ -272,23 +256,18 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         token.role = "admin";
       }
 
-      console.log("🎫 JWT callback result:", {
-        tokenSub: token.sub,
-        tokenEmail: token.email,
-        tokenRole: token.role,
-        tokenId: token.id,
-      });
+      logger.debug("JWT callback result:", { tokenSub: token.sub, tokenRole: token.role });
 
       return token;
     },
     async redirect({ url, baseUrl }) {
       const correctBaseUrl = getBaseUrl();
-      console.log("Redirect callback:", { url, baseUrl, correctBaseUrl });
+      logger.debug("Redirect callback:", { url, baseUrl, correctBaseUrl });
 
       // If it's a relative URL, make it absolute
       if (url.startsWith("/")) {
         const redirectUrl = `${correctBaseUrl}${url}`;
-        console.log("Redirecting to relative URL:", redirectUrl);
+        logger.debug("Redirecting to relative URL:", redirectUrl);
         return redirectUrl;
       }
 
@@ -296,15 +275,14 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       try {
         const urlObj = new URL(url);
         if (urlObj.origin === correctBaseUrl) {
-          console.log("Redirecting to same origin:", url);
+          logger.debug("Redirecting to same origin:", url);
           return url;
         }
       } catch (error) {
-        console.error("Invalid URL in redirect:", error);
+        logger.errorFrom("Invalid URL in redirect", error);
       }
 
-      // Default to admin dashboard
-      console.log("Default redirect to admin dashboard");
+      logger.debug("Default redirect to admin dashboard");
       return `${correctBaseUrl}/admin`;
     },
   },

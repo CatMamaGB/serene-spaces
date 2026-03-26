@@ -5,6 +5,9 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 import { createGmailTransporter } from "@/lib/gmail-oauth";
+import { logger } from "@/lib/logger";
+import { getClientIpFromHeaders } from "@/lib/client-ip";
+import { checkIntakeRateLimit } from "@/lib/intake-rate-limit";
 
 export async function POST(req: Request) {
   try {
@@ -20,7 +23,31 @@ export async function POST(req: Request) {
       repairNotes,
       waterproofingNotes,
       allergies,
+      /** Honeypot — must stay empty (bots often fill hidden "website" fields). */
+      website: honeypotWebsite,
     } = body;
+
+    if (
+      typeof honeypotWebsite === "string" &&
+      honeypotWebsite.trim() !== ""
+    ) {
+      logger.debug("Intake honeypot filled; ignoring submission");
+      return NextResponse.json({
+        success: true,
+        message: "Request received",
+      });
+    }
+
+    const ip = getClientIpFromHeaders(req.headers);
+    if (!checkIntakeRateLimit(ip).ok) {
+      return NextResponse.json(
+        {
+          error:
+            "Too many submissions from this network. Please try again in a few minutes.",
+        },
+        { status: 429 },
+      );
+    }
 
     // Validate required fields
     if (!fullName || !email || !address || !services || services.length === 0) {
@@ -132,7 +159,7 @@ export async function POST(req: Request) {
         replyTo: email, // So you can reply directly to the customer
       });
     } catch (emailError) {
-      console.error("Failed to send confirmation email:", emailError);
+      logger.errorFrom("Intake confirmation email", emailError);
       // Don't fail the whole request if email fails
     }
 
@@ -147,7 +174,7 @@ export async function POST(req: Request) {
       },
     });
   } catch (error) {
-    console.error("Error submitting intake form:", error);
+    logger.errorFrom("POST /api/intake", error);
     return NextResponse.json(
       {
         error: "Failed to submit service request",

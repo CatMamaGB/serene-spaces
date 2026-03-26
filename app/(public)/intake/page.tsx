@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Footer from "../../../components/Footer";
 import { useToast } from "@/components/ToastProvider";
+import { logger } from "@/lib/logger";
 
 export default function IntakePage() {
   const [formData, setFormData] = useState({
@@ -17,6 +18,8 @@ export default function IntakePage() {
     repairNotes: "",
     waterproofingNotes: "",
     allergies: "",
+    /** Leave empty — spam bot trap */
+    website: "",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -107,11 +110,11 @@ export default function IntakePage() {
         throw new Error(errorData.error || "Failed to submit form");
       }
 
-      const result = await response.json();
-      console.log("Form submitted successfully:", result);
+      await response.json();
+      logger.debug("Intake form submitted successfully");
       setSubmitSuccess(true);
     } catch (error) {
-      console.error("Error submitting form:", error);
+      logger.errorFrom("Intake form submit", error);
       toast.error(
         "Submission Failed",
         "Failed to submit form. Please try again.",
@@ -245,7 +248,20 @@ export default function IntakePage() {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="p-4 sm:p-6 lg:p-8">
+          <form
+            onSubmit={handleSubmit}
+            className="relative p-4 sm:p-6 lg:p-8"
+          >
+            <input
+              type="text"
+              name="website"
+              value={formData.website}
+              onChange={handleInputChange}
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              className="absolute left-[-9999px] top-0 h-px w-px overflow-hidden opacity-0"
+            />
             {/* Customer Information */}
             <div className="mb-6 sm:mb-8">
               <h2 className="text-gray-800 text-lg sm:text-xl font-semibold mb-4 sm:mb-6">

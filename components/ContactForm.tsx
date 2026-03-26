@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useToast } from "@/components/ToastProvider";
+import { logger } from "@/lib/logger";
 
 export default function ContactForm() {
   const [formData, setFormData] = useState({
@@ -42,7 +43,7 @@ export default function ContactForm() {
       });
       setSubmitSuccess(true);
     } catch (error) {
-      console.error("Error submitting form:", error);
+      logger.errorFrom("Contact form submit", error);
       toast.error(
         "Submission Failed",
         "Failed to send message. Please try again.",

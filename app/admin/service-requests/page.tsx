@@ -15,6 +15,7 @@ import {
   ActionButtons,
 } from "@/components/service-requests";
 import { useToast } from "@/components/ToastProvider";
+import { logger } from "@/lib/logger";
 
 export default function ServiceRequestsPage() {
   const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>([]);
@@ -38,7 +39,7 @@ export default function ServiceRequestsPage() {
       setServiceRequests(data);
       setError(null);
     } catch (e) {
-      console.error("Error fetching service requests:", e);
+      logger.errorFrom("Fetch service requests", e);
       setError("Couldn't load requests. Try Refresh.");
     } finally {
       setLoading(false);
@@ -558,7 +559,7 @@ export default function ServiceRequestsPage() {
                         notes: newNotes,
                       });
                     } catch (error) {
-                      console.error("Error updating notes:", error);
+                      logger.errorFrom("Update service request notes", error);
                       toast.error(
                         "Update Failed",
                         "Failed to update notes. Please try again.",

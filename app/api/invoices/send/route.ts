@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createGmailTransporter } from "@/lib/gmail-oauth";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,7 +13,7 @@ export async function POST(req: NextRequest) {
     // Check authentication first
     const session = await auth();
     if (!session?.user?.id) {
-      console.error("No authenticated user found");
+      logger.error("Send invoice: no authenticated user");
       return NextResponse.json(
         {
           error: "Authentication required - Please log in to send invoices.",
@@ -22,7 +23,10 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    console.log("Send invoice request body:", JSON.stringify(body, null, 2));
+    logger.debug("Send invoice request body (sanitized keys):", {
+      invoiceId: body?.invoiceId,
+      itemCount: Array.isArray(body?.items) ? body.items.length : 0,
+    });
 
     const {
       invoiceId,
@@ -43,10 +47,10 @@ export async function POST(req: NextRequest) {
 
     // Validate required fields
     if (!customerName || !customerEmail || !items || items.length === 0) {
-      console.error("Missing required fields:", {
-        customerName,
-        customerEmail,
-        items: items?.length,
+      logger.debug("Send invoice validation: missing required fields", {
+        hasName: !!customerName,
+        hasEmail: !!customerEmail,
+        itemCount: items?.length,
       });
       return NextResponse.json(
         {
@@ -59,7 +63,7 @@ export async function POST(req: NextRequest) {
 
     // Validate financial fields
     if (typeof subtotal !== 'number' || typeof tax !== 'number' || typeof total !== 'number') {
-      console.error("Missing or invalid financial fields:", {
+      logger.debug("Send invoice validation: invalid financial field types", {
         subtotal: typeof subtotal,
         tax: typeof tax,
         total: typeof total,
@@ -74,10 +78,7 @@ export async function POST(req: NextRequest) {
 
     // Validate Gmail OAuth2 configuration
     if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
-      console.error("Google OAuth2 configuration missing:", {
-        clientId: process.env.GOOGLE_CLIENT_ID ? "Set" : "Missing",
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET ? "Set" : "Missing",
-      });
+      logger.error("Send invoice: Google OAuth2 env vars missing");
       return NextResponse.json(
         {
           error:
@@ -93,7 +94,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (!gmailCredential?.refreshToken && !process.env.GMAIL_REFRESH_TOKEN) {
-      console.error("Gmail refresh token missing from database and environment");
+      logger.error("Send invoice: Gmail refresh token missing (DB and env)");
       return NextResponse.json(
         {
           error:
@@ -103,15 +104,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.log("Gmail OAuth credential found:", {
+    logger.debug("Gmail OAuth:", {
       hasDatabaseToken: !!gmailCredential?.refreshToken,
       hasEnvToken: !!process.env.GMAIL_REFRESH_TOKEN,
-    });
-
-    console.log("Gmail OAuth2 configuration:", {
-      clientId: process.env.GOOGLE_CLIENT_ID ? "Set" : "Missing",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET ? "Set" : "Missing",
-      refreshToken: process.env.GMAIL_REFRESH_TOKEN ? "Set" : "Missing",
     });
 
     // Generate invoice HTML
@@ -131,15 +126,10 @@ export async function POST(req: NextRequest) {
       emailMessage,
     });
 
-    // Send email via Gmail OAuth2
-    console.log("Attempting to send email via Gmail OAuth2...");
-
     const transporter = await createGmailTransporter(session.user.id);
     const fromAddr = process.env.GMAIL_USER || "loveserenespaces@gmail.com";
 
-    console.log("From:", `Serene Spaces <${fromAddr}>`);
-    console.log("To:", customerEmail);
-    console.log("Subject:", `Invoice from Serene Spaces - ${invoiceDate}`);
+    logger.debug("Sending invoice email via Gmail OAuth2");
 
     const mailOptions = {
       from: `Serene Spaces <${fromAddr}>`, // must match the authorized Gmail
@@ -156,10 +146,7 @@ export async function POST(req: NextRequest) {
 
     const info = await transporter.sendMail(mailOptions);
 
-    console.log("✅ Email sent successfully via Gmail:", {
-      messageId: info.messageId,
-      response: info.response,
-    });
+    logger.debug("Invoice email sent", { messageId: info.messageId });
 
     // Update invoice status to "sent" if invoiceId is provided
     if (invoiceId) {
@@ -168,12 +155,9 @@ export async function POST(req: NextRequest) {
           where: { id: invoiceId },
           data: { status: "sent" },
         });
-        console.log(
-          "✅ Invoice status updated to 'sent' for invoice:",
-          invoiceId,
-        );
+        logger.debug("Invoice status set to sent", { invoiceId });
       } catch (updateError) {
-        console.error("⚠️ Failed to update invoice status:", updateError);
+        logger.errorFrom("Update invoice status after send", updateError);
         // Don't fail the entire request if status update fails
       }
     }
@@ -184,8 +168,7 @@ export async function POST(req: NextRequest) {
       message: "Invoice sent successfully via Gmail OAuth2",
     });
   } catch (error) {
-    console.error("Error sending invoice:", error);
-    console.error("Error details:", JSON.stringify(error, null, 2));
+    logger.errorFrom("Send invoice", error);
 
     // Provide more specific error information
     let errorMessage = "Internal server error";
@@ -260,7 +243,7 @@ export async function GET(req: NextRequest) {
       message: "Test email sent successfully via Gmail OAuth2",
     });
   } catch (error) {
-    console.error("Error sending test email:", error);
+    logger.errorFrom("Send test email", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

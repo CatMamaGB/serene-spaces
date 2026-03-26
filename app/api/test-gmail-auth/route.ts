@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
+import { diagnosticsNotAllowedResponse } from "@/lib/diagnostics-allowed";
 
 export const runtime = "nodejs";
 
 export async function GET() {
+  const blocked = diagnosticsNotAllowedResponse();
+  if (blocked) return blocked;
+
   try {
     // Check authentication
     const session = await auth();
@@ -29,7 +34,7 @@ export async function GET() {
         tokenInfo.tokenId = credential?.id || null;
         tokenInfo.tokenLength = credential?.refreshToken?.length || 0;
       } catch (dbError) {
-        console.error("DB query failed:", dbError);
+        logger.errorFrom("Test Gmail auth DB query", dbError);
       }
     }
 
@@ -41,7 +46,7 @@ export async function GET() {
         : "❌ No Gmail token found - need to authorize",
     });
   } catch (error) {
-    console.error("Test Gmail auth error:", error);
+    logger.errorFrom("GET /api/test-gmail-auth", error);
     return NextResponse.json(
       { error: "Test failed", detail: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }

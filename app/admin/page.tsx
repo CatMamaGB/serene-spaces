@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { safeJson } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { usePendingCount } from "@/hooks/usePendingCount";
+import { logger } from "@/lib/logger";
 
 interface DashboardStats {
   totalCustomers: number;
@@ -36,27 +37,15 @@ export default function AdminDashboard() {
   const [recentInvoices, setRecentInvoices] = useState<RecentInvoice[]>([]);
 
   useEffect(() => {
-    console.log("🏠 Admin Dashboard - Session Status:", status);
-    console.log("🏠 Admin Dashboard - Session Data:", session);
+    logger.debug("Admin dashboard session", { status, email: session?.user?.email });
 
     if (status === "unauthenticated") {
-      console.log(
-        "❌ Admin Dashboard - User not authenticated, redirecting to login",
-      );
       window.location.href = "/auth/signin";
       return;
     }
 
     if (status === "loading") {
-      console.log("⏳ Admin Dashboard - Session loading...");
       return;
-    }
-
-    if (status === "authenticated" && session?.user) {
-      console.log(
-        "✅ Admin Dashboard - User authenticated:",
-        session.user.email,
-      );
     }
   }, [session, status]);
 
@@ -129,7 +118,7 @@ export default function AdminDashboard() {
         });
         setRecentInvoices(recentInvoicesData);
       } catch (error) {
-        console.error("Error fetching dashboard stats:", error);
+        logger.errorFrom("Admin dashboard stats", error);
         // Keep default values on error
       } finally {
         setLoading(false);

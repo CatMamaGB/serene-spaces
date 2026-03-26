@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { requireAdmin } from "@/lib/api-auth";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -91,7 +92,7 @@ export async function GET(
 
     return NextResponse.json(formattedInvoice);
   } catch (error) {
-    console.error("Error fetching invoice:", error);
+    logger.errorFrom("GET /api/invoices/[id]", error);
     return NextResponse.json(
       { error: "Failed to fetch invoice" },
       { status: 500 },
@@ -228,7 +229,7 @@ export async function PATCH(
 
     return NextResponse.json(updatedInvoice);
   } catch (error) {
-    console.error("Error updating invoice:", error);
+    logger.errorFrom("PATCH /api/invoices/[id]", error);
     return NextResponse.json(
       { error: "Failed to update invoice" },
       { status: 500 },
@@ -258,7 +259,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: "Invoice deleted successfully" });
   } catch (error) {
-    console.error("Error deleting invoice:", error);
+    logger.errorFrom("DELETE /api/invoices/[id]", error);
     return NextResponse.json(
       { error: "Failed to delete invoice" },
       { status: 500 },

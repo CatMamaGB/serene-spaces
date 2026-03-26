@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -149,7 +150,7 @@ export async function GET(request: Request) {
       },
     });
   } catch (error) {
-    console.error("Error exporting invoices:", error);
+    logger.errorFrom("GET /api/export/invoices", error);
     return NextResponse.json(
       { error: "Failed to export invoices" },
       { status: 500 },

@@ -7,6 +7,7 @@ import { useIsMobile } from "@/lib/hooks";
 import { safeJson } from "@/lib/utils";
 import { Invoice, recomputeTotals, formatCurrency } from "@/lib/invoice-types";
 import { useToast } from "@/components/ToastProvider";
+import { logger } from "@/lib/logger";
 
 export default function ViewInvoice() {
   const params = useParams() as { id: string };
@@ -41,7 +42,7 @@ export default function ViewInvoice() {
         setSendToEmail(invoiceData.customerEmail);
       } catch (error) {
         if ((error as Error).name !== "AbortError") {
-          console.error("Error fetching invoice:", error);
+          logger.errorFrom("Fetch invoice", error);
           // Fallback to mock data if API fails
           const mockInvoice: Invoice = {
             id: params.id,
@@ -130,7 +131,7 @@ export default function ViewInvoice() {
         toast.error("Send Failed", `Failed to send invoice: ${result.error}`);
       }
     } catch (error) {
-      console.error("Error sending invoice:", error);
+      logger.errorFrom("Send invoice", error);
       toast.error("Send Failed", "Failed to send invoice. Please try again.");
     } finally {
       setIsSending(false);
@@ -165,7 +166,7 @@ export default function ViewInvoice() {
         );
       }
     } catch (error) {
-      console.error("Error deleting invoice:", error);
+      logger.errorFrom("Delete invoice", error);
       toast.error(
         "Delete Failed",
         "Failed to delete invoice. Please try again.",
@@ -201,7 +202,7 @@ export default function ViewInvoice() {
         );
       }
     } catch (error) {
-      console.error("Error updating invoice:", error);
+      logger.errorFrom("Update invoice", error);
       toast.error(
         "Update Failed",
         "Failed to update invoice. Please try again.",
@@ -328,7 +329,7 @@ export default function ViewInvoice() {
                       "Invoice status updated successfully!",
                     );
                   } catch (error) {
-                    console.error("Error updating status:", error);
+                    logger.errorFrom("Update invoice status", error);
                     setInvoice((prev) =>
                       prev ? { ...prev, status: prevStatus } : null,
                     );

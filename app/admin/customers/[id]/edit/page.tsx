@@ -18,6 +18,7 @@ import {
   safeJson,
 } from "@/lib/utils";
 import { useToast } from "@/components/ToastProvider";
+import { logger } from "@/lib/logger";
 
 export default function EditCustomer() {
   const params = useParams();
@@ -132,7 +133,7 @@ export default function EditCustomer() {
         );
       }
     } catch (error) {
-      console.error("Error updating customer:", error);
+      logger.errorFrom("Update customer", error);
       toast.error(
         "Update Failed",
         "Failed to update customer. Please try again.",

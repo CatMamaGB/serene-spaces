@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 
@@ -26,7 +27,7 @@ export async function POST() {
       userId: session.user.id,
     });
   } catch (error) {
-    console.error("Reset Gmail credentials error:", error);
+    logger.errorFrom("POST /api/gmail/reset", error);
     return NextResponse.json(
       { error: "Failed to reset credentials" },
       { status: 500 }

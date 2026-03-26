@@ -7,6 +7,7 @@ import { useIsMobile, useCustomer } from "@/lib/hooks";
 import { LoadingState, ErrorState, DeleteModal } from "@/components/shared";
 import { safeJson } from "@/lib/utils";
 import { useToast } from "@/components/ToastProvider";
+import { logger } from "@/lib/logger";
 
 export default function ViewCustomer() {
   const params = useParams();
@@ -40,7 +41,7 @@ export default function ViewCustomer() {
         );
       }
     } catch (error) {
-      console.error("Error deleting customer:", error);
+      logger.errorFrom("Delete customer", error);
       toast.error(
         "Delete Failed",
         "Failed to delete customer. Please try again.",

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,7 +26,7 @@ export async function GET() {
 
     return NextResponse.json({ priceLists });
   } catch (error) {
-    console.error("Error fetching price lists:", error);
+    logger.errorFrom("GET /api/pricing", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },
@@ -63,7 +64,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ priceList });
   } catch (error) {
-    console.error("Error creating price list:", error);
+    logger.errorFrom("POST /api/pricing", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

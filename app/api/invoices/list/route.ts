@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -59,13 +60,7 @@ export async function GET() {
 
     return NextResponse.json(formattedInvoices);
   } catch (error) {
-    console.error("Error fetching invoices:", error);
-
-    // Log more details about the error
-    if (error instanceof Error) {
-      console.error("Error message:", error.message);
-      console.error("Error stack:", error.stack);
-    }
+    logger.errorFrom("GET /api/invoices/list", error);
 
     return NextResponse.json(
       {

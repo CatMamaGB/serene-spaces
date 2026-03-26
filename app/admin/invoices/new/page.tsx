@@ -7,6 +7,7 @@ import { PRICING, PRICE_LABELS, type PriceCode } from "@/lib/pricing";
 import { safeJson } from "@/lib/utils";
 import { toCents, fromCents, formatCurrency } from "@/lib/invoice-types";
 import { useToast } from "@/components/ToastProvider";
+import { logger } from "@/lib/logger";
 
 interface Customer {
   id: string;
@@ -99,7 +100,7 @@ export default function CreateInvoice() {
         }
       } catch (e: unknown) {
         if ((e as Error).name !== "AbortError")
-          console.error("Error fetching customers:", e);
+          logger.errorFrom("New invoice: fetch customers", e);
       } finally {
         setLoading(false);
       }
@@ -278,7 +279,7 @@ export default function CreateInvoice() {
       // Redirect to the invoice view page
       router.push(`/admin/invoices/${result.id}`);
     } catch (error) {
-      console.error("Error creating invoice:", error);
+      logger.errorFrom("Create invoice", error);
       toast.error(
         "Creation Failed",
         `Failed to create invoice: ${error instanceof Error ? error.message : "Unknown error"}`,
@@ -348,7 +349,7 @@ export default function CreateInvoice() {
       // Redirect to the invoice view page
       router.push(`/admin/invoices/${result.id}`);
     } catch (error) {
-      console.error("Error saving draft:", error);
+      logger.errorFrom("Save invoice draft", error);
       toast.error(
         "Save Failed",
         `Failed to save draft: ${error instanceof Error ? error.message : "Unknown error"}`,

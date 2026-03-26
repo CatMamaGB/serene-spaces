@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { nextInvoiceNumber } from "@/lib/invoice-number";
 import { auth } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,7 +16,10 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    console.log("Creating invoice with data:", JSON.stringify(body, null, 2));
+    logger.debug("Creating invoice", {
+      customerName: body?.customerName,
+      itemCount: Array.isArray(body?.items) ? body.items.length : 0,
+    });
 
     const {
       customerName,
@@ -124,7 +128,7 @@ export async function POST(req: Request) {
       return invoice;
     });
 
-    console.log("Invoice created successfully:", result.id);
+    logger.debug("Invoice created", { id: result.id });
 
     return NextResponse.json({
       id: result.id,
@@ -134,7 +138,7 @@ export async function POST(req: Request) {
       message: "Invoice created successfully",
     });
   } catch (err: unknown) {
-    console.error("Error creating invoice:", err);
+    logger.errorFrom("POST /api/invoices", err);
     const errorMessage = err instanceof Error ? err.message : "Server error";
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }

@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { diagnosticsNotAllowedResponse } from "@/lib/diagnostics-allowed";
 
 export const runtime = "nodejs";
 
 export async function GET() {
+  const blocked = diagnosticsNotAllowedResponse();
+  if (blocked) return blocked;
+
   try {
     const diagnostics = {
       timestamp: new Date().toISOString(),

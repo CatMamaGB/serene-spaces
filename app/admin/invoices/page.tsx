@@ -5,6 +5,7 @@ import Link from "next/link";
 import { safeJson } from "@/lib/utils";
 import { formatCurrency } from "@/lib/invoice-types";
 import { useToast } from "@/components/ToastProvider";
+import { logger } from "@/lib/logger";
 
 type Invoice = {
   id: string;
@@ -201,12 +202,12 @@ export default function InvoicesPage() {
           }));
           setInvoices(normalizedData);
         } else {
-          console.warn("API returned non-array data, using mock data");
+          logger.warn("API returned non-array data, using mock data");
           setInvoices(mockInvoices);
         }
       })
       .catch((error) => {
-        console.error("Error fetching invoices, using mock data:", error);
+        logger.errorFrom("Fetch invoices list", error);
         setInvoices(mockInvoices);
       })
       .finally(() => setLoading(false));
@@ -270,15 +271,12 @@ export default function InvoicesPage() {
   const confirmDelete = async () => {
     if (!invoiceToDelete) return;
 
-    console.log("Attempting to delete invoice:", invoiceToDelete);
+    logger.debug("Delete invoice", { id: invoiceToDelete.id });
     setDeletingInvoiceId(invoiceToDelete.id);
     try {
       const response = await fetch(`/api/invoices/${invoiceToDelete.id}`, {
         method: "DELETE",
       });
-
-      console.log("Delete response status:", response.status);
-      console.log("Delete response headers:", response.headers);
 
       const result = await safeJson(response);
 
@@ -294,14 +292,14 @@ export default function InvoicesPage() {
           "Invoice has been deleted successfully!",
         );
       } else {
-        console.error("Delete failed with error:", result);
+        logger.error("Delete invoice failed:", result?.error ?? result);
         toast.error(
           "Delete Failed",
           `Failed to delete invoice: ${result.error || "Unknown error"}`,
         );
       }
     } catch (error) {
-      console.error("Error deleting invoice:", error);
+      logger.errorFrom("Delete invoice", error);
       toast.error(
         "Delete Failed",
         "Failed to delete invoice. Please try again.",

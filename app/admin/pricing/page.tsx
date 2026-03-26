@@ -12,6 +12,7 @@ import {
   updatePriceList,
 } from "./actions";
 import { useToast } from "@/components/ToastProvider";
+import { logger } from "@/lib/logger";
 
 interface PriceList {
   id: string;
@@ -78,11 +79,11 @@ export default function PricingPage() {
           setSelectedList(data.priceLists[0]);
         }
       } else {
-        console.error("API Error:", data.error);
+        logger.error("Pricing API error:", data.error);
         setPriceLists([]);
       }
     } catch (error) {
-      console.error("Error fetching price lists:", error);
+      logger.errorFrom("Fetch price lists", error);
       setPriceLists([]);
     } finally {
       setIsLoading(false);
@@ -102,7 +103,7 @@ export default function PricingPage() {
       setShowNewListForm(false);
       await fetchPriceLists();
     } catch (error) {
-      console.error("Error creating price list:", error);
+      logger.errorFrom("Create price list", error);
     }
   };
 
@@ -111,7 +112,7 @@ export default function PricingPage() {
       await publishDraft(listId);
       await fetchPriceLists();
     } catch (error) {
-      console.error("Error publishing price list:", error);
+      logger.errorFrom("Publish price list", error);
     }
   };
 
@@ -121,7 +122,7 @@ export default function PricingPage() {
       setEditingList(null);
       await fetchPriceLists();
     } catch (error) {
-      console.error("Error updating price list:", error);
+      logger.errorFrom("Update price list", error);
     }
   };
 
@@ -141,7 +142,7 @@ export default function PricingPage() {
       setShowNewItemForm(false);
       await fetchPriceLists();
     } catch (error) {
-      console.error("Error creating price item:", error);
+      logger.errorFrom("Create price item", error);
     }
   };
 
@@ -155,7 +156,7 @@ export default function PricingPage() {
       setEditingItem(null);
       await fetchPriceLists();
     } catch (error) {
-      console.error("Error updating price item:", error);
+      logger.errorFrom("Update price item", error);
     }
   };
 
@@ -174,7 +175,7 @@ export default function PricingPage() {
       );
       await fetchPriceLists();
     } catch (error) {
-      console.error("Error archiving price item:", error);
+      logger.errorFrom("Archive price item", error);
       toast.error(
         "Archive Failed",
         "Failed to archive price item. Please try again.",

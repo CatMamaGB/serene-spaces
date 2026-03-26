@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { logger } from "@/lib/logger";
 
 // Custom hook for mobile detection
 export const useIsMobile = () => {
@@ -51,7 +52,7 @@ export const useCustomer = (id: string) => {
           setError("Failed to load customer data");
         }
       } catch (error) {
-        console.error("Error fetching customer:", error);
+        logger.errorFrom("useCustomer fetch", error);
         setError("Error loading customer data");
       } finally {
         setLoading(false);

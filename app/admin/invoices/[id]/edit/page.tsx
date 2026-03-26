@@ -13,6 +13,7 @@ import {
   generateItemId,
 } from "@/lib/invoice-types";
 import { useToast } from "@/components/ToastProvider";
+import { logger } from "@/lib/logger";
 import { setInvoiceApplyTax, setInvoiceTaxRate } from "../actions";
 
 export default function EditInvoicePage() {
@@ -55,7 +56,7 @@ export default function EditInvoicePage() {
         setInvoice(recomputeTotals(invoiceWithIds));
       } catch (error) {
         if ((error as Error).name !== "AbortError") {
-          console.error("Error fetching invoice:", error);
+          logger.errorFrom("Fetch invoice (edit)", error);
           // Fallback to mock data if API fails
           const mockInvoice: Invoice = {
             id: params.id,
@@ -190,7 +191,7 @@ export default function EditInvoicePage() {
         router.push("/admin/invoices");
       }, 2000);
     } catch (error) {
-      console.error("Error saving invoice:", error);
+      logger.errorFrom("Save invoice", error);
       toast.error(
         "Save Failed",
         `Error saving invoice: ${error instanceof Error ? error.message : "Unknown error"}`,
@@ -228,7 +229,7 @@ export default function EditInvoicePage() {
         );
       }
     } catch (error) {
-      console.error("Error deleting invoice:", error);
+      logger.errorFrom("Delete invoice (edit page)", error);
       toast.error(
         "Delete Failed",
         "Failed to delete invoice. Please try again.",

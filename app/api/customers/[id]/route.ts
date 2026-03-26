@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { requireAdmin } from "@/lib/api-auth";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -39,7 +40,7 @@ export async function GET(
 
     return NextResponse.json(customer);
   } catch (error) {
-    console.error("Error fetching customer:", error);
+    logger.errorFrom("GET /api/customers/[id]", error);
     return NextResponse.json(
       { error: "Failed to fetch customer" },
       { status: 500 },
@@ -105,7 +106,7 @@ export async function PUT(
 
     return NextResponse.json(updatedCustomer);
   } catch (error) {
-    console.error("Error updating customer:", error);
+    logger.errorFrom("PATCH /api/customers/[id]", error);
     return NextResponse.json(
       { error: "Failed to update customer" },
       { status: 500 },
@@ -176,7 +177,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: "Customer deleted successfully" });
   } catch (error) {
-    console.error("Error deleting customer:", error);
+    logger.errorFrom("DELETE /api/customers/[id]", error);
     return NextResponse.json(
       { error: "Failed to delete customer" },
       { status: 500 },

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Customer } from "@/lib/hooks";
 import { formatAddress, safeJson } from "@/lib/utils";
 import { useToast } from "@/components/ToastProvider";
+import { logger } from "@/lib/logger";
 
 // Mobile Card Layout
 const MobileCardLayout = ({
@@ -232,7 +233,7 @@ export default function CustomersPage() {
         );
       }
     } catch (error) {
-      console.error("Error deleting customer:", error);
+      logger.errorFrom("Delete customer", error);
       toast.error(
         "Delete Failed",
         "Failed to delete customer. Please try again.",

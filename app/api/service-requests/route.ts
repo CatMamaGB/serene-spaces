@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -115,7 +116,7 @@ export async function GET(request: Request) {
       hasMore: skip + transformedRequests.length < total,
     });
   } catch (error) {
-    console.error("Error fetching service requests:", error);
+    logger.errorFrom("GET /api/service-requests", error);
     return NextResponse.json(
       { error: "Failed to fetch service requests" },
       { status: 500 },
@@ -154,7 +155,7 @@ export async function PUT(req: Request) {
 
     return NextResponse.json(updatedRequest);
   } catch (error) {
-    console.error("Error updating service request:", error);
+    logger.errorFrom("PATCH /api/service-requests", error);
     return NextResponse.json(
       { error: "Failed to update service request" },
       { status: 500 },

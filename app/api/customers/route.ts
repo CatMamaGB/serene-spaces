@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { auth } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -46,7 +47,7 @@ export async function GET(req: Request) {
       hasMore: skip + customers.length < total,
     });
   } catch (error) {
-    console.error("Error fetching customers:", error);
+    logger.errorFrom("GET /api/customers", error);
     return NextResponse.json(
       { error: "Failed to fetch customers" },
       { status: 500 },
@@ -63,7 +64,7 @@ export async function POST(req: Request) {
 
     // Check if DATABASE_URL is set
     if (!process.env.DATABASE_URL) {
-      console.error("DATABASE_URL not set in environment variables");
+      logger.error("POST /api/customers: DATABASE_URL not set");
       return NextResponse.json(
         {
           error: "Database not configured",
@@ -74,7 +75,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    console.log("Creating customer with data:", body);
+    logger.debug("Creating customer", { name: body?.name, hasEmail: !!body?.email });
 
     const {
       name,
@@ -105,16 +106,16 @@ export async function POST(req: Request) {
           phone: phone || undefined,
         });
         stripeId = sc.id;
-        console.log("Created Stripe customer:", stripeId);
+        logger.debug("Created Stripe customer", { stripeId });
       } catch (stripeError) {
-        console.warn("Failed to create Stripe customer:", stripeError);
+        logger.warn("Failed to create Stripe customer:", stripeError);
         // Continue without Stripe customer
       }
     } else {
-      console.log("Stripe not configured, skipping Stripe customer creation");
+      logger.debug("Stripe not configured; skipping Stripe customer creation");
     }
 
-    console.log("Creating customer in database...");
+    logger.debug("Creating customer in database");
     const customer = await prisma.customer.create({
       data: {
         name,
@@ -129,10 +130,10 @@ export async function POST(req: Request) {
       },
     });
 
-    console.log("Customer created successfully:", customer.id);
+    logger.debug("Customer created", { id: customer.id });
     return NextResponse.json(customer);
   } catch (error) {
-    console.error("Error creating customer:", error);
+    logger.errorFrom("POST /api/customers", error);
 
     // Provide more detailed error information
     let errorMessage = "Failed to create customer";

@@ -1,5 +1,6 @@
 import { google } from "googleapis";
 import nodemailer from "nodemailer";
+import { logger } from "./logger";
 
 // Create OAuth2 client
 const createOAuth2Client = () => {
@@ -35,7 +36,7 @@ export const createGmailTransporter = async (userId?: string) => {
         });
         refreshToken = credential?.refreshToken;
       } catch (dbError) {
-        console.log("Could not load refresh token from database:", dbError);
+        logger.debug("Could not load refresh token from database:", dbError);
       }
     } else {
       // Fallback to latest token if no userId provided
@@ -46,7 +47,7 @@ export const createGmailTransporter = async (userId?: string) => {
         });
         refreshToken = credential?.refreshToken;
       } catch (dbError) {
-        console.log("Could not load refresh token from database:", dbError);
+        logger.debug("Could not load refresh token from database:", dbError);
       }
     }
   }

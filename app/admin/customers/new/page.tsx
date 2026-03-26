@@ -12,6 +12,7 @@ import {
   safeJson,
 } from "@/lib/utils";
 import { useToast } from "@/components/ToastProvider";
+import { logger } from "@/lib/logger";
 
 type CustomerFormData = {
   name: string;
@@ -112,10 +113,10 @@ export default function NewCustomerPage() {
           "Creation Failed",
           `Error saving customer: ${errorMessage}${errorDetails}`,
         );
-        console.error("Customer creation failed:", result);
+        logger.error("Customer creation failed:", result);
       }
     } catch (error) {
-      console.error("Error:", error);
+      logger.errorFrom("Create customer", error);
       toast.error(
         "Network Error",
         "Unable to connect to server. Please check your internet connection and try again.",
