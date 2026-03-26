@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { useState } from "react";
-import { usePendingCount } from "@/hooks/usePendingCount";
+import { useAdminSummary } from "@/hooks/useAdminSummary";
 import { PendingBadge } from "@/components/PendingBadge";
 
 const NavItem = ({
@@ -26,7 +26,7 @@ const NavItem = ({
 
 export default function AdminNavigation({ children }: { children: ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { pendingCount } = usePendingCount();
+  const { pendingServiceRequests, unreadContactInquiries } = useAdminSummary();
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -48,12 +48,27 @@ export default function AdminNavigation({ children }: { children: ReactNode }) {
             <NavItem href="/admin" label="Dashboard" />
             <NavItem href="/admin/customers" label="Customers" />
             <NavItem href="/admin/invoices" label="Invoices" />
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <NavItem
                 href="/admin/service-requests"
                 label="Service Requests"
               />
-              {pendingCount > 0 && <PendingBadge count={pendingCount} />}
+              {pendingServiceRequests > 0 && (
+                <PendingBadge count={pendingServiceRequests} />
+              )}
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <NavItem
+                href="/admin/contact-inquiries"
+                label="Contact messages"
+              />
+              {unreadContactInquiries > 0 && (
+                <PendingBadge
+                  count={unreadContactInquiries}
+                  href="/admin/contact-inquiries"
+                  title={`${unreadContactInquiries} unread message${unreadContactInquiries !== 1 ? "s" : ""}`}
+                />
+              )}
             </div>
             <NavItem href="/admin/pricing" label="Pricing" />
           </nav>
@@ -175,9 +190,23 @@ export default function AdminNavigation({ children }: { children: ReactNode }) {
                     label="Service Requests"
                     onClick={closeMobileMenu}
                   />
-                  {pendingCount > 0 && (
+                  {pendingServiceRequests > 0 && (
                     <PendingBadge
-                      count={pendingCount}
+                      count={pendingServiceRequests}
+                      isMobile
+                      onClose={closeMobileMenu}
+                    />
+                  )}
+                  <NavItem
+                    href="/admin/contact-inquiries"
+                    label="Contact messages"
+                    onClick={closeMobileMenu}
+                  />
+                  {unreadContactInquiries > 0 && (
+                    <PendingBadge
+                      count={unreadContactInquiries}
+                      href="/admin/contact-inquiries"
+                      title={`${unreadContactInquiries} unread message${unreadContactInquiries !== 1 ? "s" : ""}`}
                       isMobile
                       onClose={closeMobileMenu}
                     />

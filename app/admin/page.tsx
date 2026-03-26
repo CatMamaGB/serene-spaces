@@ -4,13 +4,14 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { safeJson } from "@/lib/utils";
 import { useSession } from "next-auth/react";
-import { usePendingCount } from "@/hooks/usePendingCount";
+import { useAdminSummary } from "@/hooks/useAdminSummary";
 import { logger } from "@/lib/logger";
 
 interface DashboardStats {
   totalCustomers: number;
   pendingInvoices: number;
   pendingRequests: number;
+  unreadContactMessages: number;
   monthlyRevenue: number;
 }
 
@@ -25,12 +26,16 @@ interface RecentInvoice {
 
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
-  const { pendingCount: pendingRequests, isLoading: pendingRequestsLoading } =
-    usePendingCount();
+  const {
+    pendingServiceRequests,
+    unreadContactInquiries,
+    isLoading: summaryLoading,
+  } = useAdminSummary();
   const [stats, setStats] = useState<DashboardStats>({
     totalCustomers: 0,
     pendingInvoices: 0,
     pendingRequests: 0,
+    unreadContactMessages: 0,
     monthlyRevenue: 0,
   });
   const [loading, setLoading] = useState(true);
@@ -113,7 +118,8 @@ export default function AdminDashboard() {
         setStats({
           totalCustomers,
           pendingInvoices,
-          pendingRequests: pendingRequests, // From usePendingCount hook
+          pendingRequests: pendingServiceRequests,
+          unreadContactMessages: unreadContactInquiries,
           monthlyRevenue: monthlyRevenue, // Already in dollars
         });
         setRecentInvoices(recentInvoicesData);
@@ -126,9 +132,9 @@ export default function AdminDashboard() {
     };
 
     fetchStats();
-  }, [pendingRequests]);
+  }, [pendingServiceRequests, unreadContactInquiries]);
 
-  if (loading || pendingRequestsLoading) {
+  if (loading || summaryLoading) {
     return (
       <div className="p-6 bg-gray-50 min-h-screen">
         <div className="max-w-7xl mx-auto">
@@ -154,7 +160,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Stats */}
-        <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+        <section className="grid gap-6 sm:grid-cols-2 xl:grid-cols-5 mb-8">
           {[
             {
               label: "Total Customers",
@@ -167,9 +173,14 @@ export default function AdminDashboard() {
               color: "bg-yellow-500",
             },
             {
-              label: "Pending Requests",
+              label: "Pending Service Requests",
               value: stats.pendingRequests.toString(),
               color: "bg-orange-500",
+            },
+            {
+              label: "Unread Contact",
+              value: stats.unreadContactMessages.toString(),
+              color: "bg-amber-500",
             },
             {
               label: "Monthly Revenue",
@@ -313,6 +324,18 @@ export default function AdminDashboard() {
                 className="inline-flex items-center justify-center px-4 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors min-h-[44px]"
               >
                 View Customers
+              </Link>
+              <Link
+                href="/admin/service-requests"
+                className="inline-flex items-center justify-center px-4 py-3 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-colors min-h-[44px] sm:col-span-2"
+              >
+                Service requests (intake)
+              </Link>
+              <Link
+                href="/admin/contact-inquiries"
+                className="inline-flex items-center justify-center px-4 py-3 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-colors min-h-[44px] sm:col-span-2"
+              >
+                Contact form messages
               </Link>
             </div>
           </div>

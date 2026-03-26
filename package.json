@@ -11,6 +11,8 @@
     "format:check": "prettier --check .",
     "lint": "next lint",
     "db:seed": "tsx prisma/seed.ts",
+    "db:apply-contact": "npx prisma db execute --file prisma/sql/apply-contact-inquiry.sql --schema prisma/schema.prisma",
+    "db:diff-to-schema": "node scripts/diff-db-to-schema.mjs",
     "db:reset": "npx prisma migrate reset --force",
     "hash-admin-password": "node scripts/hash-admin-password.mjs",
     "postinstall": "npx prisma generate --no-engine"

@@ -1,0 +1,41 @@
+Prisma migrate and your database (no data loss)
+==============================================
+
+Why "migrate dev" asked for reset
+----------------------------------
+Your real database was updated over time (tables/columns) while the files in
+prisma/migrations no longer describe that full history. Prisma compares
+"migrations replayed on an empty DB" to your actual DB, sees a mismatch
+(drift), and suggests reset. You should NOT reset if you need to keep data.
+
+What is safe right now
+----------------------
+1) Add only the missing ContactInquiry table (idempotent):
+
+   npx prisma db execute --file prisma/sql/apply-contact-inquiry.sql --schema prisma/schema.prisma
+
+2) Tell Prisma that the contact migration is already applied (so deploy does not
+   try to create the table again):
+
+   npx prisma migrate resolve --applied 20250325120000_add_contact_inquiry
+
+That does not delete any rows. It only creates one table if missing and updates
+_prisma_migrations.
+
+If "migrate dev" still complains about drift
+--------------------------------------------
+That is only the migration *history* being out of sync with the DB, not your
+business data. Options:
+
+A) Prefer "migrate deploy" in CI/production and avoid "migrate dev" against
+   this database until history is baselined.
+
+B) Full baseline (advanced): back up _prisma_migrations and your DB, then
+   consolidate migration files to match reality using Prisma's baseline docs:
+   https://www.prisma.io/docs/guides/migrate/developing-with-baseline
+
+Quick check: what SQL is still needed?
+--------------------------------------
+   node scripts/diff-db-to-schema.mjs
+
+If the output is empty, the database already matches schema.prisma.

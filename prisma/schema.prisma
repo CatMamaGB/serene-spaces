@@ -295,3 +295,14 @@ model GmailCredential {
   updatedAt    DateTime @updatedAt
   user         User?    @relation(fields: [userId], references: [id])
 }
+
+/// Website "Contact Us" form submissions (public; staff notified by email + admin UI).
+model ContactInquiry {
+  id        String    @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  message   String    @db.Text
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+}

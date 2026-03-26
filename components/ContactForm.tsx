@@ -11,6 +11,7 @@ export default function ContactForm() {
     email: "",
     phone: "",
     message: "",
+    website: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -31,15 +32,46 @@ export default function ContactForm() {
     setIsSubmitting(true);
 
     try {
-      // Simulate form submission
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          phone: formData.phone.trim() || undefined,
+          message: formData.message.trim(),
+          website: formData.website,
+        }),
+      });
 
-      // Reset form
+      const data = await res.json().catch(() => ({}));
+
+      if (res.status === 429) {
+        toast.error(
+          "Slow down",
+          typeof data?.error === "string"
+            ? data.error
+            : "Too many messages. Please try again in a few minutes.",
+        );
+        return;
+      }
+
+      if (!res.ok) {
+        toast.error(
+          "Could not send",
+          typeof data?.error === "string"
+            ? data.error
+            : "Something went wrong. Please try again.",
+        );
+        return;
+      }
+
       setFormData({
         name: "",
         email: "",
         phone: "",
         message: "",
+        website: "",
       });
       setSubmitSuccess(true);
     } catch (error) {
@@ -82,7 +114,7 @@ export default function ContactForm() {
       <div className="py-8 sm:py-12 lg:py-16">
         <div className="container-responsive">
           <div className="max-w-2xl mx-auto">
-            <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 lg:p-12">
+            <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 lg:p-12 relative">
               {/* Header */}
               <div className="text-center mb-8 sm:mb-12">
                 <h1 className="text-primary text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6 tracking-tight">
@@ -96,6 +128,16 @@ export default function ContactForm() {
 
               {/* Contact Form */}
               <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
+                <input
+                  type="text"
+                  name="website"
+                  value={formData.website}
+                  onChange={handleInputChange}
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                  className="absolute left-[-9999px] top-0 h-px w-px overflow-hidden opacity-0"
+                />
                 {/* Name Field */}
                 <div>
                   <label htmlFor="name" className="form-label">
