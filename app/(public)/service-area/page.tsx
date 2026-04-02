@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     title: "Service Area | Horse Blanket Cleaning | Serene Spaces",
     description:
       "See where Serene Spaces offers free pickup and where travel fees apply across McHenry County and nearby suburbs.",
-    url: "https://loveserenespaces.com/service-area",
+    url: "/service-area",
   },
 };
 

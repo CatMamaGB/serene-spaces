@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     title: "Horse Blanket Cleaning Huntley IL | Serene Spaces",
     description:
       "Horse blanket cleaning, waterproofing, and repairs in Huntley, IL with free pickup and delivery. Reliable service for barns and horse owners.",
-    url: "https://loveserenespaces.com/locations/huntley",
+    url: "/locations/huntley",
   },
 };
 

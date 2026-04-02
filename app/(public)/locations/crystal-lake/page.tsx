@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     title: "Horse Blanket Cleaning Crystal Lake IL | Serene Spaces",
     description:
       "Professional horse blanket cleaning, waterproofing, and repair services in Crystal Lake with free pickup and delivery.",
-    url: "https://loveserenespaces.com/locations/crystal-lake",
+    url: "/locations/crystal-lake",
   },
 };
 

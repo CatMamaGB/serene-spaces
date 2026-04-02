@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     title: "Horse Blanket Cleaning Pricing | Serene Spaces",
     description:
       "View pricing for horse blanket cleaning, waterproofing, and repairs in Crystal Lake and surrounding areas. Pickup and delivery available.",
-    url: "https://loveserenespaces.com/pricing",
+    url: "/pricing",
   },
   twitter: {
     title: "Horse Blanket Cleaning Pricing | Serene Spaces",
@@ -39,7 +39,7 @@ export default function PricingPage() {
         type="Service"
         name="Horse Equipment Cleaning Services"
         description="Professional horse blanket cleaning, repairs, and waterproofing services with transparent pricing"
-        url="https://loveserenespaces.com/pricing"
+        pathname="/pricing"
         serviceType="Horse Equipment Care"
       />
       <div className="min-h-screen bg-gray-50">

@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     title: "Barn Organization Service - Serene Spaces",
     description:
       "Professional barn organization services to optimize your horse facility. Expert organization solutions for tack rooms and equipment management.",
-    url: "https://loveserenespaces.com/services/barn-organization",
+    url: "/services/barn-organization",
   },
   twitter: {
     title: "Barn Organization Service - Serene Spaces",

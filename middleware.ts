@@ -8,11 +8,11 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Enforce www host to prevent cookie domain mismatches
+  // Canonical host is apex; redirect www so metadata and URL bar match
   const host = req.headers.get("host");
-  if (host === "loveserenespaces.com") {
+  if (host === "www.loveserenespaces.com") {
     const url = new URL(req.url);
-    url.host = "www.loveserenespaces.com";
+    url.host = "loveserenespaces.com";
     return NextResponse.redirect(url);
   }
 

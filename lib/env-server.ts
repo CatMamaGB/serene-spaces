@@ -12,7 +12,7 @@
  * - NEXTAUTH_SECRET or AUTH_SECRET — required in production (either name; Vercel may only set AUTH_SECRET)
  *
  * App URLs:
- * - NEXT_PUBLIC_APP_URL — canonical origin (e.g. https://www.loveserenespaces.com)
+ * - NEXT_PUBLIC_APP_URL — canonical origin (e.g. https://loveserenespaces.com)
  *
  * Gmail send (OAuth):
  * - GMAIL_USER — mailbox for OAuth SMTP + From: header (must match the Google account used at /api/gmail/connect)
@@ -61,7 +61,7 @@ export function getGmailOAuthRedirectUri(requestOrigin?: string): string {
   if (base) return `${base}/api/gmail/callback/google`;
 
   return process.env.NODE_ENV === "production"
-    ? "https://www.loveserenespaces.com/api/gmail/callback/google"
+    ? "https://loveserenespaces.com/api/gmail/callback/google"
     : "http://localhost:3000/api/gmail/callback/google";
 }
 
@@ -71,7 +71,7 @@ export function getPublicSiteOrigin(requestOrigin?: string): string {
     process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
     requestOrigin?.replace(/\/$/, "") ||
     (process.env.NODE_ENV === "production"
-      ? "https://www.loveserenespaces.com"
+      ? "https://loveserenespaces.com"
       : "http://localhost:3000")
   );
 }

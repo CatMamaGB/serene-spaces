@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     title: "Horse Strategy Consulting Service - Serene Spaces",
     description:
       "Professional horse strategy consulting and advisory services. Expert guidance for horse care and equipment management.",
-    url: "https://loveserenespaces.com/services/consulting",
+    url: "/services/consulting",
   },
   twitter: {
     title: "Horse Strategy Consulting Service - Serene Spaces",

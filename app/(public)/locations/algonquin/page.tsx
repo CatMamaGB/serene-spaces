@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     title: "Horse Blanket Cleaning Algonquin IL | Serene Spaces",
     description:
       "Professional horse blanket cleaning, waterproofing, and repairs in Algonquin, IL with free pickup and delivery from Serene Spaces.",
-    url: "https://loveserenespaces.com/locations/algonquin",
+    url: "/locations/algonquin",
   },
 };
 

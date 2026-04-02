@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     title: "Horse Equipment Services - Serene Spaces",
     description:
       "Professional horse equipment services including blanket cleaning, repairs, waterproofing, and barn organization.",
-    url: "https://loveserenespaces.com/services",
+    url: "/services",
   },
   twitter: {
     title: "Horse Equipment Services - Serene Spaces",

@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     title: "Contact Serene Spaces | Schedule Pickup",
     description:
       "Schedule horse blanket cleaning, repairs, and pickup in Crystal Lake, Cary, McHenry, and nearby areas.",
-    url: "https://loveserenespaces.com/contact",
+    url: "/contact",
   },
   twitter: {
     title: "Contact Serene Spaces | Schedule Pickup",

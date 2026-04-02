@@ -4,6 +4,11 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 import { NextAuthProvider } from "../components/NextAuthProvider";
 import { ToastProvider } from "../components/ToastProvider";
+import { getBusinessJsonLdId, getCanonicalOrigin } from "../lib/site";
+
+/** GA4 — override with NEXT_PUBLIC_GA_MEASUREMENT_ID in env (e.g. staging). */
+const GA_MEASUREMENT_ID =
+  process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? "G-519B7JR17N";
 
 // Avoid Chrome "preloaded but not used within a few seconds" for extra Inter .woff2
 // chunks; Next still self-hosts the font via @font-face (no layout shift with swap).
@@ -40,11 +45,11 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL("https://loveserenespaces.com"),
+  metadataBase: new URL(getCanonicalOrigin()),
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://loveserenespaces.com",
+    url: "/",
     siteName: "Serene Spaces",
     title: "Serene Spaces - Professional Horse Equipment Care",
     description:
@@ -94,10 +99,11 @@ export default function RootLayout({
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
+    "@id": getBusinessJsonLdId(),
     name: "Serene Spaces",
     description:
       "Professional horse blanket cleaning, repairs, and waterproofing services in Crystal Lake, IL. Local pickup and delivery available.",
-    url: "https://loveserenespaces.com",
+    url: getCanonicalOrigin(),
     telephone: "+1-815-621-3509",
     email: "loveserenespaces@gmail.com",
     address: {
@@ -176,9 +182,7 @@ export default function RootLayout({
         <NextAuthProvider>
           <ToastProvider>{children}</ToastProvider>
         </NextAuthProvider>
-        {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ? (
-          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
-        ) : null}
+        <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />
       </body>
     </html>
   );

@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     title: "Horse Blanket Cleaning Lake Zurich IL | Serene Spaces",
     description:
       "Horse blanket cleaning, repairs, and waterproofing in Lake Zurich, IL. Pickup and delivery available for horse owners and barns.",
-    url: "https://loveserenespaces.com/locations/lake-zurich",
+    url: "/locations/lake-zurich",
   },
 };
 

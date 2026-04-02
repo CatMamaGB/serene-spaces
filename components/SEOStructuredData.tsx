@@ -1,10 +1,14 @@
 import React from "react";
+import { absoluteUrl, getBusinessJsonLdId } from "../lib/site";
 
 interface SEOStructuredDataProps {
   type?: "Service" | "Organization" | "WebPage";
   name?: string;
   description?: string;
+  /** Absolute URL, or use `pathname` instead */
   url?: string;
+  /** Preferred: path only (e.g. `/pricing`); resolved with canonical origin */
+  pathname?: string;
   image?: string;
   price?: string;
   serviceType?: string;
@@ -15,44 +19,40 @@ export const SEOStructuredData: React.FC<SEOStructuredDataProps> = ({
   name,
   description,
   url,
+  pathname,
   image,
   price,
   serviceType,
 }) => {
+  const pageUrl =
+    pathname !== undefined ? absoluteUrl(pathname) : url;
+
   const getStructuredData = () => {
     const baseData = {
       "@context": "https://schema.org",
       "@type": type,
-      name: name,
-      description: description,
-      url: url,
+      name,
+      description,
+      url: pageUrl,
     };
 
     if (type === "Service") {
       return {
         ...baseData,
         provider: {
-          "@type": "LocalBusiness",
-          name: "Serene Spaces",
-          url: "https://loveserenespaces.com",
-          email: "loveserenespaces@gmail.com",
-          address: {
-            "@type": "PostalAddress",
-            addressLocality: "Crystal Lake",
-            addressRegion: "IL",
-            postalCode: "60014",
-            addressCountry: "US",
-          },
+          "@id": getBusinessJsonLdId(),
         },
-        serviceType: serviceType,
-        offers: price
+        ...(serviceType ? { serviceType } : {}),
+        ...(price
           ? {
-              "@type": "Offer",
-              price: price,
-              priceCurrency: "USD",
+              offers: {
+                "@type": "Offer",
+                price,
+                priceCurrency: "USD",
+              },
             }
-          : undefined,
-        image: image,
+          : {}),
+        ...(image ? { image } : {}),
       };
     }
 
@@ -62,7 +62,7 @@ export const SEOStructuredData: React.FC<SEOStructuredDataProps> = ({
         isPartOf: {
           "@type": "WebSite",
           name: "Serene Spaces",
-          url: "https://loveserenespaces.com",
+          url: absoluteUrl("/"),
         },
         breadcrumb: {
           "@type": "BreadcrumbList",
@@ -71,7 +71,7 @@ export const SEOStructuredData: React.FC<SEOStructuredDataProps> = ({
               "@type": "ListItem",
               position: 1,
               name: "Home",
-              item: "https://loveserenespaces.com",
+              item: absoluteUrl("/"),
             },
           ],
         },

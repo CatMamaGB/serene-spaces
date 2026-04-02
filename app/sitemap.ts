@@ -1,7 +1,8 @@
 import { MetadataRoute } from "next";
+import { getCanonicalOrigin } from "../lib/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://loveserenespaces.com";
+  const baseUrl = getCanonicalOrigin();
 
   return [
     {

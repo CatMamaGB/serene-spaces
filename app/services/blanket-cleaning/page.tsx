@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     title: "Horse Blanket Cleaning & Repair Service - Serene Spaces",
     description:
       "Professional horse blanket cleaning, repair, and waterproofing services. Expert care for turnout blankets, sheets, and saddle pads.",
-    url: "https://loveserenespaces.com/services/blanket-cleaning",
+    url: "/services/blanket-cleaning",
   },
   twitter: {
     title: "Horse Blanket Cleaning & Repair Service - Serene Spaces",

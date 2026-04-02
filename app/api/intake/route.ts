@@ -592,7 +592,7 @@ function generateNotificationEmail(data: {
         }
         
         <div class="action-buttons">
-          <a href="https://www.loveserenespaces.com/admin/service-requests" class="action-button">View in Admin Panel</a>
+          <a href="https://loveserenespaces.com/admin/service-requests" class="action-button">View in Admin Panel</a>
           <a href="mailto:${email}?subject=Re: Service Request #${serviceRequestId}" class="action-button">Reply to Customer</a>
         </div>
         

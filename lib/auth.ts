@@ -89,7 +89,7 @@ const getBaseUrl = () => {
   if (process.env.NODE_ENV === "development") {
     return "http://localhost:3000";
   }
-  return process.env.NEXTAUTH_URL || "https://www.loveserenespaces.com";
+  return process.env.NEXTAUTH_URL || "https://loveserenespaces.com";
 };
 
 export const { auth, handlers, signIn, signOut } = NextAuth({

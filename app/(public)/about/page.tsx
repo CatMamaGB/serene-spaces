@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     title: "About Serene Spaces - Professional Horse Equipment Care",
     description:
       "Learn about Serene Spaces, your trusted partner for professional horse blanket cleaning, repairs, and waterproofing in Crystal Lake, IL.",
-    url: "https://loveserenespaces.com/about",
+    url: "/about",
   },
   twitter: {
     title: "About Serene Spaces - Professional Horse Equipment Care",

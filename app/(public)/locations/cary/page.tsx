@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     title: "Horse Blanket Cleaning Cary IL | Serene Spaces",
     description:
       "Professional horse blanket cleaning, waterproofing, and repairs in Cary, IL with free pickup and delivery from Serene Spaces.",
-    url: "https://loveserenespaces.com/locations/cary",
+    url: "/locations/cary",
   },
 };
 

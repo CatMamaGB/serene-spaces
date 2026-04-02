@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     title: "Horse Blanket Cleaning McHenry IL | Serene Spaces",
     description:
       "Professional horse blanket cleaning, waterproofing, and repairs in McHenry, IL with free pickup and delivery.",
-    url: "https://loveserenespaces.com/locations/mchenry",
+    url: "/locations/mchenry",
   },
 };
 

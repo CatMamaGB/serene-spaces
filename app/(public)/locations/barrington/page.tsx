@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     title: "Horse Blanket Cleaning Barrington IL | Serene Spaces",
     description:
       "Premium horse blanket cleaning, waterproofing, and repair services in Barrington, IL with pickup and delivery available.",
-    url: "https://loveserenespaces.com/locations/barrington",
+    url: "/locations/barrington",
   },
 };
 
