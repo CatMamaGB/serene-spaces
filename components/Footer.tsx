@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import { FaInstagram, FaFacebook, FaEnvelope, FaHeart } from "react-icons/fa";
 
@@ -25,9 +23,9 @@ export default function Footer() {
 
             {/* Social Media Section */}
             <div>
-              <h4 className="text-sm sm:text-base lg:text-lg mb-4 sm:mb-6 font-semibold text-white/90 uppercase tracking-wider px-4 sm:px-0">
+              <h3 className="text-sm sm:text-base lg:text-lg mb-4 sm:mb-6 font-semibold text-white/90 uppercase tracking-wider px-4 sm:px-0">
                 Follow Us
-              </h4>
+              </h3>
               <div className="flex gap-3 sm:gap-4 justify-center sm:justify-start flex-wrap px-4 sm:px-0">
                 <a
                   href="https://instagram.com/loveserenespaces"
@@ -71,9 +69,9 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div className="sm:col-span-1 lg:col-span-1 min-w-0">
-            <h4 className="text-sm sm:text-base lg:text-lg mb-4 sm:mb-6 md:mb-8 font-semibold text-white/95 uppercase tracking-wider px-4 sm:px-0">
+            <h3 className="text-sm sm:text-base lg:text-lg mb-4 sm:mb-6 md:mb-8 font-semibold text-white/95 uppercase tracking-wider px-4 sm:px-0">
               Quick Links
-            </h4>
+            </h3>
             <div className="flex flex-col gap-3 sm:gap-4 md:gap-5 px-4 sm:px-0">
               {[
                 { href: "/", label: "Home" },
@@ -96,9 +94,9 @@ export default function Footer() {
 
           {/* Contact Information */}
           <div className="sm:col-span-1 lg:col-span-1 min-w-0">
-            <h4 className="text-sm sm:text-base lg:text-lg mb-4 sm:mb-6 md:mb-8 font-semibold text-white/95 uppercase tracking-wider">
+            <h3 className="text-sm sm:text-base lg:text-lg mb-4 sm:mb-6 md:mb-8 font-semibold text-white/95 uppercase tracking-wider">
               Contact
-            </h4>
+            </h3>
             <div className="flex flex-col gap-4 sm:gap-5 md:gap-6">
               <div className="flex justify-center sm:justify-start">
                 <a

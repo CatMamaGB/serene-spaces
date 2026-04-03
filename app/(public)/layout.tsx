@@ -8,7 +8,9 @@ export default function PublicLayout({
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
-      {children}
+      <main id="main-content" className="min-w-0">
+        {children}
+      </main>
     </div>
   );
 }

@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import Footer from "./Footer";
 import { homeFaqItems } from "./home-faq-data";
@@ -141,7 +139,7 @@ export default function HomePageClient() {
             <h2 className="text-responsive-lg font-bold mb-4 sm:mb-6">
               Ready to Get Started?
             </h2>
-            <p className="text-sm sm:text-base lg:text-lg mb-6 sm:mb-8 lg:mb-10 opacity-90 leading-relaxed">
+            <p className="text-sm sm:text-base lg:text-lg mb-6 sm:mb-8 lg:mb-10 text-gray-100 leading-relaxed">
               Contact us today to schedule your pickup and give your horse
               equipment the care it deserves.
             </p>

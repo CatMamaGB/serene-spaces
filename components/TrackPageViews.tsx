@@ -5,15 +5,19 @@ import { usePathname, useSearchParams } from "next/navigation";
 
 declare global {
   interface Window {
-    /** Set by gtag.js / @next/third-parties GoogleAnalytics inline script */
+    /** Set by gtag.js after `GoogleAnalyticsLazy` scripts load */
     gtag?: (...args: unknown[]) => void;
   }
 }
 
+const GTAG_RETRY_MS = 100;
+const GTAG_MAX_ATTEMPTS = 60;
+
 /**
  * Sends GA4 `page_view` on client-side navigations (App Router).
- * The initial page load is already counted by `GoogleAnalytics` in `layout.tsx`;
+ * The initial page load is counted by `GoogleAnalyticsLazy` in `layout.tsx`;
  * we skip the first effect run to avoid double-counting.
+ * Retries until `gtag` exists because GA is loaded with `lazyOnload`.
  */
 export default function TrackPageViews() {
   const pathname = usePathname();
@@ -29,14 +33,27 @@ export default function TrackPageViews() {
       return;
     }
 
-    const { gtag } = window;
-    if (typeof gtag !== "function") return;
+    let attempts = 0;
+    let timeoutId: ReturnType<typeof setTimeout>;
 
-    gtag("event", "page_view", {
-      page_path: pagePath,
-      page_location: window.location.href,
-      page_title: document.title,
-    });
+    const send = () => {
+      const { gtag } = window;
+      if (typeof gtag === "function") {
+        gtag("event", "page_view", {
+          page_path: pagePath,
+          page_location: window.location.href,
+          page_title: document.title,
+        });
+        return;
+      }
+      attempts += 1;
+      if (attempts < GTAG_MAX_ATTEMPTS) {
+        timeoutId = setTimeout(send, GTAG_RETRY_MS);
+      }
+    };
+
+    send();
+    return () => clearTimeout(timeoutId);
   }, [pathname, searchParams]);
 
   return null;

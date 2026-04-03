@@ -1,23 +1,27 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { Inter } from "next/font/google";
-import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
+import GoogleAnalyticsLazy from "../components/GoogleAnalyticsLazy";
 import TrackPageViews from "../components/TrackPageViews";
 import { NextAuthProvider } from "../components/NextAuthProvider";
 import { ToastProvider } from "../components/ToastProvider";
-import { getBusinessJsonLdId, getCanonicalOrigin } from "../lib/site";
+import {
+  absoluteUrl,
+  getBusinessJsonLdId,
+  getCanonicalOrigin,
+} from "../lib/site";
 
 /** GA4 — override with NEXT_PUBLIC_GA_MEASUREMENT_ID in env (e.g. staging). */
 const GA_MEASUREMENT_ID =
   process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? "G-519B7JR17N";
 
-// Avoid Chrome "preloaded but not used within a few seconds" for extra Inter .woff2
-// chunks; Next still self-hosts the font via @font-face (no layout shift with swap).
+// Preload primary Latin subset for faster hero text paint (LCP); adjustFontFallback limits CLS.
 const inter = Inter({
   subsets: ["latin"],
   display: "swap",
-  preload: false,
+  preload: true,
+  adjustFontFallback: true,
 });
 
 export const metadata: Metadata = {
@@ -93,6 +97,11 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -108,6 +117,8 @@ export default function RootLayout({
     url: getCanonicalOrigin(),
     telephone: "+1-815-621-3509",
     email: "loveserenespaces@gmail.com",
+    image: absoluteUrl("/og-image.jpg"),
+    logo: absoluteUrl("/icon1.png"),
     address: {
       "@type": "PostalAddress",
       addressLocality: "Crystal Lake",
@@ -184,7 +195,7 @@ export default function RootLayout({
         <NextAuthProvider>
           <ToastProvider>{children}</ToastProvider>
         </NextAuthProvider>
-        <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />
+        <GoogleAnalyticsLazy gaId={GA_MEASUREMENT_ID} />
         <Suspense fallback={null}>
           <TrackPageViews />
         </Suspense>
