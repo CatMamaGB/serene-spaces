@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Inter } from "next/font/google";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
+import TrackPageViews from "../components/TrackPageViews";
 import { NextAuthProvider } from "../components/NextAuthProvider";
 import { ToastProvider } from "../components/ToastProvider";
 import { getBusinessJsonLdId, getCanonicalOrigin } from "../lib/site";
@@ -183,6 +185,9 @@ export default function RootLayout({
           <ToastProvider>{children}</ToastProvider>
         </NextAuthProvider>
         <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />
+        <Suspense fallback={null}>
+          <TrackPageViews />
+        </Suspense>
       </body>
     </html>
   );

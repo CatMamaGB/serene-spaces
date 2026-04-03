@@ -173,7 +173,7 @@ If you serve EU/UK visitors, you may need a cookie consent banner and GA4 consen
 
 ## Code reference
 
-- Integration: [`app/layout.tsx`](../app/layout.tsx) — `GoogleAnalytics` from `@next/third-parties/google`
+- Integration: [`app/layout.tsx`](../app/layout.tsx) — `GoogleAnalytics` from `@next/third-parties/google`, plus [`components/TrackPageViews.tsx`](../components/TrackPageViews.tsx) (client navigations → GA4 `page_view`, e.g. `/thank-you` after form submit)
 - Env template: [`.env.example`](../.env.example)
 - Thank-you / lead landing: [`app/(public)/thank-you/page.tsx`](<../app/(public)/thank-you/page.tsx>) — `noindex` metadata; redirects from contact and intake forms
 
