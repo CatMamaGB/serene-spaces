@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
 import { useToast } from "@/components/ToastProvider";
 import { logger } from "@/lib/logger";
 
 export default function IntakePage() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -23,7 +24,6 @@ export default function IntakePage() {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
   const [isDayDropdownOpen, setIsDayDropdownOpen] = useState(false);
   const [daySearchTerm, setDaySearchTerm] = useState("");
   const [isMonthDropdownOpen, setIsMonthDropdownOpen] = useState(false);
@@ -112,7 +112,7 @@ export default function IntakePage() {
 
       await response.json();
       logger.debug("Intake form submitted successfully");
-      setSubmitSuccess(true);
+      router.push("/thank-you?type=intake");
     } catch (error) {
       logger.errorFrom("Intake form submit", error);
       toast.error(
@@ -123,83 +123,6 @@ export default function IntakePage() {
       setIsSubmitting(false);
     }
   };
-
-  if (submitSuccess) {
-    return (
-      <div
-        style={{
-          minHeight: "100vh",
-          backgroundColor: "#f5f5f5",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "20px",
-        }}
-      >
-        <div
-          style={{
-            backgroundColor: "white",
-            padding: "40px",
-            borderRadius: "12px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-            textAlign: "center",
-            maxWidth: "500px",
-            width: "100%",
-          }}
-        >
-          <div
-            style={{
-              fontSize: "48px",
-              marginBottom: "20px",
-            }}
-          >
-            ✅
-          </div>
-          <h2
-            style={{
-              color: "#7a6990",
-              marginBottom: "16px",
-              fontSize: "1.75rem",
-            }}
-          >
-            Thank You!
-          </h2>
-          <p
-            style={{
-              color: "#6b7280",
-              marginBottom: "24px",
-              lineHeight: "1.6",
-            }}
-          >
-            Your service request has been submitted successfully. We&apos;ll
-            contact you within 24 hours to confirm your pickup details and
-            discuss your specific needs.
-          </p>
-          <Link
-            href="/"
-            style={{
-              display: "inline-block",
-              backgroundColor: "#7a6990",
-              color: "white",
-              padding: "12px 24px",
-              borderRadius: "8px",
-              textDecoration: "none",
-              fontWeight: "500",
-              transition: "background-color 0.2s",
-            }}
-            onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => {
-              e.currentTarget.style.backgroundColor = "#6b5b7a";
-            }}
-            onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => {
-              e.currentTarget.style.backgroundColor = "#7a6990";
-            }}
-          >
-            Return to Home
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <>

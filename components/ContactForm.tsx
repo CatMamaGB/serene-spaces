@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ToastProvider";
 import { logger } from "@/lib/logger";
 
 export default function ContactForm() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -14,7 +15,6 @@ export default function ContactForm() {
     website: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
   const toast = useToast();
 
   const handleInputChange = (
@@ -66,14 +66,7 @@ export default function ContactForm() {
         return;
       }
 
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        message: "",
-        website: "",
-      });
-      setSubmitSuccess(true);
+      router.push("/thank-you?type=contact");
     } catch (error) {
       logger.errorFrom("Contact form submit", error);
       toast.error(
@@ -84,30 +77,6 @@ export default function ContactForm() {
       setIsSubmitting(false);
     }
   };
-
-  if (submitSuccess) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 sm:p-6 lg:p-8">
-        <div className="bg-white p-6 sm:p-8 lg:p-12 rounded-xl shadow-lg max-w-md w-full text-center">
-          <div className="text-4xl sm:text-5xl mb-4 sm:mb-6">✅</div>
-          <h2 className="text-primary text-xl sm:text-2xl lg:text-3xl font-bold mb-3 sm:mb-4">
-            Message Sent!
-          </h2>
-          <p className="text-gray-600 mb-6 sm:mb-8 leading-relaxed text-sm sm:text-base">
-            Thank you for reaching out! We&apos;ve received your message and
-            will get back to you within 24 hours. We appreciate your interest in
-            our services.
-          </p>
-          <Link
-            href="/"
-            className="btn-primary w-full sm:w-auto inline-block text-center"
-          >
-            Return to Home
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
