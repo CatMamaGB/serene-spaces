@@ -8,6 +8,7 @@ import { safeJson } from "@/lib/utils";
 import {
   Invoice,
   InvoiceItem,
+  normalizeInvoice,
   recomputeTotals,
   formatCurrency,
   generateItemId,
@@ -42,18 +43,7 @@ export default function EditInvoicePage() {
         }
 
         const invoiceData = await response.json();
-
-        // Ensure all items have unique IDs
-        const invoiceWithIds = {
-          ...invoiceData,
-          items:
-            invoiceData.items?.map((item: any, index: number) => ({
-              ...item,
-              id: item.id || `item-${index}-${Date.now()}`,
-            })) || [],
-        };
-
-        setInvoice(recomputeTotals(invoiceWithIds));
+        setInvoice(normalizeInvoice(invoiceData));
       } catch (error) {
         if ((error as Error).name !== "AbortError") {
           logger.errorFrom("Fetch invoice (edit)", error);
@@ -144,26 +134,30 @@ export default function EditInvoicePage() {
     }
 
     try {
+      const computedInvoice = recomputeTotals(invoice);
+
       // Prepare the invoice data for the API
       const invoicePayload = {
-        customerName: invoice.customerName,
-        customerEmail: invoice.customerEmail,
-        customerPhone: invoice.customerPhone,
-        customerAddress: invoice.customerAddress,
-        invoiceDate: invoice.invoiceDate,
-        items: invoice.items.map((item) => ({
+        customerName: computedInvoice.customerName,
+        customerEmail: computedInvoice.customerEmail,
+        customerPhone: computedInvoice.customerPhone,
+        customerAddress: computedInvoice.customerAddress,
+        invoiceDate: computedInvoice.invoiceDate,
+        items: computedInvoice.items.map((item) => ({
           id: item.id,
           description: item.description,
           quantity: item.quantity,
           rate: item.rate,
           amount: item.amount,
         })),
-        notes: invoice.notes,
-        terms: invoice.terms,
-        subtotal: invoice.subtotal,
-        tax: invoice.tax,
-        total: invoice.total,
-        status: invoice.status,
+        notes: computedInvoice.notes,
+        terms: computedInvoice.terms,
+        subtotal: computedInvoice.subtotal,
+        tax: computedInvoice.tax,
+        total: computedInvoice.total,
+        applyTax: computedInvoice.applyTax,
+        taxRate: computedInvoice.taxRate,
+        status: computedInvoice.status,
       };
 
       // Update the invoice via API
@@ -1027,10 +1021,13 @@ export default function EditInvoicePage() {
                   id="applyTax"
                   checked={invoice.applyTax}
                   onChange={async (e) => {
+                    const applyTax = e.target.checked;
                     try {
-                      await setInvoiceApplyTax(invoice.id, e.target.checked);
+                      await setInvoiceApplyTax(invoice.id, applyTax);
                       setInvoice((prev) =>
-                        prev ? { ...prev, applyTax: e.target.checked } : null,
+                        prev
+                          ? recomputeTotals({ ...prev, applyTax })
+                          : null,
                       );
                       toast.success("Tax settings updated");
                     } catch {
@@ -1085,7 +1082,7 @@ export default function EditInvoicePage() {
                     try {
                       await setInvoiceTaxRate(invoice.id, rate);
                       setInvoice((prev) =>
-                        prev ? { ...prev, taxRate: rate } : null,
+                        prev ? recomputeTotals({ ...prev, taxRate: rate }) : null,
                       );
                       toast.success("Tax rate updated");
                     } catch {

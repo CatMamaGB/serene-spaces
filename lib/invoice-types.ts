@@ -30,18 +30,35 @@ export interface Invoice {
 export const toCents = (dollars: number): number => Math.round(dollars * 100);
 export const fromCents = (cents: number): number => cents / 100;
 
-// Tax rate constant (6.25% Illinois Sales Tax)
-export const TAX_RATE = 0.0625;
+const DEFAULT_TAX_RATE_PERCENT = 6.25;
+const toNumber = (value: unknown, fallback = 0): number => {
+  const num = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(num) ? num : fallback;
+};
+
+const normalizeItem = (item: Partial<InvoiceItem>, index: number): InvoiceItem => {
+  const quantity = Math.max(1, Math.trunc(toNumber(item.quantity, 1)));
+  const rate = toNumber(item.rate);
+  const amountC = toCents(quantity * rate);
+
+  return {
+    id: item.id || `item-${index}`,
+    description: item.description || "",
+    quantity,
+    rate: fromCents(toCents(rate)),
+    amount: fromCents(amountC),
+  };
+};
 
 // Recompute totals with cents math to avoid floating point drift
 export const recomputeTotals = (invoice: Invoice): Invoice => {
-  const items = invoice.items.map((item) => {
-    const amountC = toCents(item.quantity * item.rate);
-    return { ...item, amount: fromCents(amountC) };
-  });
+  const items = invoice.items.map((item, index) => normalizeItem(item, index));
 
   const subtotalC = items.reduce((sum, item) => sum + toCents(item.amount), 0);
-  const taxC = Math.round(subtotalC * TAX_RATE);
+  const taxRatePercent = Math.max(0, toNumber(invoice.taxRate, DEFAULT_TAX_RATE_PERCENT));
+  const taxC = invoice.applyTax
+    ? Math.round(subtotalC * (taxRatePercent / 100))
+    : 0;
   const totalC = subtotalC + taxC;
 
   return {
@@ -50,6 +67,31 @@ export const recomputeTotals = (invoice: Invoice): Invoice => {
     subtotal: fromCents(subtotalC),
     tax: fromCents(taxC),
     total: fromCents(totalC),
+    taxRate: taxRatePercent,
+  };
+};
+
+export const normalizeInvoice = (invoice: Partial<Invoice>): Invoice => {
+  const items = Array.isArray(invoice.items) ? invoice.items : [];
+
+  return {
+    id: invoice.id || "",
+    customerName: invoice.customerName || "",
+    customerEmail: invoice.customerEmail || "",
+    customerPhone: invoice.customerPhone || "",
+    customerAddress: invoice.customerAddress || "",
+    invoiceDate: invoice.invoiceDate || "",
+    status: invoice.status || "draft",
+    notes: invoice.notes || "",
+    terms: invoice.terms || "",
+    subtotal: toNumber(invoice.subtotal),
+    tax: toNumber(invoice.tax),
+    total: toNumber(invoice.total),
+    applyTax:
+      typeof invoice.applyTax === "boolean" ? invoice.applyTax : true,
+    taxRate: Math.max(0, toNumber(invoice.taxRate, DEFAULT_TAX_RATE_PERCENT)),
+    invoiceNumber: invoice.invoiceNumber || "",
+    items: items.map((item, index) => normalizeItem(item, index)),
   };
 };
 

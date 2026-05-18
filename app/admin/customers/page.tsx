@@ -49,7 +49,7 @@ const MobileCardLayout = ({
                   : "bg-red-600 hover:bg-red-700"
               }`}
             >
-              {deletingCustomerId === customer.id ? "Deleting..." : "Delete"}
+              {deletingCustomerId === customer.id ? "Archiving..." : "Archive"}
             </button>
           </div>
         </div>
@@ -146,8 +146,8 @@ const DesktopTableLayout = ({
                     }`}
                   >
                     {deletingCustomerId === customer.id
-                      ? "Deleting..."
-                      : "Delete"}
+                      ? "Archiving..."
+                      : "Archive"}
                   </button>
                 </div>
               </td>
@@ -223,20 +223,20 @@ export default function CustomersPage() {
           prev.filter((customer) => customer.id !== customerToDelete.id),
         );
         toast.success(
-          "Customer Deleted",
-          "Customer has been deleted successfully!",
+          "Customer Archived",
+          "Customer has been archived and removed from active lists.",
         );
       } else {
         toast.error(
-          "Delete Failed",
-          `Failed to delete customer: ${result.error || "Unknown error"}`,
+          "Archive Failed",
+          `Failed to archive customer: ${result.error || "Unknown error"}`,
         );
       }
     } catch (error) {
       logger.errorFrom("Delete customer", error);
       toast.error(
-        "Delete Failed",
-        "Failed to delete customer. Please try again.",
+        "Archive Failed",
+        "Failed to archive customer. Please try again.",
       );
     } finally {
       setDeletingCustomerId(null);
@@ -383,20 +383,21 @@ export default function CustomersPage() {
               </div>
               <div className="ml-3">
                 <h3 className="text-lg font-medium text-gray-900">
-                  Delete Customer
+                  Archive Customer
                 </h3>
               </div>
             </div>
 
             <div className="mb-6">
               <p className="text-sm text-gray-600">
-                Are you sure you want to delete{" "}
-                <strong>{customerToDelete.name}</strong>? This action cannot be
-                undone.
+                Archive <strong>{customerToDelete.name}</strong>? Their record
+                will be removed from active customer lists but their service
+                history will stay attached for reporting.
               </p>
               <p className="text-sm text-gray-500 mt-2">
-                Deletion is blocked if this customer has invoices, service
-                requests, or jobs. Remove or reassign those first.
+                Archiving preserves invoices, service requests, and jobs so you
+                can keep history without showing this customer in active
+                workflows.
               </p>
             </div>
 
@@ -411,7 +412,7 @@ export default function CustomersPage() {
                 onClick={confirmDeleteCustomer}
                 className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors w-full sm:w-auto min-h-[40px]"
               >
-                Delete Customer
+                Archive Customer
               </button>
             </div>
           </div>

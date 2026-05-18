@@ -30,21 +30,21 @@ export default function ViewCustomer() {
 
       if (response.ok) {
         toast.success(
-          "Customer Deleted",
-          "Customer has been deleted successfully!",
+          "Customer Archived",
+          "Customer has been archived and removed from active lists.",
         );
         router.push("/admin/customers");
       } else {
         toast.error(
-          "Delete Failed",
-          `Failed to delete customer: ${result.error || "Unknown error"}`,
+          "Archive Failed",
+          `Failed to archive customer: ${result.error || "Unknown error"}`,
         );
       }
     } catch (error) {
       logger.errorFrom("Delete customer", error);
       toast.error(
-        "Delete Failed",
-        "Failed to delete customer. Please try again.",
+        "Archive Failed",
+        "Failed to archive customer. Please try again.",
       );
     } finally {
       setDeleting(false);
@@ -128,7 +128,7 @@ export default function ViewCustomer() {
               onClick={() => setShowDeleteModal(true)}
               className="inline-flex items-center justify-center px-5 py-3 bg-red-600 hover:bg-red-700 text-white border-none rounded-lg font-semibold cursor-pointer transition-colors w-full sm:w-auto min-h-[44px]"
             >
-              🗑️ Delete
+              🗑️ Archive
             </button>
           </div>
         </div>

@@ -73,6 +73,7 @@ model Customer {
   stripeId        String?          @unique
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
+  deletedAt       DateTime?
   invoices        InvoiceMirror[]
   newInvoices     Invoice[]
   jobs            Job[]

@@ -1,12 +1,20 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { nextInvoiceNumber } from "@/lib/invoice-number";
 import { auth } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { calcTotals } from "@/lib/invoice-totals";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+type NormalizedInvoiceItem = {
+  description: string;
+  quantity: number;
+  rate: number;
+};
 
 export async function POST(req: Request) {
   try {
@@ -30,9 +38,6 @@ export async function POST(req: Request) {
       items,
       notes,
       terms,
-      subtotal,
-      tax,
-      total,
       applyTax = true,
       taxRate = 6.25,
       status = "open",
@@ -46,11 +51,36 @@ export async function POST(req: Request) {
       );
     }
 
+    const normalizedItems: NormalizedInvoiceItem[] = items.map(
+      (item: {
+        description: string;
+        quantity: number;
+        rate: number;
+        amount: number;
+      }) => ({
+        description: String(item.description || "").trim(),
+        quantity: Math.max(1, Number(item.quantity) || 1),
+        rate: Number(item.rate) || 0,
+      }),
+    );
+
+    const decimalTaxRate = new Prisma.Decimal(Number(taxRate) || 0);
+    const totals = calcTotals(
+      normalizedItems.map((item: NormalizedInvoiceItem) => ({
+        quantity: item.quantity,
+        unitPrice: new Prisma.Decimal(item.rate),
+        taxable: true,
+      })),
+      decimalTaxRate,
+      Boolean(applyTax),
+    );
+
     // Use transaction to ensure atomicity
     const result = await prisma.$transaction(async (tx) => {
       // Find or create customer
       let customer = await tx.customer.findFirst({
         where: {
+          deletedAt: null,
           OR: [{ email: customerEmail }, { name: customerName }],
         },
       });
@@ -94,29 +124,24 @@ export async function POST(req: Request) {
           number,
           status: status,
           issueDate: invoiceDate ? new Date(invoiceDate) : new Date(),
-          subtotal: subtotal,
-          tax: tax,
-          total: total,
-          balance: total,
-          applyTax: applyTax,
-          taxRate: taxRate,
+          subtotal: totals.subtotal,
+          tax: totals.tax,
+          total: totals.total,
+          balance: totals.total,
+          applyTax: Boolean(applyTax),
+          taxRate: decimalTaxRate,
           notes: notes || null,
           internalMemo: terms || null,
           items: {
-            create: items.map(
-              (item: {
-                description: string;
-                quantity: number;
-                rate: number;
-                amount: number;
-              }) => ({
+            create: normalizedItems.map((item: NormalizedInvoiceItem) => ({
                 description: item.description,
                 quantity: item.quantity,
                 unitPrice: item.rate,
                 taxable: true,
-                lineTotal: item.amount,
-              }),
-            ),
+                lineTotal: new Prisma.Decimal(item.quantity).times(
+                  new Prisma.Decimal(item.rate),
+                ),
+              })),
           },
         },
         include: {

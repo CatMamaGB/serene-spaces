@@ -32,11 +32,12 @@ export async function GET(req: Request) {
 
     const [customers, total] = await Promise.all([
       prisma.customer.findMany({
+        where: { deletedAt: null },
         orderBy: { createdAt: "desc" },
         skip,
         take: pageSize,
       }),
-      prisma.customer.count(),
+      prisma.customer.count({ where: { deletedAt: null } }),
     ]);
 
     return NextResponse.json({

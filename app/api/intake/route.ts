@@ -13,6 +13,7 @@ import {
   getGmailSmtpUser,
   isGmailInvalidGrantError,
 } from "@/lib/gmail-oauth";
+import { getBusinessNotifyEmail } from "@/lib/business-email";
 import { logger } from "@/lib/logger";
 import { getClientIpFromHeaders } from "@/lib/client-ip";
 import { checkIntakeRateLimit } from "@/lib/intake-rate-limit";
@@ -70,7 +71,7 @@ export async function POST(req: Request) {
 
     // Check if customer already exists
     let customer = await prisma.customer.findFirst({
-      where: { email },
+      where: { email, deletedAt: null },
     });
 
     // Create new customer if they don't exist
@@ -132,6 +133,7 @@ export async function POST(req: Request) {
 
       const oauth2Client = await getGmailOAuth2Client();
       const fromAddr = getGmailSmtpUser();
+      const notifyTo = getBusinessNotifyEmail();
 
       await sendGmailApiMessage(oauth2Client, {
         fromDisplay: "Serene Spaces",
@@ -160,7 +162,7 @@ export async function POST(req: Request) {
       await sendGmailApiMessage(oauth2Client, {
         fromDisplay: "Serene Spaces",
         fromEmail: fromAddr,
-        to: fromAddr,
+        to: notifyTo,
         subject: `New Service Request: ${fullName} - ${services.join(", ")}`,
         html: notificationHtml,
         text: stripHtml(notificationHtml),

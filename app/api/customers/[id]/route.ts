@@ -27,8 +27,8 @@ export async function GET(
       );
     }
 
-    const customer = await prisma.customer.findUnique({
-      where: { id },
+    const customer = await prisma.customer.findFirst({
+      where: { id, deletedAt: null },
     });
 
     if (!customer) {
@@ -88,6 +88,18 @@ export async function PUT(
       );
     }
 
+    const existingCustomer = await prisma.customer.findFirst({
+      where: { id, deletedAt: null },
+      select: { id: true },
+    });
+
+    if (!existingCustomer) {
+      return NextResponse.json(
+        { error: "Customer not found" },
+        { status: 404 },
+      );
+    }
+
     const updatedCustomer = await prisma.customer.update({
       where: { id },
       data: {
@@ -131,51 +143,28 @@ export async function DELETE(
       );
     }
 
-    const [mirrorInvoices, internalInvoices, serviceRequests, jobs] =
-      await Promise.all([
-        prisma.invoiceMirror.findMany({
-          where: { customerId: id },
-          take: 1,
-        }),
-        prisma.invoice.findMany({
-          where: { customerId: id },
-          take: 1,
-        }),
-        prisma.serviceRequest.findMany({
-          where: { customerId: id },
-          take: 1,
-        }),
-        prisma.job.findMany({
-          where: { customerId: id },
-          take: 1,
-        }),
-      ]);
+    const customer = await prisma.customer.findFirst({
+      where: { id, deletedAt: null },
+      select: { id: true, name: true },
+    });
 
-    if (
-      mirrorInvoices.length > 0 ||
-      internalInvoices.length > 0 ||
-      serviceRequests.length > 0 ||
-      jobs.length > 0
-    ) {
-      const parts: string[] = [];
-      if (mirrorInvoices.length > 0) parts.push("legacy imported invoices");
-      if (internalInvoices.length > 0) parts.push("invoices");
-      if (serviceRequests.length > 0) parts.push("service requests");
-      if (jobs.length > 0) parts.push("jobs");
-
+    if (!customer) {
       return NextResponse.json(
-        {
-          error: `Cannot delete customer with associated ${parts.join(", ")}. Remove or reassign those records first.`,
-        },
-        { status: 400 },
+        { error: "Customer not found" },
+        { status: 404 },
       );
     }
 
-    await prisma.customer.delete({
+    await prisma.customer.update({
       where: { id },
+      data: { deletedAt: new Date() },
+      select: { id: true },
     });
 
-    return NextResponse.json({ message: "Customer deleted successfully" });
+    return NextResponse.json({
+      message: "Customer archived successfully",
+      archivedCustomerId: customer.id,
+    });
   } catch (error) {
     logger.errorFrom("DELETE /api/customers/[id]", error);
     return NextResponse.json(

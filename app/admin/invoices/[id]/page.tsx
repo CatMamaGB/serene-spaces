@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useIsMobile } from "@/lib/hooks";
 import { safeJson } from "@/lib/utils";
-import { Invoice, recomputeTotals, formatCurrency } from "@/lib/invoice-types";
+import { Invoice, normalizeInvoice, formatCurrency } from "@/lib/invoice-types";
 import { useToast } from "@/components/ToastProvider";
 import { logger } from "@/lib/logger";
 
@@ -37,9 +37,9 @@ export default function ViewInvoice() {
           throw new Error(`HTTP ${response.status}`);
         }
 
-        const invoiceData = await response.json();
-        setInvoice(recomputeTotals(invoiceData));
-        setSendToEmail(invoiceData.customerEmail);
+        const invoiceData = normalizeInvoice(await response.json());
+        setInvoice(invoiceData);
+        setSendToEmail(invoiceData.customerEmail || "");
       } catch (error) {
         if ((error as Error).name !== "AbortError") {
           logger.errorFrom("Fetch invoice", error);

@@ -323,6 +323,8 @@ export default function CreateInvoice() {
         subtotal: invoiceData._subtotal ?? 0,
         tax: invoiceData._tax ?? 0,
         total: invoiceData._total ?? 0,
+        applyTax: invoiceData.applyTax,
+        taxRate: invoiceData.taxRate,
         status: "draft",
       };
 
@@ -1464,7 +1466,7 @@ How to pay:
                       color: "#64748b",
                     }}
                   >
-                    <span>Tax (6.25%)</span>
+                    <span>Tax ({invoiceData.taxRate}%)</span>
                     <span>{formatCurrency(invoiceData._tax ?? 0)}</span>
                   </div>
                   <div
