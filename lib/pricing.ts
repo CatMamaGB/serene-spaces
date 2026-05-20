@@ -8,6 +8,8 @@ export const PRICING = {
   HOOD_NECK: 15,
   FLEECE_GIRTH: 15,
   LEG_STRAPS: 10,
+  WATERPROOFING: 20,
+  REPAIR_REPLACE_LEG_STRAPS: 15,
 } as const;
 
 export const PRICE_LABELS = {
@@ -19,6 +21,8 @@ export const PRICE_LABELS = {
   HOOD_NECK: "WASH: Hood or Neck Cover",
   FLEECE_GIRTH: "WASH: Fleece Girth",
   LEG_STRAPS: "WASH: Leg Straps (s)",
+  WATERPROOFING: "WASH: Waterproofing",
+  REPAIR_REPLACE_LEG_STRAPS: "Repair or replace leg strap(s)",
   REPAIRS: "Repairs",
 } as const;
 

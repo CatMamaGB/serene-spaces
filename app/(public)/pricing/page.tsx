@@ -42,6 +42,8 @@ const cleaningServices = [
   { code: "HOOD_NECK", accent: "text-primary" },
   { code: "FLEECE_GIRTH", accent: "text-[#7f86ac]" },
   { code: "LEG_STRAPS", accent: "text-[#5f4b6a]" },
+  { code: "WATERPROOFING", accent: "text-[#7a6990]" },
+  { code: "REPAIR_REPLACE_LEG_STRAPS", accent: "text-[#9ab5d9]" },
 ] as const;
 
 export default function PricingPage() {
@@ -132,42 +134,6 @@ export default function PricingPage() {
                 gap: "30px",
               }}
             >
-              <div
-                style={{
-                  backgroundColor: "white",
-                  padding: "40px 30px",
-                  borderRadius: "12px",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                  border: "1px solid #e9ecef",
-                  textAlign: "center",
-                }}
-              >
-                <h3
-                  style={{
-                    fontSize: "1.4rem",
-                    marginBottom: "16px",
-                    color: "#7a6990",
-                    fontWeight: "600",
-                  }}
-                >
-                  Waterproofing
-                </h3>
-                <div
-                  style={{
-                    fontSize: "2rem",
-                    fontWeight: "700",
-                    color: "#7a6990",
-                    marginBottom: "16px",
-                  }}
-                >
-                  $20
-                </div>
-                <p style={{ color: "#666", lineHeight: "1.6", margin: "0" }}>
-                  Professional waterproofing treatment with DWR coating and seam
-                  sealing
-                </p>
-              </div>
-
               <div
                 style={{
                   backgroundColor: "white",
