@@ -1,6 +1,7 @@
 import Footer from "../../../components/Footer";
 import SEOStructuredData from "../../../components/SEOStructuredData";
 import type { Metadata } from "next";
+import { PRICING, PRICE_LABELS } from "@/lib/pricing";
 
 export const metadata: Metadata = {
   title: "Horse Blanket Cleaning Pricing | Serene Spaces",
@@ -31,6 +32,17 @@ export const metadata: Metadata = {
       "View pricing for horse blanket cleaning, waterproofing, and repairs in Crystal Lake and surrounding areas.",
   },
 };
+
+const cleaningServices = [
+  { code: "BLANKET_FILL", accent: "text-primary" },
+  { code: "SHEET_NO_FILL", accent: "text-[#7f86ac]" },
+  { code: "SADDLE_PAD", accent: "text-[#5f4b6a]" },
+  { code: "WRAPS", accent: "text-[#7a6990]" },
+  { code: "BOOTS", accent: "text-[#9ab5d9]" },
+  { code: "HOOD_NECK", accent: "text-primary" },
+  { code: "FLEECE_GIRTH", accent: "text-[#7f86ac]" },
+  { code: "LEG_STRAPS", accent: "text-[#5f4b6a]" },
+] as const;
 
 export default function PricingPage() {
   return (
@@ -70,225 +82,23 @@ export default function PricingPage() {
 
                 <div className="p-6 sm:p-8">
                   <div className="space-y-4 sm:space-y-6">
-                    <div className="flex justify-between items-center py-4 border-b border-gray-200">
-                      <span className="text-sm sm:text-base font-medium text-gray-900">
-                        Turnout Blanket
-                      </span>
-                      <span className="text-lg sm:text-xl font-bold text-primary">
-                        $25
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between items-center py-4 border-b border-gray-200">
-                      <span className="text-sm sm:text-base font-medium text-gray-900">
-                        Blanket (with fill)
-                      </span>
-                      <span className="text-lg sm:text-xl font-bold text-primary">
-                        $25
-                      </span>
-                    </div>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      padding: "16px 0",
-                      borderBottom: "1px solid #f0f0f0",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: "1.1rem",
-                        color: "#333",
-                        fontWeight: "500",
-                      }}
-                    >
-                      Sheet/Fly Sheet (no fill)
-                    </span>
-                    <span
-                      style={{
-                        fontSize: "1.5rem",
-                        fontWeight: "700",
-                        color: "#7f86ac",
-                      }}
-                    >
-                      $20
-                    </span>
-                  </div>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      padding: "16px 0",
-                      borderBottom: "1px solid #f0f0f0",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: "1.1rem",
-                        color: "#333",
-                        fontWeight: "500",
-                      }}
-                    >
-                      Hood or Neck Cover
-                    </span>
-                    <span
-                      style={{
-                        fontSize: "1.5rem",
-                        fontWeight: "700",
-                        color: "#9ab5d9",
-                      }}
-                    >
-                      $15
-                    </span>
-                  </div>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      padding: "16px 0",
-                      borderBottom: "1px solid #f0f0f0",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: "1.1rem",
-                        color: "#333",
-                        fontWeight: "500",
-                      }}
-                    >
-                      Saddle Pad
-                    </span>
-                    <span
-                      style={{
-                        fontSize: "1.5rem",
-                        fontWeight: "700",
-                        color: "#5f4b6a",
-                      }}
-                    >
-                      $10
-                    </span>
-                  </div>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      padding: "16px 0",
-                      borderBottom: "1px solid #f0f0f0",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: "1.1rem",
-                        color: "#333",
-                        fontWeight: "500",
-                      }}
-                    >
-                      Wraps / Boots (each)
-                    </span>
-                    <span
-                      style={{
-                        fontSize: "1.5rem",
-                        fontWeight: "700",
-                        color: "#7a6990",
-                      }}
-                    >
-                      $5
-                    </span>
-                  </div>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      padding: "16px 0",
-                      borderBottom: "1px solid #f0f0f0",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: "1.1rem",
-                        color: "#333",
-                        fontWeight: "500",
-                      }}
-                    >
-                      Fleece Girth
-                    </span>
-                    <span
-                      style={{
-                        fontSize: "1.5rem",
-                        fontWeight: "700",
-                        color: "#7f86ac",
-                      }}
-                    >
-                      $15
-                    </span>
-                  </div>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      padding: "16px 0",
-                      borderBottom: "1px solid #f0f0f0",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: "1.1rem",
-                        color: "#333",
-                        fontWeight: "500",
-                      }}
-                    >
-                      Tail Strap
-                    </span>
-                    <span
-                      style={{
-                        fontSize: "1.5rem",
-                        fontWeight: "700",
-                        color: "#9ab5d9",
-                      }}
-                    >
-                      $10
-                    </span>
-                  </div>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      padding: "16px 0",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: "1.1rem",
-                        color: "#333",
-                        fontWeight: "500",
-                      }}
-                    >
-                      Leg Strap
-                    </span>
-                    <span
-                      style={{
-                        fontSize: "1.5rem",
-                        fontWeight: "700",
-                        color: "#5f4b6a",
-                      }}
-                    >
-                      $15
-                    </span>
-                  </div>
+                    {cleaningServices.map(({ code, accent }, index) => (
+                      <div
+                        key={code}
+                        className={`flex justify-between items-center py-4 ${
+                          index < cleaningServices.length - 1
+                            ? "border-b border-gray-200"
+                            : ""
+                        }`}
+                      >
+                        <span className="text-sm sm:text-base font-medium text-gray-900">
+                          {PRICE_LABELS[code]}
+                        </span>
+                        <span className={`text-lg sm:text-xl font-bold ${accent}`}>
+                          ${PRICING[code]}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>

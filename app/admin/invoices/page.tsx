@@ -41,7 +41,7 @@ export default function InvoicesPage() {
   );
 
   // Filter states
-  const [statusFilter, setStatusFilter] = useState<string>("active"); // Default to "active" (open + draft)
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [yearFilter, setYearFilter] = useState<string>("all");
   const [monthFilter, setMonthFilter] = useState<string>("all");
   const [customerFilter, setCustomerFilter] = useState<string>("");
@@ -458,14 +458,14 @@ export default function InvoicesPage() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => {
-                      setStatusFilter("active");
+                      setStatusFilter("all");
                       setYearFilter("all");
                       setMonthFilter("all");
                       setCustomerFilter("");
                     }}
                     className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
                   >
-                    Reset to Active
+                    Reset Filters
                   </button>
                   <button
                     onClick={exportFilteredInvoices}
