@@ -26,7 +26,7 @@ const NavItem = ({
 
 export default function AdminNavigation({ children }: { children: ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { pendingServiceRequests, unreadContactInquiries } = useAdminSummary();
+  const { openPickupRequests, unreadContactInquiries } = useAdminSummary();
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -51,26 +51,26 @@ export default function AdminNavigation({ children }: { children: ReactNode }) {
             <div>
               <NavItem
                 href="/admin/service-requests"
-                label="Service Requests"
+                label="Pickup Requests"
               />
-              {pendingServiceRequests > 0 ? (
+              {openPickupRequests > 0 ? (
                 <AdminSidebarAlert
                   href="/admin/service-requests"
-                  label={`${pendingServiceRequests} pending request${pendingServiceRequests !== 1 ? "s" : ""}`}
-                  title={`${pendingServiceRequests} pending service request(s)`}
+                  label={`${openPickupRequests} open request${openPickupRequests !== 1 ? "s" : ""}`}
+                  title={`${openPickupRequests} open pickup request(s)`}
                 />
               ) : null}
             </div>
             <div>
               <NavItem
                 href="/admin/contact-inquiries"
-                label="Contact messages"
+                label="Contact Inquiries"
               />
               {unreadContactInquiries > 0 ? (
                 <AdminSidebarAlert
                   href="/admin/contact-inquiries"
-                  label={`${unreadContactInquiries} unread message${unreadContactInquiries !== 1 ? "s" : ""}`}
-                  title={`${unreadContactInquiries} unread contact message(s)`}
+                  label={`${unreadContactInquiries} unread inquir${unreadContactInquiries !== 1 ? "ies" : "y"}`}
+                  title={`${unreadContactInquiries} unread contact inquir${unreadContactInquiries !== 1 ? "ies" : "y"}`}
                 />
               ) : null}
             </div>
@@ -191,28 +191,28 @@ export default function AdminNavigation({ children }: { children: ReactNode }) {
                   />
                   <NavItem
                     href="/admin/service-requests"
-                    label="Service Requests"
+                    label="Pickup Requests"
                     onClick={closeMobileMenu}
                   />
-                  {pendingServiceRequests > 0 ? (
+                  {openPickupRequests > 0 ? (
                     <AdminSidebarAlert
                       href="/admin/service-requests"
-                      label={`${pendingServiceRequests} pending request${pendingServiceRequests !== 1 ? "s" : ""}`}
-                      title={`${pendingServiceRequests} pending service request(s)`}
+                      label={`${openPickupRequests} open request${openPickupRequests !== 1 ? "s" : ""}`}
+                      title={`${openPickupRequests} open pickup request(s)`}
                       isMobile
                       onClose={closeMobileMenu}
                     />
                   ) : null}
                   <NavItem
                     href="/admin/contact-inquiries"
-                    label="Contact messages"
+                    label="Contact Inquiries"
                     onClick={closeMobileMenu}
                   />
                   {unreadContactInquiries > 0 ? (
                     <AdminSidebarAlert
                       href="/admin/contact-inquiries"
-                      label={`${unreadContactInquiries} unread message${unreadContactInquiries !== 1 ? "s" : ""}`}
-                      title={`${unreadContactInquiries} unread contact message(s)`}
+                      label={`${unreadContactInquiries} unread inquir${unreadContactInquiries !== 1 ? "ies" : "y"}`}
+                      title={`${unreadContactInquiries} unread contact inquir${unreadContactInquiries !== 1 ? "ies" : "y"}`}
                       isMobile
                       onClose={closeMobileMenu}
                     />

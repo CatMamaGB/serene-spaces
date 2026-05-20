@@ -1,5 +1,6 @@
 import Footer from "../../../components/Footer";
 import SEOStructuredData from "../../../components/SEOStructuredData";
+import Link from "next/link";
 import type { Metadata } from "next";
 import { PRICING, PRICE_LABELS } from "@/lib/pricing";
 
@@ -109,112 +110,56 @@ export default function PricingPage() {
         </section>
 
         {/* Additional Services */}
-        <section
-          style={{
-            padding: "80px 24px",
-            backgroundColor: "#f8f9fa",
-          }}
-        >
-          <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-            <h2
-              style={{
-                fontSize: "2.5rem",
-                textAlign: "center",
-                marginBottom: "60px",
-                color: "#1a1a1a",
-              }}
-            >
-              Additional Services
-            </h2>
+        <section className="padding-responsive bg-gray-50 border-y border-gray-200">
+          <div className="container-responsive">
+            <div className="max-w-4xl mx-auto">
+              <h2 className="text-responsive-lg font-bold text-center mb-12 sm:mb-16 text-gray-900">
+                Additional Services
+              </h2>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-                gap: "30px",
-              }}
-            >
-              <div
-                style={{
-                  backgroundColor: "white",
-                  padding: "40px 30px",
-                  borderRadius: "12px",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                  border: "1px solid #e9ecef",
-                  textAlign: "center",
-                }}
-              >
-                <h3
-                  style={{
-                    fontSize: "1.4rem",
-                    marginBottom: "16px",
-                    color: "#7a6990",
-                    fontWeight: "600",
-                  }}
-                >
-                  Repairs
-                </h3>
-                <div
-                  style={{
-                    fontSize: "2rem",
-                    fontWeight: "700",
-                    color: "#7a6990",
-                    marginBottom: "16px",
-                  }}
-                >
-                  Starting at $15
+              <div className="grid gap-6 sm:grid-cols-1">
+                <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm">
+                  <h3 className="text-xl sm:text-2xl font-semibold text-primary mb-4">
+                    Repairs
+                  </h3>
+                  <div className="text-3xl font-bold text-primary mb-4">
+                    Starting at $15
+                  </div>
+                  <p className="text-gray-600 leading-relaxed">
+                    Rip repairs, strap replacement, and other repairs as needed.
+                  </p>
                 </div>
-                <p style={{ color: "#666", lineHeight: "1.6", margin: "0" }}>
-                  Rip repairs, strap replacement, and other repairs as needed.
-                </p>
               </div>
             </div>
           </div>
         </section>
 
         {/* CTA Section */}
-        <section
-          style={{
-            padding: "80px 24px",
-            backgroundColor: "#7a6990",
-            color: "white",
-            textAlign: "center",
-          }}
-        >
-          <div style={{ maxWidth: "600px", margin: "0 auto" }}>
-            <h2
-              style={{
-                fontSize: "2.5rem",
-                marginBottom: "24px",
-              }}
-            >
-              Ready to Schedule Your Service?
-            </h2>
-            <p
-              style={{
-                fontSize: "1.1rem",
-                marginBottom: "32px",
-                opacity: "0.9",
-              }}
-            >
-              Get started with professional horse equipment care today
-            </p>
-            <a
-              href="/intake"
-              style={{
-                display: "inline-block",
-                backgroundColor: "white",
-                color: "#7a6990",
-                padding: "16px 32px",
-                borderRadius: "8px",
-                fontSize: "1.1rem",
-                fontWeight: "600",
-                textDecoration: "none",
-                transition: "transform 0.2s",
-              }}
-            >
-              Schedule Service
-            </a>
+        <section className="padding-responsive bg-primary text-white text-center">
+          <div className="container-responsive">
+            <div className="max-w-3xl mx-auto">
+              <h2 className="text-responsive-lg font-bold mb-4 sm:mb-6">
+                Ready to Schedule Your Service?
+              </h2>
+              <p className="text-sm sm:text-base lg:text-lg mb-8 text-gray-100 leading-relaxed">
+                Book your pickup online, or reach out if you have a custom request
+                before submitting.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link
+                  href="/intake"
+                  className="btn-secondary text-sm sm:text-base lg:text-lg px-6 sm:px-8 py-3 sm:py-4"
+                >
+                  Book a Pickup
+                </Link>
+                <Link
+                  href="/contact"
+                  className="btn-secondary text-sm sm:text-base lg:text-lg px-6 sm:px-8 py-3 sm:py-4 border border-white/40"
+                >
+                  Contact Us
+                </Link>
+              </div>
+            </div>
           </div>
         </section>
 

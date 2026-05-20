@@ -82,16 +82,16 @@ export default function AlgonquinLocationPage() {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
               <Link
-                href="/contact"
+                href="/intake"
                 className="btn-primary text-center px-8 py-3 text-sm sm:text-base"
               >
-                Contact us
+                Book a Pickup
               </Link>
               <Link
-                href="/pricing"
+                href="/contact"
                 className="btn-secondary text-center px-8 py-3 text-sm sm:text-base border border-primary text-primary"
               >
-                View pricing
+                Contact Us
               </Link>
             </div>
           </div>

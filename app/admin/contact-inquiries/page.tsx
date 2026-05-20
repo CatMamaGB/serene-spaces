@@ -4,16 +4,11 @@ import { useCallback, useEffect, useState } from "react";
 import { formatDate } from "@/components/service-requests";
 import { useAdminSummary } from "@/hooks/useAdminSummary";
 import { logger } from "@/lib/logger";
-
-type ContactInquiry = {
-  id: string;
-  name: string;
-  email: string;
-  phone: string | null;
-  message: string;
-  readAt: string | null;
-  createdAt: string;
-};
+import {
+  fetchContactInquiries,
+  markContactInquiryRead,
+  type ContactInquiry,
+} from "@/lib/api";
 
 export default function ContactInquiriesPage() {
   const { refresh: refreshSummary } = useAdminSummary();
@@ -25,21 +20,11 @@ export default function ContactInquiriesPage() {
   const load = useCallback(async () => {
     setError(null);
     try {
-      const r = await fetch("/api/contact-inquiries", { cache: "no-store" });
-      const data = await r.json().catch(() => []);
-      if (!r.ok) {
-        setError(
-          typeof data?.error === "string"
-            ? data.error
-            : "Could not load messages.",
-        );
-        setItems([]);
-        return;
-      }
-      setItems(Array.isArray(data) ? data : []);
+      const data = await fetchContactInquiries();
+      setItems(data);
     } catch (e) {
       logger.errorFrom("contact inquiries load", e);
-      setError("Could not load messages.");
+      setError("Could not load contact inquiries.");
       setItems([]);
     } finally {
       setLoading(false);
@@ -53,15 +38,7 @@ export default function ContactInquiriesPage() {
   const markRead = async (id: string) => {
     setMarkingId(id);
     try {
-      const r = await fetch(`/api/contact-inquiries/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ read: true }),
-      });
-      if (!r.ok) {
-        setError("Could not update message.");
-        return;
-      }
+      await markContactInquiryRead(id);
       setItems((prev) =>
         prev.map((row) =>
           row.id === id
@@ -72,7 +49,7 @@ export default function ContactInquiriesPage() {
       await refreshSummary();
     } catch (e) {
       logger.errorFrom("contact inquiry mark read", e);
-      setError("Could not update message.");
+      setError("Could not update contact inquiry.");
     } finally {
       setMarkingId(null);
     }
@@ -80,17 +57,19 @@ export default function ContactInquiriesPage() {
 
   if (loading) {
     return (
-      <div className="text-center py-16 text-gray-600">Loading messages…</div>
+      <div className="text-center py-16 text-gray-600">
+        Loading contact inquiries...
+      </div>
     );
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Contact messages</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Contact Inquiries</h1>
         <p className="text-gray-600 mt-1 text-sm sm:text-base">
-          Submissions from the public Contact form. Unread items appear in the
-          sidebar badge.
+          General questions and special requests from the public contact form.
+          Unread inquiries appear in the sidebar badge.
         </p>
       </div>
 
@@ -102,7 +81,7 @@ export default function ContactInquiriesPage() {
 
       {items.length === 0 ? (
         <div className="rounded-2xl border bg-white p-8 text-center text-gray-600">
-          No contact form messages yet.
+          No contact inquiries yet.
         </div>
       ) : (
         <ul className="space-y-4">

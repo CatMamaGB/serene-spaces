@@ -76,7 +76,7 @@ export default function Navigation() {
               href="/contact"
               className="px-4 py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded-lg font-medium transition-all duration-200"
             >
-              Contact
+              Contact Us
             </Link>
           </div>
 
@@ -158,7 +158,7 @@ export default function Navigation() {
                 className="block px-4 py-3 text-gray-700 hover:text-primary hover:bg-gray-50 rounded-lg font-medium transition-all duration-200"
                 onClick={closeMenu}
               >
-                Contact
+                Contact Us
               </Link>
             </div>
           </div>

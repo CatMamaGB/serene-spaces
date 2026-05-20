@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 interface AboutContentProps {
   isMobile: boolean;
 }
@@ -79,16 +81,22 @@ export default function AboutContent({ isMobile }: AboutContentProps) {
             </h2>
             <p className="text-sm sm:text-base lg:text-lg text-gray-600 mb-8 sm:mb-10 lg:mb-12 leading-relaxed">
               Join the many horse owners who trust Serene Spaces with their
-              valuable equipment. Contact us today to schedule your first
-              service.
+              valuable equipment. Book your first pickup online, or contact us if
+              you have questions before getting started.
             </p>
-            <div className="flex justify-center">
-              <a
-                href="/contact"
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <Link
+                href="/intake"
                 className="btn-primary w-full sm:w-auto text-sm sm:text-base lg:text-lg px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5"
               >
-                Get Started Today
-              </a>
+                Book a Pickup
+              </Link>
+              <Link
+                href="/contact"
+                className="btn-secondary w-full sm:w-auto text-sm sm:text-base lg:text-lg px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 border border-primary text-primary"
+              >
+                Contact Us
+              </Link>
             </div>
           </div>
         </div>

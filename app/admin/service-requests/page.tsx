@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   fetchServiceRequests,
+  markServiceRequestPending,
   markServiceRequestHandled,
   updateServiceRequestNotes,
   type ServiceRequest,
@@ -26,9 +27,7 @@ export default function ServiceRequestsPage() {
     null,
   );
   const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<
-    "all" | "new" | "pending" | "handled"
-  >("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "new" | "pending" | "handled">("all");
   const [query, setQuery] = useState("");
   const toast = useToast();
 
@@ -46,6 +45,23 @@ export default function ServiceRequestsPage() {
     }
   };
 
+  const markPending = async (id: string) => {
+    const previousRequests = serviceRequests;
+    setServiceRequests((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, status: "pending" } : r)),
+    );
+
+    try {
+      await markServiceRequestPending(id);
+    } catch {
+      setServiceRequests(previousRequests);
+      toast.error(
+        "Update Failed",
+        "Failed to mark request as in progress. Please try again.",
+      );
+    }
+  };
+
   // Optimistic mark handled with rollback
   const markHandled = async (id: string) => {
     const previousRequests = serviceRequests;
@@ -59,8 +75,8 @@ export default function ServiceRequestsPage() {
       // Rollback on error
       setServiceRequests(previousRequests);
       toast.error(
-        "Mark Handled Failed",
-        "Failed to mark request as handled. Please try again.",
+        "Update Failed",
+        "Failed to close request. Please try again.",
       );
     }
   };
@@ -111,7 +127,7 @@ export default function ServiceRequestsPage() {
           <div className="text-center py-16">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-4"></div>
             <div className="text-lg text-gray-800 font-medium">
-              Loading service requests...
+              Loading pickup requests...
             </div>
           </div>
         </div>
@@ -127,10 +143,10 @@ export default function ServiceRequestsPage() {
           <div className="flex flex-col gap-4 sm:gap-6">
             <div>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
-                Service Requests
+                Pickup Requests
               </h1>
               <p className="text-gray-800 text-sm sm:text-base">
-                Manage incoming service requests from customers
+                Manage online booking requests submitted through the pickup form
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
@@ -151,10 +167,10 @@ export default function ServiceRequestsPage() {
                   }
                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white min-h-[44px] w-full sm:w-auto"
                 >
-                  <option value="all">All Requests</option>
-                  <option value="new">New Requests</option>
-                  <option value="pending">Pending</option>
-                  <option value="handled">Handled</option>
+                  <option value="all">All Pickup Requests</option>
+                  <option value="new">New</option>
+                  <option value="pending">In Progress</option>
+                  <option value="handled">Closed</option>
                 </select>
                 <button
                   onClick={() => {
@@ -189,11 +205,10 @@ export default function ServiceRequestsPage() {
             <div className="p-16 text-center text-gray-700">
               <div className="text-6xl mb-4 opacity-50">📋</div>
               <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                No Service Requests
+                No Pickup Requests
               </h3>
               <p>
-                When customers submit intake forms, their requests will appear
-                here.
+                When customers book a pickup online, their requests will appear here.
               </p>
             </div>
           ) : (
@@ -201,7 +216,7 @@ export default function ServiceRequestsPage() {
               {/* Table Header */}
               <div className="p-4 sm:p-6 border-b border-gray-200 bg-gray-50">
                 <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
-                  Recent Requests ({filteredRequests.length})
+                  Recent Pickup Requests ({filteredRequests.length})
                 </h2>
               </div>
 
@@ -253,6 +268,7 @@ export default function ServiceRequestsPage() {
                               setSelectedRequest(request);
                               setShowDetailsModal(true);
                             }}
+                            onMarkPending={() => markPending(request.id)}
                             onMarkHandled={() => markHandled(request.id)}
                             isMobile={true}
                           />
@@ -346,6 +362,7 @@ export default function ServiceRequestsPage() {
                                 setSelectedRequest(request);
                                 setShowDetailsModal(true);
                               }}
+                              onMarkPending={() => markPending(request.id)}
                               onMarkHandled={() => markHandled(request.id)}
                               isMobile={false}
                             />
@@ -388,7 +405,7 @@ export default function ServiceRequestsPage() {
                 id="sr-modal-title"
                 className="text-2xl font-semibold text-gray-900 mb-2"
               >
-                Service Request Details
+                Pickup Request Details
               </h2>
               <p className="text-gray-600 text-sm">
                 Submitted on {formatDate(selectedRequest.createdAt)}

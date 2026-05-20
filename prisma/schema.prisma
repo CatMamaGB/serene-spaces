@@ -93,7 +93,7 @@ model Job {
 model ServiceRequest {
   id                  String    @id @default(cuid())
   customerId          String
-  status              String    @default("draft") // draft, scheduled, picked_up, in_cleaning, needs_review, ready_to_invoice, completed, canceled
+  status              String    @default("new") // new, pending, handled
   pickupDate          DateTime?
   scheduledPickupDate DateTime?
   pickupNotes         String?

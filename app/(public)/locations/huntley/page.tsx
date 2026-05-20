@@ -71,20 +71,21 @@ export default function HuntleyLocationPage() {
             </p>
 
             <p className="text-center text-gray-800 font-medium pt-4">
-              Schedule your pickup today or view pricing to get started.
+              Book your pickup today or contact us if you need help before
+              getting started.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
               <Link
-                href="/pricing"
+                href="/intake"
                 className="btn-primary text-center px-8 py-3 text-sm sm:text-base"
               >
-                View Pricing
+                Book a Pickup
               </Link>
               <Link
                 href="/contact"
                 className="btn-secondary text-center px-8 py-3 text-sm sm:text-base border border-primary text-primary"
               >
-                Schedule Pickup
+                Contact Us
               </Link>
             </div>
           </div>

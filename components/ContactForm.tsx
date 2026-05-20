@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ToastProvider";
 import { logger } from "@/lib/logger";
@@ -90,9 +91,18 @@ export default function ContactForm() {
                   Contact Us
                 </h1>
                 <p className="text-gray-600 text-sm sm:text-base lg:text-lg leading-relaxed max-w-lg mx-auto">
-                  Have a question or need our services? Send us a message and
-                  we&apos;ll get back to you as soon as possible.
+                  Have a question, custom request, or service-area exception?
+                  Send us a message and we&apos;ll get back to you as soon as
+                  possible.
                 </p>
+              </div>
+
+              <div className="mb-8 rounded-xl border border-primary/15 bg-primary/5 px-4 py-4 text-sm text-gray-700">
+                Ready to book service now?{" "}
+                <Link href="/intake" className="font-semibold text-primary hover:underline">
+                  Use the pickup booking form
+                </Link>
+                .
               </div>
 
               {/* Contact Form */}
@@ -190,7 +200,7 @@ export default function ContactForm() {
                     isSubmitting ? "opacity-70 cursor-not-allowed" : ""
                   }`}
                 >
-                  {isSubmitting ? "Sending..." : "Send Message"}
+                  {isSubmitting ? "Sending..." : "Send Inquiry"}
                 </button>
               </form>
 

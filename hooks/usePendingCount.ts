@@ -6,7 +6,7 @@ import { useAdminSummary } from "./useAdminSummary";
 export function usePendingCount() {
   const s = useAdminSummary();
   return {
-    pendingCount: s.pendingServiceRequests,
+    pendingCount: s.openPickupRequests,
     isLoading: s.isLoading,
     error: s.error,
     refresh: s.refresh,

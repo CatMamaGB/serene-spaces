@@ -28,17 +28,23 @@ export default async function ThankYouPage({ searchParams }: ThankYouProps) {
           heading: "Message sent!",
           body:
             "Thank you for reaching out. We've received your message and will get back to you within 24 hours.",
+          secondaryHref: "/intake",
+          secondaryLabel: "Book a Pickup",
         }
       : leadType === "intake"
         ? {
             heading: "Thank you!",
             body:
               "Your service request was submitted successfully. We'll contact you within 24 hours to confirm pickup details and discuss your needs.",
+            secondaryHref: "/contact",
+            secondaryLabel: "Contact Us",
           }
         : {
             heading: "Thanks for visiting",
             body:
               "If you just submitted a contact or service request, you're all set—we've received it and will follow up soon.",
+            secondaryHref: "/intake",
+            secondaryLabel: "Book a Pickup",
           };
 
   return (
@@ -62,10 +68,10 @@ export default async function ThankYouPage({ searchParams }: ThankYouProps) {
               Return to home
             </Link>
             <Link
-              href="/contact"
+              href={copy.secondaryHref}
               className="inline-block w-full sm:w-auto text-center rounded-lg border-2 border-primary text-primary font-semibold px-6 py-3 hover:bg-primary/5 transition-colors"
             >
-              Contact us
+              {copy.secondaryLabel}
             </Link>
           </div>
         </div>

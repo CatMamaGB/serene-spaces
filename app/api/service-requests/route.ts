@@ -156,7 +156,7 @@ export async function PUT(req: Request) {
 
     return NextResponse.json(updatedRequest);
   } catch (error) {
-    logger.errorFrom("PATCH /api/service-requests", error);
+    logger.errorFrom("PUT /api/service-requests", error);
     return NextResponse.json(
       { error: "Failed to update service request" },
       { status: 500 },

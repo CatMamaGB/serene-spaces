@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Footer from "../../../components/Footer";
 import { useToast } from "@/components/ToastProvider";
@@ -144,11 +145,11 @@ export default function IntakePage() {
           {/* Header */}
           <div className="bg-[#7a6990] text-white p-6 sm:p-8 text-center">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4">
-              Service Request Form
+              Book a Pickup
             </h1>
             <p className="text-sm sm:text-base lg:text-lg opacity-90 leading-relaxed">
-              Let us know what services you need and we&apos;ll schedule your
-              pickup
+              Tell us what services you need, where to pick up, and any special
+              notes so we can confirm your booking.
             </p>
           </div>
 
@@ -168,6 +169,13 @@ export default function IntakePage() {
               <span className="text-lg">🚚</span>
               Free pickup & delivery within service area
             </div>
+            <p className="mt-4 text-sm text-gray-600">
+              Need help before booking?{" "}
+              <Link href="/contact" className="font-semibold text-primary hover:underline">
+                Contact us
+              </Link>
+              .
+            </p>
           </div>
 
           {/* Form */}
@@ -677,7 +685,7 @@ export default function IntakePage() {
                     : "bg-[#7a6990] hover:bg-[#6b5b7a] cursor-pointer"
                 } text-white`}
               >
-                {isSubmitting ? "Submitting..." : "Submit Service Request"}
+                {isSubmitting ? "Submitting..." : "Send Booking Request"}
               </button>
 
               {formData.services.length === 0 && (

@@ -27,7 +27,7 @@ interface RecentInvoice {
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
   const {
-    pendingServiceRequests,
+    openPickupRequests,
     unreadContactInquiries,
     isLoading: summaryLoading,
   } = useAdminSummary();
@@ -118,7 +118,7 @@ export default function AdminDashboard() {
         setStats({
           totalCustomers,
           pendingInvoices,
-          pendingRequests: pendingServiceRequests,
+          pendingRequests: openPickupRequests,
           unreadContactMessages: unreadContactInquiries,
           monthlyRevenue: monthlyRevenue, // Already in dollars
         });
@@ -132,7 +132,7 @@ export default function AdminDashboard() {
     };
 
     fetchStats();
-  }, [pendingServiceRequests, unreadContactInquiries]);
+  }, [openPickupRequests, unreadContactInquiries]);
 
   if (loading || summaryLoading) {
     return (
@@ -173,12 +173,12 @@ export default function AdminDashboard() {
               color: "bg-yellow-500",
             },
             {
-              label: "Pending Service Requests",
+              label: "Open Pickup Requests",
               value: stats.pendingRequests.toString(),
               color: "bg-orange-500",
             },
             {
-              label: "Unread Contact",
+              label: "Unread Contact Inquiries",
               value: stats.unreadContactMessages.toString(),
               color: "bg-amber-500",
             },
@@ -329,13 +329,13 @@ export default function AdminDashboard() {
                 href="/admin/service-requests"
                 className="inline-flex items-center justify-center px-4 py-3 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-colors min-h-[44px] sm:col-span-2"
               >
-                Service requests (intake)
+                Pickup requests
               </Link>
               <Link
                 href="/admin/contact-inquiries"
                 className="inline-flex items-center justify-center px-4 py-3 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-colors min-h-[44px] sm:col-span-2"
               >
-                Contact form messages
+                Contact inquiries
               </Link>
             </div>
           </div>

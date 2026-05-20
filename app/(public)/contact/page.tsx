@@ -3,9 +3,9 @@ import Footer from "../../../components/Footer";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Contact Serene Spaces | Schedule Pickup",
+  title: "Contact Serene Spaces | Questions and Special Requests",
   description:
-    "Schedule horse blanket cleaning, repairs, and pickup in Crystal Lake, Cary, McHenry, and nearby areas.",
+    "Contact Serene Spaces with questions about service areas, custom requests, or anything else before booking your pickup.",
   alternates: {
     canonical: "/contact",
   },
@@ -13,20 +13,20 @@ export const metadata: Metadata = {
     "contact serene spaces",
     "horse equipment service contact",
     "Crystal Lake horse services",
-    "schedule pickup",
+    "horse blanket questions",
     "horse blanket cleaning contact",
-    "equipment repair service",
+    "special service requests",
   ],
   openGraph: {
-    title: "Contact Serene Spaces | Schedule Pickup",
+    title: "Contact Serene Spaces | Questions and Special Requests",
     description:
-      "Schedule horse blanket cleaning, repairs, and pickup in Crystal Lake, Cary, McHenry, and nearby areas.",
+      "Contact Serene Spaces with questions about service areas, custom requests, or anything else before booking your pickup.",
     url: "/contact",
   },
   twitter: {
-    title: "Contact Serene Spaces | Schedule Pickup",
+    title: "Contact Serene Spaces | Questions and Special Requests",
     description:
-      "Schedule horse blanket cleaning, repairs, and pickup in Crystal Lake, Cary, McHenry, and nearby areas.",
+      "Contact Serene Spaces with questions about service areas, custom requests, or anything else before booking your pickup.",
   },
 };
 

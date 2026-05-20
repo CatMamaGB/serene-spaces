@@ -9,7 +9,7 @@ const fetcher = async (url: string) => {
 };
 
 export type AdminSummary = {
-  pendingServiceRequests: number;
+  openPickupRequests: number;
   unreadContactInquiries: number;
 };
 
@@ -24,7 +24,7 @@ export function useAdminSummary() {
   );
 
   return {
-    pendingServiceRequests: data?.pendingServiceRequests ?? 0,
+    openPickupRequests: data?.openPickupRequests ?? 0,
     unreadContactInquiries: data?.unreadContactInquiries ?? 0,
     isLoading,
     error,

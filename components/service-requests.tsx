@@ -15,6 +15,12 @@ export function formatDate(dateString: string): string {
 // Status badge component with consistent styling
 export function StatusBadge({ value }: { value?: string }) {
   const status = (value ?? "new").toLowerCase();
+  const label =
+    status === "pending"
+      ? "In Progress"
+      : status === "handled"
+        ? "Closed"
+        : "New";
 
   const getStatusClasses = (status: string) => {
     switch (status) {
@@ -33,7 +39,7 @@ export function StatusBadge({ value }: { value?: string }) {
     <span
       className={`px-2 py-1 border rounded text-xs font-medium min-w-[100px] text-center ${getStatusClasses(status)}`}
     >
-      {value || "New"}
+      {label}
     </span>
   );
 }
@@ -49,6 +55,7 @@ interface ActionButtonsProps {
     createdAt: string;
   };
   onViewDetails: () => void;
+  onMarkPending: () => void;
   onMarkHandled: () => void;
   isMobile?: boolean;
 }
@@ -56,6 +63,7 @@ interface ActionButtonsProps {
 export function ActionButtons({
   request,
   onViewDetails,
+  onMarkPending,
   onMarkHandled,
   isMobile = false,
 }: ActionButtonsProps) {
@@ -71,6 +79,16 @@ export function ActionButtons({
       >
         View Details
       </button>
+      {request.status === "new" && (
+        <button
+          onClick={onMarkPending}
+          className={`inline-flex items-center justify-center px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white border-none rounded-lg text-sm font-medium cursor-pointer transition-colors min-h-[44px] ${
+            isMobile ? "w-full" : "w-full"
+          }`}
+        >
+          Mark In Progress
+        </button>
+      )}
       {(request.status === "new" || request.status === "pending") && (
         <button
           onClick={onMarkHandled}
@@ -78,7 +96,7 @@ export function ActionButtons({
             isMobile ? "w-full" : "w-full"
           }`}
         >
-          Mark as Done
+          Mark Closed
         </button>
       )}
     </div>

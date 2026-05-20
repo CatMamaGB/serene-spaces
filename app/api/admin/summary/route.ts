@@ -13,13 +13,13 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const [pendingServiceRequests, unreadContactInquiries] = await Promise.all([
-      prisma.serviceRequest.count({ where: { status: "new" } }),
+    const [openPickupRequests, unreadContactInquiries] = await Promise.all([
+      prisma.serviceRequest.count({ where: { status: { in: ["new", "pending"] } } }),
       prisma.contactInquiry.count({ where: { readAt: null } }),
     ]);
 
     return NextResponse.json({
-      pendingServiceRequests,
+      openPickupRequests,
       unreadContactInquiries,
     });
   } catch (e) {

@@ -4,19 +4,17 @@ import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-import {
-  logGmailApiFailure,
-  sendGmailApiMessage,
-} from "@/lib/gmail-api-send";
-import {
-  getGmailOAuth2Client,
-  getGmailSmtpUser,
-  isGmailInvalidGrantError,
-} from "@/lib/gmail-oauth";
 import { getBusinessNotifyEmail } from "@/lib/business-email";
 import { logger } from "@/lib/logger";
 import { getClientIpFromHeaders } from "@/lib/client-ip";
 import { checkIntakeRateLimit } from "@/lib/intake-rate-limit";
+import {
+  hasFilledHoneypot,
+  normalizeOptionalString,
+  normalizeRequiredString,
+  normalizeStringArray,
+} from "@/lib/lead-form";
+import { sendLeadEmailBatch } from "@/lib/lead-email";
 
 export async function POST(req: Request) {
   try {
@@ -36,10 +34,7 @@ export async function POST(req: Request) {
       website: honeypotWebsite,
     } = body;
 
-    if (
-      typeof honeypotWebsite === "string" &&
-      honeypotWebsite.trim() !== ""
-    ) {
+    if (hasFilledHoneypot(honeypotWebsite)) {
       logger.debug("Intake honeypot filled; ignoring submission");
       return NextResponse.json({
         success: true,
@@ -58,8 +53,19 @@ export async function POST(req: Request) {
       );
     }
 
+    const fullNameStr = normalizeRequiredString(fullName);
+    const emailStr = normalizeRequiredString(email);
+    const addressStr = normalizeRequiredString(address);
+    const phoneStr = normalizeOptionalString(phone);
+    const pickupMonthStr = normalizeOptionalString(pickupMonth);
+    const pickupDayStr = normalizeOptionalString(pickupDay);
+    const servicesList = normalizeStringArray(services);
+    const repairNotesStr = normalizeOptionalString(repairNotes);
+    const waterproofingNotesStr = normalizeOptionalString(waterproofingNotes);
+    const allergiesStr = normalizeOptionalString(allergies);
+
     // Validate required fields
-    if (!fullName || !email || !address || !services || services.length === 0) {
+    if (!fullNameStr || !emailStr || !addressStr || servicesList.length === 0) {
       return NextResponse.json(
         {
           error:
@@ -71,17 +77,17 @@ export async function POST(req: Request) {
 
     // Check if customer already exists
     let customer = await prisma.customer.findFirst({
-      where: { email, deletedAt: null },
+      where: { email: emailStr, deletedAt: null },
     });
 
     // Create new customer if they don't exist
     if (!customer) {
       customer = await prisma.customer.create({
         data: {
-          name: fullName,
-          email,
-          phone: phone || null,
-          address: address,
+          name: fullNameStr,
+          email: emailStr,
+          phone: phoneStr,
+          address: addressStr,
           city: "",
           state: "",
           postalCode: "",
@@ -94,12 +100,12 @@ export async function POST(req: Request) {
       data: {
         customerId: customer.id,
         pickupDate:
-          pickupMonth && pickupDay
+          pickupMonthStr && pickupDayStr
             ? (() => {
                 const currentYear = new Date().getFullYear(); // This will be 2025
                 const currentDate = new Date();
                 const selectedDate = new Date(
-                  `${currentYear}-${pickupMonth}-${pickupDay}`,
+                  `${currentYear}-${pickupMonthStr}-${pickupDayStr}`,
                 );
 
                 // If the selected date is in the past, use next year
@@ -110,69 +116,64 @@ export async function POST(req: Request) {
                 return selectedDate;
               })()
             : null,
-        internalNotes: `Services: ${services.join(", ")}\nRepair Notes: ${repairNotes || "None"}\nWaterproofing Notes: ${waterproofingNotes || "None"}\nAllergies: ${allergies || "None"}`,
+        internalNotes: `Services: ${servicesList.join(", ")}\nRepair Notes: ${repairNotesStr ?? "None"}\nWaterproofing Notes: ${waterproofingNotesStr ?? "None"}\nAllergies: ${allergiesStr ?? "None"}`,
         status: "new",
       } as any,
     });
 
     // Send confirmation email (Gmail API — avoids SMTP XOAUTH2 / 535 on some hosts)
-    try {
-      const confirmationHtml = generateConfirmationEmail({
-        fullName,
-        email,
-        phone,
-        address,
-        pickupDate:
-          pickupMonth && pickupDay ? `${pickupMonth}/${pickupDay}` : undefined,
-        services,
-        repairNotes,
-        waterproofingNotes,
-        allergies,
-        serviceRequestId: serviceRequest.id,
-      });
+    const confirmationHtml = generateConfirmationEmail({
+      fullName: fullNameStr,
+      email: emailStr,
+      phone: phoneStr ?? undefined,
+      address: addressStr,
+      pickupDate:
+        pickupMonthStr && pickupDayStr
+          ? `${pickupMonthStr}/${pickupDayStr}`
+          : undefined,
+      services: servicesList,
+      repairNotes: repairNotesStr ?? undefined,
+      waterproofingNotes: waterproofingNotesStr ?? undefined,
+      allergies: allergiesStr ?? undefined,
+      serviceRequestId: serviceRequest.id,
+    });
 
-      const oauth2Client = await getGmailOAuth2Client();
-      const fromAddr = getGmailSmtpUser();
-      const notifyTo = getBusinessNotifyEmail();
+    const notificationHtml = generateNotificationEmail({
+      fullName: fullNameStr,
+      email: emailStr,
+      phone: phoneStr ?? undefined,
+      address: addressStr,
+      pickupDate:
+        pickupMonthStr && pickupDayStr
+          ? `${pickupMonthStr}/${pickupDayStr}`
+          : undefined,
+      services: servicesList,
+      repairNotes: repairNotesStr ?? undefined,
+      waterproofingNotes: waterproofingNotesStr ?? undefined,
+      allergies: allergiesStr ?? undefined,
+      serviceRequestId: serviceRequest.id,
+    });
 
-      await sendGmailApiMessage(oauth2Client, {
-        fromDisplay: "Serene Spaces",
-        fromEmail: fromAddr,
-        to: email,
-        subject: "Service Request Confirmation - Serene Spaces",
-        html: confirmationHtml,
-        text: stripHtml(confirmationHtml),
-        replyTo: fromAddr,
-      });
+    const notifyTo = getBusinessNotifyEmail();
 
-      const notificationHtml = generateNotificationEmail({
-        fullName,
-        email,
-        phone,
-        address,
-        pickupDate:
-          pickupMonth && pickupDay ? `${pickupMonth}/${pickupDay}` : undefined,
-        services,
-        repairNotes,
-        waterproofingNotes,
-        allergies,
-        serviceRequestId: serviceRequest.id,
-      });
-
-      await sendGmailApiMessage(oauth2Client, {
-        fromDisplay: "Serene Spaces",
-        fromEmail: fromAddr,
-        to: notifyTo,
-        subject: `New Service Request: ${fullName} - ${services.join(", ")}`,
-        html: notificationHtml,
-        text: stripHtml(notificationHtml),
-        replyTo: email,
-      });
-    } catch (emailError) {
-      if (!isGmailInvalidGrantError(emailError)) {
-        logGmailApiFailure("Intake confirmation email", emailError);
-      }
-    }
+    await sendLeadEmailBatch({
+      failureContext: "Intake confirmation email",
+      messages: [
+        {
+          to: emailStr,
+          subject: "Service Request Confirmation - Serene Spaces",
+          html: confirmationHtml,
+          text: stripHtml(confirmationHtml),
+        },
+        {
+          to: notifyTo,
+          subject: `New Service Request: ${fullNameStr} - ${servicesList.join(", ")}`,
+          html: notificationHtml,
+          text: stripHtml(notificationHtml),
+          replyTo: emailStr,
+        },
+      ],
+    });
 
     // Return success response
     return NextResponse.json({

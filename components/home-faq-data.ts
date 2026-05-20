@@ -3,12 +3,12 @@ export const homeFaqItems = [
   {
     question: "Do you offer pickup and delivery?",
     answer:
-      "Yes. We offer free pickup and delivery within 25 miles of Crystal Lake, including Cary, McHenry, Lake in the Hills, Algonquin, Woodstock, Huntley, Barrington, and Lake Zurich. Contact us to schedule.",
+      "Yes. We offer free pickup and delivery within 25 miles of Crystal Lake, including Cary, McHenry, Lake in the Hills, Algonquin, Woodstock, Huntley, Barrington, and Lake Zurich. Use our booking form to request pickup.",
   },
   {
     question: "What areas do you serve?",
     answer:
-      "Our free pickup zone covers McHenry County and nearby communities listed on our service area page. We also serve the greater Northwest suburbs of Chicago for a small travel fee—contact us to confirm availability.",
+      "Our free pickup zone covers McHenry County and nearby communities listed on our service area page. We also serve the greater Northwest suburbs of Chicago for a small travel fee. Contact us to confirm availability outside the standard area.",
   },
   {
     question: "How long does it take?",

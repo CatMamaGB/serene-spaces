@@ -27,16 +27,16 @@ export default function HomePageClient() {
                 View Pricing
               </Link>
               <Link
-                href="/contact"
+                href="/intake"
                 className="btn-secondary text-sm sm:text-base lg:text-lg px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 inline-block text-center border border-white/40"
               >
-                Schedule Pickup
+                Book a Pickup
               </Link>
             </div>
             <p className="mt-6 text-sm opacity-85">
-              Prefer the online form?{" "}
-              <Link href="/intake" className="underline font-medium hover:opacity-100">
-                Book pickup online
+              Need a custom quote or service-area exception?{" "}
+              <Link href="/contact" className="underline font-medium hover:opacity-100">
+                Contact us
               </Link>
             </p>
           </div>
@@ -140,15 +140,15 @@ export default function HomePageClient() {
               Ready to Get Started?
             </h2>
             <p className="text-sm sm:text-base lg:text-lg mb-6 sm:mb-8 lg:mb-10 text-gray-100 leading-relaxed">
-              Contact us today to schedule your pickup and give your horse
-              equipment the care it deserves.
+              Book your pickup online in just a few minutes, or reach out if you
+              have a custom request before getting started.
             </p>
             <div className="flex-responsive justify-center">
               <Link
                 href="/intake"
                 className="btn-secondary text-sm sm:text-base lg:text-lg px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5"
               >
-                Schedule Service
+                Book a Pickup
               </Link>
               <Link
                 href="/contact"

@@ -22,7 +22,7 @@ export async function GET() {
   } catch (e) {
     logger.errorFrom("GET /api/contact-inquiries", e);
     return NextResponse.json(
-      { error: "Failed to load messages" },
+      { error: "Failed to load contact inquiries" },
       { status: 500 },
     );
   }

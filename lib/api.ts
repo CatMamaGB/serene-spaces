@@ -1,4 +1,4 @@
-// Centralized API utilities for service requests
+// Centralized API utilities for admin lead workflows
 
 export interface ServiceRequest {
   id: string;
@@ -20,6 +20,16 @@ export interface ServiceRequest {
   waterproofingNotes?: string;
   allergies?: string;
   notes?: string;
+}
+
+export interface ContactInquiry {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  message: string;
+  readAt: string | null;
+  createdAt: string;
 }
 
 export async function fetchServiceRequests(): Promise<ServiceRequest[]> {
@@ -59,6 +69,17 @@ export async function markServiceRequestHandled(id: string): Promise<void> {
   }
 }
 
+export async function markServiceRequestPending(id: string): Promise<void> {
+  const response = await fetch("/api/service-requests", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, status: "pending" }),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to mark request as pending: ${response.status}`);
+  }
+}
+
 export async function updateServiceRequestNotes(
   id: string,
   notes: string,
@@ -70,5 +91,28 @@ export async function updateServiceRequestNotes(
   });
   if (!response.ok) {
     throw new Error(`Failed to update notes: ${response.status}`);
+  }
+}
+
+export async function fetchContactInquiries(): Promise<ContactInquiry[]> {
+  const response = await fetch("/api/contact-inquiries", {
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch contact inquiries: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return Array.isArray(data) ? (data as ContactInquiry[]) : [];
+}
+
+export async function markContactInquiryRead(id: string): Promise<void> {
+  const response = await fetch(`/api/contact-inquiries/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ read: true }),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to mark inquiry as read: ${response.status}`);
   }
 }

@@ -64,14 +64,23 @@ export default function ServiceAreaPage() {
             <p className="text-gray-700 text-sm sm:text-base leading-relaxed mb-4">
               We also serve the greater Northwest suburbs of Chicago outside the free
               radius for a small travel fee.{" "}
-              <strong>Contact us for availability</strong> in your area.
+              <strong>Contact us for availability</strong> in your area before
+              booking.
             </p>
-            <Link
-              href="/contact"
-              className="inline-block btn-primary px-6 py-3 text-sm sm:text-base"
-            >
-              Contact us
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link
+                href="/intake"
+                className="inline-block btn-primary px-6 py-3 text-sm sm:text-base text-center"
+              >
+                Book a Pickup
+              </Link>
+              <Link
+                href="/contact"
+                className="inline-block btn-secondary px-6 py-3 text-sm sm:text-base text-center border border-primary text-primary"
+              >
+                Contact Us
+              </Link>
+            </div>
           </div>
 
           <div className="pt-6 border-t border-gray-200">

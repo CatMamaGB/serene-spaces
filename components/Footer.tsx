@@ -77,8 +77,8 @@ export default function Footer() {
                 { href: "/", label: "Home" },
                 { href: "/pricing", label: "Pricing" },
                 { href: "/service-area", label: "Service Area" },
-                { href: "/intake", label: "Schedule Service" },
-                { href: "/contact", label: "Contact" },
+                { href: "/intake", label: "Book a Pickup" },
+                { href: "/contact", label: "Contact Us" },
                 { href: "/about", label: "About Us" },
               ].map((link) => (
                 <Link

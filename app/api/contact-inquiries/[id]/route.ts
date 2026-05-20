@@ -32,6 +32,9 @@ export async function PATCH(
     return NextResponse.json({ ok: true });
   } catch (e) {
     logger.errorFrom("PATCH /api/contact-inquiries/[id]", e);
-    return NextResponse.json({ error: "Update failed" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to update contact inquiry" },
+      { status: 500 },
+    );
   }
 }

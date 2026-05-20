@@ -69,20 +69,20 @@ export default function LakeZurichLocationPage() {
             </p>
 
             <p className="text-center text-gray-800 font-medium pt-4">
-              View pricing or schedule your pickup today.
+              Book your pickup today or contact us with any special requests.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
               <Link
-                href="/pricing"
+                href="/intake"
                 className="btn-primary text-center px-8 py-3 text-sm sm:text-base"
               >
-                View Pricing
+                Book a Pickup
               </Link>
               <Link
                 href="/contact"
                 className="btn-secondary text-center px-8 py-3 text-sm sm:text-base border border-primary text-primary"
               >
-                Schedule Pickup
+                Contact Us
               </Link>
             </div>
           </div>
